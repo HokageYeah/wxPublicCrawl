@@ -94,6 +94,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useWechatLoginStore } from '@/stores/wechatLoginStore';
 import { LoginStep } from '@/types/wechat';
 import QRCodeDisplay from '@/components/QRCodeDisplay.vue';
@@ -187,13 +188,13 @@ const restart = () => {
   wechatStore.startLoginFlow();
 };
 
+const router = useRouter();
+
 const onContinue = () => {
   // Handle the continue action after successful login
   // This could redirect to another page or trigger a callback
-  console.log('Login complete, redirecting to dashboard...');
-  
-  // In a real application, you might redirect or emit an event
-  // window.location.href = '/dashboard';
+  console.log('Login complete, redirecting to search...');
+  router.push('/search');
 };
 
 const onLogout = () => {

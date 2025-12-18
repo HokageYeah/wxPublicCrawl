@@ -7,7 +7,7 @@
     </header>
     
     <main class="flex-1 container mx-auto p-4">
-      <WeChatLogin />
+      <RouterView />
     </main>
     
     <footer class="p-4 border-t border-gray-800 text-center text-gray-500 text-sm">
@@ -17,5 +17,5 @@
 </template>
 
 <script setup lang="ts">
-import WeChatLogin from './views/WeChatLogin.vue';
+
 </script> 

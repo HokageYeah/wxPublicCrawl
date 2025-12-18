@@ -13,8 +13,12 @@ import type {
 } from '@/types/wechat';
 
 // Create axios instance with base URL
+// In dev: /web-api proxy handles it
+// In prod: direct to /api/v1
+const baseURL = import.meta.env.DEV ? '/web-api/api/v1/wx/public' : '/api/v1/wx/public';
+console.log('mport.meta.env.DEV---', import.meta.env.DEV)
 const api = axios.create({
-  baseURL: '/web-api/api/v1/wx/public',
+  baseURL,
   withCredentials: true, // Important for cookies
 });
 
