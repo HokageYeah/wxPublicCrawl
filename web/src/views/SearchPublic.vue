@@ -31,7 +31,7 @@
         @click="selectAccount(item)"
       >
         <div class="p-6 flex flex-col items-center">
-          <img :src="item.round_head_img" alt="Logo" class="w-20 h-20 rounded-full mb-4 object-cover" />
+          <img :src="item.round_head_img" class="w-20 h-20 rounded-full mb-4 object-cover" alt="" referrerpolicy="no-referrer" />
           <h3 class="font-bold text-lg mb-2 text-center" v-html="item.nickname"></h3>
           <p class="text-sm text-gray-500 mb-2">{{ item.alias }}</p>
           <p class="text-xs text-gray-400 line-clamp-2 text-center self-stretch">{{ item.signature }}</p>
@@ -52,7 +52,8 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 // 使用 axios 直接调用或导入预配置的实例
-import axios from 'axios';
+// import axios from 'axios';
+import request from '@/utils/request';
 
 // 定义搜索结果接口
 interface PublicAccount {
@@ -82,20 +83,21 @@ const handleSearch = async () => {
     // 如果在生产环境下运行（桌面应用），如果从同一源提供服务，相对路径 '/api/v1' 是可行的
     
     // 目前假设使用 Vite 代理或同一源
-    const baseURL = import.meta.env.DEV ? '/web-api/api/v1/wx/public' : '/api/v1/wx/public';
+    // const baseURL = import.meta.env.DEV ? '/web-api/api/v1/wx/public' : '/api/v1/wx/public';
     // 实际上，在桌面应用中，main.py 提供静态文件服务，所以相对路径是正确的。
     // 在开发模式下，我们需要代理。
     
-    const response = await axios.get(`${baseURL}/wx/search-wx-public`, {
+    // const response = await axios.get(`${baseURL}/wx/search-wx-public`, {
+    const dataList = await request.get('/search-wx-public', {
       params: {
         query: query.value,
         begin: 0,
         count: 10
       }
     });
-    
-    if (response.data && Array.isArray(response.data)) {
-      results.value = response.data;
+      console.log('dataList------', dataList);
+    if (dataList && Array.isArray(dataList)) {
+      results.value = dataList;
     }
   } catch (error) {
     console.error('Search failed:', error);

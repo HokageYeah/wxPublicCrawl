@@ -56,3 +56,12 @@ class sogou_ArticleDetailRequest(BaseModel):
     is_save_to_local: bool = Field(False, description="是否保存到本地, 非必填")
     save_to_local_path: str = Field("", description="保存到本地路径, 非必填")
     save_to_local_file_name: str = Field("", description="保存到本地文件名, 非必填")
+
+class ArticleItem(BaseModel):
+    aid: str
+    title: str
+
+class CheckDownloadRequest(BaseModel):
+    base_path: str = Field(..., description="下载根目录")
+    wx_public_name: str = Field(..., description="公众号名称")
+    articles: list[ArticleItem] = Field(..., description="文章列表")

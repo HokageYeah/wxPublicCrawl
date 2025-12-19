@@ -1,6 +1,6 @@
-import axios from 'axios';
+// import axios from 'axios';
+import api from '@/utils/request';
 import type { 
-  ApiResponseData, 
   SessionIdResponse,
   PreloginRequest,
   PreloginResponse,
@@ -15,12 +15,12 @@ import type {
 // Create axios instance with base URL
 // In dev: /web-api proxy handles it
 // In prod: direct to /api/v1
-const baseURL = import.meta.env.DEV ? '/web-api/api/v1/wx/public' : '/api/v1/wx/public';
-console.log('mport.meta.env.DEV---', import.meta.env.DEV)
-const api = axios.create({
-  baseURL,
-  withCredentials: true, // Important for cookies
-});
+// const baseURL = import.meta.env.DEV ? '/web-api/api/v1/wx/public' : '/api/v1/wx/public';
+// console.log('mport.meta.env.DEV---', import.meta.env.DEV)
+// const api = axios.create({
+//   baseURL,
+//   withCredentials: true, // Important for cookies
+// });
 
 // API endpoints
 export const wechatService = {
@@ -28,34 +28,34 @@ export const wechatService = {
    * Generate a session ID for the login flow
    */
   generateSessionId: async (): Promise<string> => {
-    const response = await api.get<ApiResponseData<SessionIdResponse>>('/login/generate-session-id');
-    return response.data.data.session_id;
+    const data = await api.get<SessionIdResponse>('/login/generate-session-id');
+    return data?.session_id || '';
   },
 
   /**
    * Step 1: Prelogin - Get ignore password list
    */
-  prelogin: async (params: PreloginRequest = {}): Promise<ApiResponseData<PreloginResponse>> => {
-    const response = await api.post<ApiResponseData<PreloginResponse>>('/login/prelogin', params);
-    return response.data;
+  prelogin: async (params: PreloginRequest = {}): Promise<PreloginResponse> => {
+    const data = await api.post<PreloginResponse>('/login/prelogin', params);
+    return data;
   },
 
   /**
    * Step 2: Start login - Get QR code
    */
-  startLogin: async (params: StartLoginRequest): Promise<ApiResponseData<StartLoginResponse>> => {
+  startLogin: async (params: StartLoginRequest): Promise<StartLoginResponse> => {
     console.log('startLogin params', params);
-    const response = await api.post<ApiResponseData<StartLoginResponse>>('/login/startlogin', params);
-    return response.data;
+    const data = await api.post<StartLoginResponse>('/login/startlogin', params);
+    return data;
   },
 
   /**
    * Step 3: Web report - Report device info
    */
-  webReport: async (params: WebreportRequest): Promise<ApiResponseData<any>> => {
+  webReport: async (params: WebreportRequest): Promise<any> => {
     console.log('webReport params', params);
-    const response = await api.post<ApiResponseData<any>>('/login/webreport', params);
-    return response.data;
+    const data = await api.post<any>('/login/webreport', params);
+    return data;
   },
 
   /**
@@ -64,34 +64,21 @@ export const wechatService = {
    */
   getLoginQRCode: async (): Promise<string> => {
     try {
-      // 直接请求二进制数据，指定responseType为blob
-      const response = await api.get('/login/get-wx-login-qrcode', { 
-        responseType: 'blob',
-        headers: {
-          Accept: 'image/jpeg,image/png,image/*'
-        }
-      });
-      console.log('QR code response received');
+      // 使用 getBlob 方法获取二进制数据（自动设置 responseType: 'blob'）
+      const blob = await api.getBlob('/login/get-wx-login-qrcode');
       
-      // 检查响应类型
-      const contentType = response.headers['content-type'];
-      console.log('Content-Type:', contentType);
-      
-      // 创建对象URL
-      const blob = new Blob([response.data], { 
-        type: contentType || 'image/png' 
+      console.log('二维码获取成功:', {
+        size: blob.size,
+        type: blob.type
       });
       
-      // 打印blob信息以便调试
-      console.log('Blob size:', blob.size);
-      console.log('Blob type:', blob.type);
-      
-      // 直接创建对象URL
+      // 创建对象URL用于显示图片
       const objectUrl = URL.createObjectURL(blob);
-      console.log('Created Object URL:', objectUrl);
+      console.log('创建对象 URL:', objectUrl);
+      
       return objectUrl;
     } catch (error) {
-      console.error('Error fetching QR code:', error);
+      console.error('获取二维码失败:', error);
       throw error;
     }
   },
@@ -99,32 +86,32 @@ export const wechatService = {
   /**
    * Step 5: Get QR code status
    */
-  getQRCodeStatus: async (): Promise<ApiResponseData<QRCodeStatusResponse>> => {
-    const response = await api.post<ApiResponseData<QRCodeStatusResponse>>('/login/get-qrcode-status');
-    return response.data;
+  getQRCodeStatus: async (): Promise<QRCodeStatusResponse> => {
+    const data = await api.post<QRCodeStatusResponse>('/login/get-qrcode-status');
+    return data;
   },
 
   /**
    * Step 6: Get login info after successful login
    */
-  getLoginInfo: async (): Promise<ApiResponseData<LoginInfoResponse>> => {
-    const response = await api.post<ApiResponseData<LoginInfoResponse>>('/login/get-login-info');
-    return response.data;
+  getLoginInfo: async (): Promise<LoginInfoResponse> => {
+    const data = await api.post<LoginInfoResponse>('/login/get-login-info');
+    return data;
   },
 
   /**
    * Step 7: Verify user info with token
    */
-  verifyUserInfo: async (token: string): Promise<ApiResponseData<UserInfoResponse>> => {
-    const response = await api.post<ApiResponseData<UserInfoResponse>>(`/login/verify-user-info?rq_token=${token}`);
-    return response.data;
+  verifyUserInfo: async (token: string): Promise<UserInfoResponse> => {
+    const data = await api.post<UserInfoResponse>(`/login/verify-user-info?rq_token=${token}`);
+    return data;
   },
 
   /**
    * Step 8: Get personal login info via redirect URL
    */
-  redirectLoginInfo: async (redirectUrl: string): Promise<ApiResponseData<any>> => {
-    const response = await api.post<ApiResponseData<any>>('/login/redirect-login-info', { redirect_url: redirectUrl });
-    return response.data;
+  redirectLoginInfo: async (redirectUrl: string): Promise<any> => {
+    const data = await api.post<any>('/login/redirect-login-info', { redirect_url: redirectUrl });
+    return data;
   }
 }; 

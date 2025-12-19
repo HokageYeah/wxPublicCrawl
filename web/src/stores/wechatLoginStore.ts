@@ -182,7 +182,7 @@ export const useWechatLoginStore = defineStore('wechatLogin', {
       this.statusPollingInterval = window.setInterval(async () => {
         try {
           const statusResponse = await wechatService.getQRCodeStatus();
-          this.qrCodeStatus = statusResponse.data.status;
+          this.qrCodeStatus = statusResponse.status;
           console.log('QR code status:', this.qrCodeStatus);
           
           // Handle status changes
@@ -214,8 +214,8 @@ export const useWechatLoginStore = defineStore('wechatLogin', {
         this.stopStatusPolling();
         // Step 6: Get login info
         const loginInfoResponse = await wechatService.getLoginInfo();
-        this.token = loginInfoResponse.data.token;
-        this.redirectUrl = loginInfoResponse.data.redirect_url;
+        this.token = loginInfoResponse.token;
+        this.redirectUrl = loginInfoResponse.redirect_url;
         this.currentStep = LoginStep.LOGIN_SUCCESS;
         console.log('loginInfoResponse', loginInfoResponse);
         
@@ -227,7 +227,7 @@ export const useWechatLoginStore = defineStore('wechatLogin', {
         // Step 8: Redirect login info
         const redirectResponse = await wechatService.redirectLoginInfo(this.redirectUrl);
         // 使用重定向响应中的用户数据
-        this.userInfo = redirectResponse.data;
+        this.userInfo = redirectResponse;
         this.currentStep = LoginStep.REDIRECT_SUCCESS;
         this.loginComplete = true;
         console.log('redirectResponse', redirectResponse);
