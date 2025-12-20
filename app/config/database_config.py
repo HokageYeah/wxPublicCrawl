@@ -7,13 +7,17 @@ from app.core.config import settings
 def get_database_config():
     """根据当前环境获取数据库配置"""
     env = os.getenv("ENV", "development").lower()
-    print("\n当前数据库环境信息:")
-    print("----------------------------------------")
-    print(f"database_config.py---- ENV: {env}") # 系统环境变量
-    print(f"database_config.py---- DB_NAME: {os.getenv('DB_NAME')}") 
-    print(f"database_config.py---- settings.DB_NAME: {settings.DB_NAME}") 
-    print(f"database_config.py---- settings.DB_CHARSET: {settings.Config.env_file}") 
-    print("----------------------------------------")
+    
+    # 只在开发环境打印数据库信息
+    if env in ("development", "dev", "test"):
+        print("\n当前数据库环境信息:")
+        print("----------------------------------------")
+        print(f"database_config.py---- ENV: {env}") # 系统环境变量
+        print(f"database_config.py---- DB_NAME: {os.getenv('DB_NAME')}") 
+        print(f"database_config.py---- settings.DB_NAME: {settings.DB_NAME}") 
+        print(f"database_config.py---- settings.DB_CHARSET: {settings.Config.env_file}") 
+        print("----------------------------------------")
+    
     return {
         "driver": settings.DB_DRIVER,
         "username": settings.DB_USER,
@@ -34,7 +38,29 @@ def get_database_config():
 def get_database_url() -> str:
     """获取当前环境的数据库URL"""
     config = get_database_config()
-    return f"{config['driver']}://{config['username']}:{config['password']}@{config['host']}:{config['port']}/{config['database']}?charset={config['charset']}"
+    driver = config['driver']
+    
+    # SQLite 使用不同的 URL 格式
+    if driver == "sqlite":
+        # 获取用户数据目录
+        import platform
+        if platform.system() == 'Darwin':  # Mac
+            data_dir = os.path.expanduser('~/Library/Application Support/WxPublicCrawler')
+        elif platform.system() == 'Windows':
+            data_dir = os.path.expanduser('~/AppData/Local/WxPublicCrawler')
+        else:  # Linux
+            data_dir = os.path.expanduser('~/.local/share/WxPublicCrawler')
+        
+        # 确保目录存在
+        os.makedirs(data_dir, exist_ok=True)
+        
+        # SQLite 数据库文件路径
+        db_file = os.path.join(data_dir, 'wxpublic.db')
+        print(f"database_config.py---- SQLite 数据库路径: {db_file}")
+        return f"sqlite:///{db_file}"
+    else:
+        # MySQL 等其他数据库
+        return f"{driver}://{config['username']}:{config['password']}@{config['host']}:{config['port']}/{config['database']}?charset={config['charset']}"
 
 # 导出数据库URL供SQLAlchemy和Alembic使用
 DATABASE_URL = get_database_url()

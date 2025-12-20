@@ -74,3 +74,7 @@
 2025-12-19 16:15:03 | CRITICAL | logging:callHandlers:1736 - 请求头
 2025-12-19 16:16:42 | ERROR    | logging:callHandlers:1736 - 请求头
 2025-12-19 16:16:42 | CRITICAL | logging:callHandlers:1736 - 请求头
+2025-12-19 16:19:37 | ERROR    | logging:callHandlers:1736 - 请求头
+2025-12-19 16:19:37 | CRITICAL | logging:callHandlers:1736 - 请求头
+2025-12-19 17:57:04 | ERROR    | logging:callHandlers:1736 - 请求头
+2025-12-19 17:57:04 | CRITICAL | logging:callHandlers:1736 - 请求头

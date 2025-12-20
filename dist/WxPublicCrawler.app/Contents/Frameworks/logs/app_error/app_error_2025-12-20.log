@@ -1,0 +1,6 @@
+2025-12-20 13:05:48 | ERROR    | app.services.wx_public:fetch_get_wx_login_qrcode:358 - 获取二维码时发生错误: [Errno 30] Read-only file system: 'qrcode.png'
+2025-12-20 13:05:48 | ERROR    | app.api.endpoints.wx_public:get_wx_login_qrcode:136 - 获取二维码失败: 500: 获取二维码失败: [Errno 30] Read-only file system: 'qrcode.png'
+2025-12-20 13:05:51 | ERROR    | app.services.wx_public:fetch_get_wx_login_qrcode:358 - 获取二维码时发生错误: [Errno 30] Read-only file system: 'qrcode.png'
+2025-12-20 13:05:51 | ERROR    | app.api.endpoints.wx_public:get_wx_login_qrcode:136 - 获取二维码失败: 500: 获取二维码失败: [Errno 30] Read-only file system: 'qrcode.png'
+2025-12-20 13:05:53 | ERROR    | app.services.wx_public:fetch_get_wx_login_qrcode:358 - 获取二维码时发生错误: [Errno 30] Read-only file system: 'qrcode.png'
+2025-12-20 13:05:53 | ERROR    | app.api.endpoints.wx_public:get_wx_login_qrcode:136 - 获取二维码失败: 500: 获取二维码失败: [Errno 30] Read-only file system: 'qrcode.png'

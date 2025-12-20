@@ -1,0 +1,207 @@
+(venv) (base) yuye@yuyedeiMac wxPublicCrawl % python run_desktop.py
+当前环境: desktop
+桌面应用模式：使用内置默认配置
+obj_path /Users/yuye/YeahWork/Python项目/wxPublicCrawl/app/utils
+root_path /Users/yuye/YeahWork/Python项目/wxPublicCrawl
+app_path /Users/yuye/YeahWork/Python项目/wxPublicCrawl/app
+
+当前数据库环境信息:
+----------------------------------------
+database_config.py---- ENV: desktop
+database_config.py---- DB_NAME: None
+database_config.py---- settings.DB_NAME: wx_public_dev
+database_config.py---- settings.DB_CHARSET: .env
+----------------------------------------
+database_config.py---- SQLite 数据库路径: /Users/yuye/Library/Application Support/WxPublicCrawler/wxpublic.db
+
+当前数据库环境信息:
+----------------------------------------
+database_config.py---- ENV: desktop
+database_config.py---- DB_NAME: None
+database_config.py---- settings.DB_NAME: wx_public_dev
+database_config.py---- settings.DB_CHARSET: .env
+----------------------------------------
+2025-12-20 12:40:39 | INFO     | app.core.logging_uru:setup_logging:84 - 日志系统初始化完成 - 使用 loguru
+database.connect()3
+2025-12-20 12:40:39,456 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-20 12:40:39,458 INFO sqlalchemy.engine.Engine SELECT 1
+2025-12-20 12:40:39 | INFO     | logging:callHandlers:1736 - BEGIN (implicit)
+2025-12-20 12:40:39,458 INFO sqlalchemy.engine.Engine [generated in 0.00095s] ()
+2025-12-20 12:40:39 | INFO     | logging:callHandlers:1736 - SELECT 1
+2025-12-20 12:40:39 | INFO     | logging:callHandlers:1736 - [generated in 0.00095s] ()
+2025-12-20 12:40:39 | INFO     | logging:callHandlers:1736 - sqlalchemy数据库连接成功 - 数据库类型: SQLite
+2025-12-20 12:40:39,461 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-12-20 12:40:39,462 INFO sqlalchemy.engine.Engine COMMIT
+2025-12-20 12:40:39 | INFO     | logging:callHandlers:1736 - BEGIN (implicit)
+2025-12-20 12:40:39,463 INFO sqlalchemy.engine.Engine ROLLBACK
+2025-12-20 12:40:39 | INFO     | logging:callHandlers:1736 - COMMIT
+2025-12-20 12:40:39 | INFO     | logging:callHandlers:1736 - SQLite 数据库表结构已创建
+2025-12-20 12:40:39 | INFO     | logging:callHandlers:1736 - ROLLBACK
+============================================================
+公众号爬虫助手 - 桌面版
+============================================================
+
+[1/4] 检查应用实例...
+✓  没有其他实例在运行
+
+[2/4] 检查端口可用性...
+✓  端口 18000 可用
+
+[3/4] 启动后端服务器...
+2025-12-20 12:40:39 | DEBUG    | logging:callHandlers:1736 - Using selector: KqueueSelector
+INFO:     Started server process [45509]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:18000 (Press CTRL+C to quit)
+✓  服务器启动成功 (http://127.0.0.1:18000)
+
+[4/4] 启动应用窗口...
+✓  应用窗口已创建
+
+============================================================
+应用已启动，欢迎使用！
+============================================================
+
+INFO:     127.0.0.1:60331 - "GET /crawl-desktop/ HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60331 - "GET /crawl-desktop/assets/index-rbMK7vsK.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60334 - "GET /crawl-desktop/assets/index-NVbbo0j3.css HTTP/1.1" 200 OK
+ResponseValidatorMiddleware
+send_wrapper
+session_id---------- 17662056409596
+INFO:     127.0.0.1:60331 - "GET /api/v1/wx/public/login/generate-session-id HTTP/1.1" 200 OK
+ResponseValidatorMiddleware
+send_wrapper
+2025-12-20 12:40:41 | INFO     | logging:callHandlers:1736 - 正在请求预登录URL: https://mp.weixin.qq.com/cgi-bin/bizlogin
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - connect_tcp.started host='127.0.0.1' port=10808 local_address=None timeout=10 socket_options=None
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x133368050>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_headers.started request=<Request [b'CONNECT']>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_headers.complete
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_body.started request=<Request [b'CONNECT']>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_body.complete
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - receive_response_headers.started request=<Request [b'CONNECT']>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - start_tls.started ssl_context=<ssl.SSLContext object at 0x13335c7a0> server_hostname='mp.weixin.qq.com' timeout=10
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - start_tls.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x133361810>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_headers.started request=<Request [b'POST']>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_headers.complete
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_body.started request=<Request [b'POST']>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_body.complete
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - receive_response_headers.started request=<Request [b'POST']>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'RetKey', b'14'), (b'LogicRet', b'0'), (b'Content-Type', b'application/json; charset=UTF-8'), (b'Cache-Control', b'no-cache, must-revalidate'), (b'Strict-Transport-Security', b'max-age=15552000'), (b'Connection', b'keep-alive'), (b'Content-Length', b'86')])
+2025-12-20 12:40:41 | INFO     | logging:callHandlers:1736 - HTTP Request: POST https://mp.weixin.qq.com/cgi-bin/bizlogin "HTTP/1.1 200 OK"
+第一步：预登录获取忽略密码列表---response {"base_resp":{"err_msg":"ok","ret":0},"eignor_passwd_result":1,"ignor_passwd_list":[]}
+第一步：预登录获取忽略密码列表---cookie <Cookies[]>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - receive_response_body.started request=<Request [b'POST']>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - receive_response_body.complete
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - response_closed.started
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - response_closed.complete
+INFO:     127.0.0.1:60331 - "POST /api/v1/wx/public/login/prelogin HTTP/1.1" 200 OK
+ResponseValidatorMiddleware
+send_wrapper
+session_id---------- 176620564117679
+2025-12-20 12:40:41 | INFO     | logging:callHandlers:1736 - 正在请求获取二维码URL: https://mp.weixin.qq.com/cgi-bin/bizlogin?action=startlogin
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - connect_tcp.started host='127.0.0.1' port=10808 local_address=None timeout=10 socket_options=None
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x1333fc2d0>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_headers.started request=<Request [b'CONNECT']>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_headers.complete
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_body.started request=<Request [b'CONNECT']>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_body.complete
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - receive_response_headers.started request=<Request [b'CONNECT']>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - start_tls.started ssl_context=<ssl.SSLContext object at 0x13335cd40> server_hostname='mp.weixin.qq.com' timeout=10
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - start_tls.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x1333ed6e0>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_headers.started request=<Request [b'POST']>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_headers.complete
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_body.started request=<Request [b'POST']>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_body.complete
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - receive_response_headers.started request=<Request [b'POST']>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'RetKey', b'14'), (b'LogicRet', b'0'), (b'Content-Type', b'application/json; charset=UTF-8'), (b'Cache-Control', b'no-cache, must-revalidate'), (b'Strict-Transport-Security', b'max-age=15552000'), (b'Set-Cookie', b'uuid=2898dada8352ac4012d95f6fb6af5f1f; Path=/; Secure; HttpOnly'), (b'Set-Cookie', b'master_sid=EXPIRED; Path=/; Expires=Fri, 19-Dec-2025 04:40:41 GMT; Secure; HttpOnly'), (b'Set-Cookie', b'master_user=EXPIRED; Path=/; Expires=Fri, 19-Dec-2025 04:40:41 GMT; Secure; HttpOnly'), (b'Set-Cookie', b'slave_sid=EXPIRED; Path=/; Expires=Fri, 19-Dec-2025 04:40:41 GMT; Secure; HttpOnly'), (b'Set-Cookie', b'slave_user=EXPIRED; Path=/; Expires=Fri, 19-Dec-2025 04:40:41 GMT; Secure; HttpOnly'), (b'Set-Cookie', b'master_ticket=EXPIRED; Path=/; Expires=Fri, 19-Dec-2025 04:40:41 GMT; Secure; HttpOnly'), (b'Set-Cookie', b'bizuin=EXPIRED; Path=/; Expires=Fri, 19-Dec-2025 04:40:41 GMT; Secure; HttpOnly'), (b'Set-Cookie', b'data_bizuin=EXPIRED; Path=/; Expires=Fri, 19-Dec-2025 04:40:41 GMT; Secure; HttpOnly'), (b'Set-Cookie', b'data_ticket=EXPIRED; Path=/; Expires=Fri, 19-Dec-2025 04:40:41 GMT; Secure; HttpOnly'), (b'Set-Cookie', b'sp_user=EXPIRED; Path=/; Expires=Fri, 19-Dec-2025 04:40:41 GMT; Secure; HttpOnly'), (b'Set-Cookie', b'sp_sid=EXPIRED; Path=/; Expires=Fri, 19-Dec-2025 04:40:41 GMT; Secure; HttpOnly'), (b'Set-Cookie', b'sp_slave_user=EXPIRED; Path=/; Expires=Fri, 19-Dec-2025 04:40:41 GMT; Secure; HttpOnly'), (b'Set-Cookie', b'safecode=EXPIRED; Path=/; Expires=Fri, 19-Dec-2025 04:40:41 GMT; Secure; HttpOnly'), (b'Set-Cookie', b'ticket=EXPIRED; Path=/; Expires=Fri, 19-Dec-2025 04:40:41 GMT; Secure; HttpOnly'), (b'Set-Cookie', b'ticket=EXPIRED; Path=/wxopen; Expires=Fri, 19-Dec-2025 04:40:41 GMT; Secure; HttpOnly'), (b'Set-Cookie', b'ticket_id=EXPIRED; Path=/; Expires=Fri, 19-Dec-2025 04:40:41 GMT; Secure; HttpOnly'), (b'Set-Cookie', b'rand_info=EXPIRED; Path=/; Expires=Fri, 19-Dec-2025 04:40:41 GMT; Secure; HttpOnly'), (b'Set-Cookie', b'slave_bizuin=EXPIRED; Path=/; Expires=Fri, 19-Dec-2025 04:40:41 GMT; Secure; HttpOnly'), (b'Connection', b'keep-alive'), (b'Content-Length', b'38')])
+第二步：获取二维码---response {"base_resp":{"err_msg":"ok","ret":0}}
+第二步：获取二维码---cookie---data <Cookies[<Cookie uuid=2898dada8352ac4012d95f6fb6af5f1f for mp.weixin.qq.com />]> {'userlang': 'zh_CN', 'redirect_url': '', 'login_type': 3, 'sessionid': '17662056409596'}
+第二步：获取二维码---cookie_str uuid=2898dada8352ac4012d95f6fb6af5f1f
+2025-12-20 12:40:41 | INFO     | logging:callHandlers:1736 - HTTP Request: POST https://mp.weixin.qq.com/cgi-bin/bizlogin?action=startlogin "HTTP/1.1 200 OK"
+第二步：获取二维码---cookies {'uuid': '2898dada8352ac4012d95f6fb6af5f1f'}
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - receive_response_body.started request=<Request [b'POST']>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - receive_response_body.complete
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - response_closed.started
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - response_closed.complete
+INFO:     127.0.0.1:60331 - "POST /api/v1/wx/public/login/startlogin HTTP/1.1" 200 OK
+ResponseValidatorMiddleware
+send_wrapper
+report_json {'devicetype': 1, 'newsessionid': '176620564117679', 'optype': 1, 'page_state': 3, 'log_id': 19015}
+2025-12-20 12:40:41 | INFO     | logging:callHandlers:1736 - 正在请求上报URL: https://mp.weixin.qq.com/cgi-bin/webreport
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - connect_tcp.started host='127.0.0.1' port=10808 local_address=None timeout=10 socket_options=None
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x133418180>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_headers.started request=<Request [b'CONNECT']>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_headers.complete
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_body.started request=<Request [b'CONNECT']>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_body.complete
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - receive_response_headers.started request=<Request [b'CONNECT']>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - start_tls.started ssl_context=<ssl.SSLContext object at 0x13335d6d0> server_hostname='mp.weixin.qq.com' timeout=10
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - start_tls.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x13334b770>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_headers.started request=<Request [b'POST']>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_headers.complete
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_body.started request=<Request [b'POST']>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_body.complete
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - receive_response_headers.started request=<Request [b'POST']>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Content-Type', b'application/json; charset=UTF-8'), (b'Cache-Control', b'no-cache, must-revalidate'), (b'RetKey', b'14'), (b'LogicRet', b'0'), (b'Strict-Transport-Security', b'max-age=15552000'), (b'Connection', b'keep-alive'), (b'Content-Length', b'46')])
+2025-12-20 12:40:41 | INFO     | logging:callHandlers:1736 - HTTP Request: POST https://mp.weixin.qq.com/cgi-bin/webreport "HTTP/1.1 200 OK"
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - receive_response_body.started request=<Request [b'POST']>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - receive_response_body.complete
+第三步：上报信息---response {"err_msg":"","err_code":0,"err_log_id":19015}
+第三步：上报信息---cookie <Cookies[]>
+第三步：上报信息---data {'reportJson': '{"devicetype": 1, "newsessionid": "176620564117679", "optype": 1, "page_state": 3, "log_id": 19015}'}
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - response_closed.started
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - response_closed.complete
+INFO:     127.0.0.1:60331 - "POST /api/v1/wx/public/login/webreport HTTP/1.1" 200 OK
+ResponseValidatorMiddleware
+send_wrapper
+2025-12-20 12:40:41 | INFO     | app.services.wx_public:fetch_get_wx_login_qrcode:336 - 第四步：获取微信登录二维码---cookies: {'uuid': '2898dada8352ac4012d95f6fb6af5f1f'}
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - connect_tcp.started host='127.0.0.1' port=10808 local_address=None timeout=10 socket_options=None
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x133336470>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_headers.started request=<Request [b'CONNECT']>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_headers.complete
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_body.started request=<Request [b'CONNECT']>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_body.complete
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - receive_response_headers.started request=<Request [b'CONNECT']>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - start_tls.started ssl_context=<ssl.SSLContext object at 0x13335d7f0> server_hostname='mp.weixin.qq.com' timeout=10
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - start_tls.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x133406f10>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_headers.started request=<Request [b'GET']>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_headers.complete
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_body.started request=<Request [b'GET']>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - send_request_body.complete
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - receive_response_headers.started request=<Request [b'GET']>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Accept-Ranges', b'bytes'), (b'Content-Type', b'image/jpg'), (b'Cache-control', b'max-age=604800'), (b'Expires', b'Sat, 27 Dec 2025 12:40:42 +0800'), (b'RetKey', b'14'), (b'LogicRet', b'0'), (b'Strict-Transport-Security', b'max-age=15552000'), (b'Connection', b'keep-alive'), (b'Content-Length', b'5695')])
+2025-12-20 12:40:41 | INFO     | logging:callHandlers:1736 - HTTP Request: GET https://mp.weixin.qq.com/cgi-bin/scanloginqrcode?action=getqrcode&random=1766205641574 "HTTP/1.1 200 OK"
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - receive_response_body.started request=<Request [b'GET']>
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - receive_response_body.complete
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - response_closed.started
+2025-12-20 12:40:41 | DEBUG    | logging:callHandlers:1736 - response_closed.complete
+2025-12-20 12:40:41 | INFO     | app.services.wx_public:fetch_get_wx_login_qrcode:349 - 二维码大小: 5695 bytes
+INFO:     127.0.0.1:60331 - "GET /api/v1/wx/public/login/get-wx-login-qrcode HTTP/1.1" 200 OK
+ResponseValidatorMiddleware
+send_wrapper
+2025-12-20 12:40:43 | DEBUG    | logging:callHandlers:1736 - connect_tcp.started host='127.0.0.1' port=10808 local_address=None timeout=10 socket_options=None
+2025-12-20 12:40:43 | DEBUG    | logging:callHandlers:1736 - connect_tcp.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x1333e9e50>
+2025-12-20 12:40:43 | DEBUG    | logging:callHandlers:1736 - send_request_headers.started request=<Request [b'CONNECT']>
+2025-12-20 12:40:43 | DEBUG    | logging:callHandlers:1736 - send_request_headers.complete
+2025-12-20 12:40:43 | DEBUG    | logging:callHandlers:1736 - send_request_body.started request=<Request [b'CONNECT']>
+2025-12-20 12:40:43 | DEBUG    | logging:callHandlers:1736 - send_request_body.complete
+2025-12-20 12:40:43 | DEBUG    | logging:callHandlers:1736 - receive_response_headers.started request=<Request [b'CONNECT']>
+2025-12-20 12:40:43 | DEBUG    | logging:callHandlers:1736 - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2025-12-20 12:40:43 | DEBUG    | logging:callHandlers:1736 - start_tls.started ssl_context=<ssl.SSLContext object at 0x13335dd90> server_hostname='mp.weixin.qq.com' timeout=10
+2025-12-20 12:40:43 | DEBUG    | logging:callHandlers:1736 - start_tls.complete return_value=<httpcore._backends.anyio.AnyIOStream object at 0x1333e8250>
+2025-12-20 12:40:43 | DEBUG    | logging:callHandlers:1736 - send_request_headers.started request=<Request [b'GET']>
+2025-12-20 12:40:43 | DEBUG    | logging:callHandlers:1736 - send_request_headers.complete
+2025-12-20 12:40:43 | DEBUG    | logging:callHandlers:1736 - send_request_body.started request=<Request [b'GET']>
+2025-12-20 12:40:43 | DEBUG    | logging:callHandlers:1736 - send_request_body.complete
+2025-12-20 12:40:43 | DEBUG    | logging:callHandlers:1736 - receive_response_headers.started request=<Request [b'GET']>
+2025-12-20 12:40:44 | DEBUG    | logging:callHandlers:1736 - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'RetKey', b'14'), (b'LogicRet', b'0'), (b'Content-Type', b'application/json; charset=UTF-8'), (b'Cache-Control', b'no-cache, must-revalidate'), (b'Strict-Transport-Security', b'max-age=15552000'), (b'Connection', b'keep-alive'), (b'Content-Length', b'93')])
+2025-12-20 12:40:44 | INFO     | logging:callHandlers:1736 - HTTP Request: GET https://mp.weixin.qq.com/cgi-bin/scanloginqrcode?action=ask&fingerprint=9b1ea719e1ba482a27d45364d3c7f877&token=&lang=zh_CN&f=json "HTTP/1.1 200 OK"
+2025-12-20 12:40:44 | DEBUG    | logging:callHandlers:1736 - receive_response_body.started request=<Request [b'GET']>
+2025-12-20 12:40:44 | DEBUG    | logging:callHandlers:1736 - receive_response_body.complete
+第五步：获取二维码状态---cookies----- {'uuid': '2898dada8352ac4012d95f6fb6af5f1f'}
+第五步：获取二维码状态---response {"acct_size":0,"base_resp":{"err_msg":"ok","ret":0},"binduin":0,"status":0,"user_category":0}
+2025-12-20 12:40:44 | DEBUG    | logging:callHandlers:1736 - response_closed.started
