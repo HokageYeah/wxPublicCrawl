@@ -9,7 +9,7 @@ block_cipher = None
 is_mac = platform.system() == 'Darwin'
 is_windows = platform.system() == 'Windows'
 
-# 添加项目根目录到 python 路径
+# 添加项目根目录到 python 路径，以帮助查找模块
 sys.path.insert(0, os.path.abspath('.'))
 
 a = Analysis(
@@ -17,7 +17,11 @@ a = Analysis(
     pathex=[],
     binaries=[],
     datas=[
-        ('web/dist', 'web/dist'),  # 前端构建产物
+        ('web/dist', 'web/dist'),  # 包含前端构建产物（必需）
+        # 注意：不要打包 .env 文件（包含敏感信息）
+        # 注意：不要打包 app 目录（Analysis 会自动处理）
+        # 如果需要其他静态资源，在这里添加
+        # ('static', 'static'),
     ],
     hiddenimports=[
         # Uvicorn 相关
@@ -29,12 +33,11 @@ a = Analysis(
         'uvicorn.protocols.http.auto',
         'uvicorn.protocols.websockets',
         'uvicorn.protocols.websockets.auto',
-        'uvicorn.lifespan',
         'uvicorn.lifespan.on',
         
-        # 数据库相关
+        # 数据库相关 - SQLite（桌面应用默认使用）
         'sqlalchemy.sql.default_comparator',
-        'pysqlite3',
+        'pysqlite3',  # SQLite 驱动
         
         # 项目模块
         'app.services.wx_public',
@@ -44,20 +47,21 @@ a = Analysis(
         'app.api.endpoints.sogou_wx_public',
         'app.api.endpoints.system',
         
-        # 其他必要模块
+        # 其他可能需要的模块
         'pkg_resources.py2_warn',
     ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
     excludes=[
-        # 排除不必要的模块
+        # 排除不需要的模块以减小体积
         'matplotlib',
         'PIL',
         'PyQt5',
         'tkinter',
         'test',
         'unittest',
+        # 桌面应用使用 SQLite，排除 MySQL 相关模块
         'mysql.connector.plugins',
         'pymysql',
     ],
@@ -75,16 +79,17 @@ exe = EXE(
     [],
     exclude_binaries=True,
     name='WxPublicCrawler',
-    debug=False,
+    debug=False,  # 发布版本设为 False，调试时可设为 True
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=True,  # GUI 模式
+    console=False,  # GUI 模式设为 False，调试时可设为 True 查看日志
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    # icon='icon.ico' if is_windows else 'icon.icns' if is_mac else None,  # 取消注释以添加图标
 )
 
 coll = COLLECT(
@@ -98,19 +103,20 @@ coll = COLLECT(
     name='WxPublicCrawler',
 )
 
-# Mac 特定:创建 .app 包
+# Mac 特定：创建 .app 包
 if is_mac:
     app = BUNDLE(
         coll,
         name='WxPublicCrawler.app',
+        # icon='icon.icns',  # 取消注释以添加 Mac 图标（.icns 格式）
         bundle_identifier='com.wxcrawler.desktop',
         info_plist={
             'NSHighResolutionCapable': 'True',
-            'LSUIElement': False,
+            'LSUIElement': False,  # False = 显示在 Dock
             'CFBundleShortVersionString': '1.0.0',
             'CFBundleVersion': '1.0.0',
             'NSAppTransportSecurity': {
-                'NSAllowsArbitraryLoads': True
+                'NSAllowsArbitraryLoads': True  # 允许本地 HTTP 请求
             },
         },
     )

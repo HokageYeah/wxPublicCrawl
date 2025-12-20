@@ -1,16 +1,8 @@
 import os
 import sys
 
-# ⚠️ 关键防护：阻止重复执行
-# 在最顶部添加执行标记
-if hasattr(sys, '_wx_crawler_running'):
-    print(f"⚠️  检测到重复执行！PID: {os.getpid()}, 父进程: {os.getppid()}")
-    sys.exit(0)
-sys._wx_crawler_running = True
-
-print(f"🔵 主程序启动 - PID: {os.getpid()}, 父进程: {os.getppid()}")
-
 # ⚠️ 关键：必须在导入 app 之前设置环境变量！
+# 否则 config.py 已经被加载，环境变量不会生效
 os.environ['DB_DRIVER'] = 'sqlite'
 os.environ['ENV'] = 'desktop'
 
@@ -19,27 +11,24 @@ import socket
 import time
 import webview
 import uvicorn
+from app.main import app
 import platform
+import multiprocessing
 
-# 延迟导入 app.main，避免过早触发初始化
-# from app.main import app  # ❌ 不要在这里导入
+# ⚠️ 关键：PyInstaller 多进程支持
+# 防止子进程重复执行主程序
+multiprocessing.freeze_support()
 
 # 固定端口
 PORT = 18000
 
-def get_resource_path(relative_path):
-    """获取资源文件的绝对路径(支持打包后)"""
-    if hasattr(sys, '_MEIPASS'):
-        return os.path.join(sys._MEIPASS, relative_path)
-    return os.path.join(os.path.abspath("."), relative_path)
-
 def get_lock_file_path():
     """获取锁文件路径"""
-    if platform.system() == 'Darwin':
+    if platform.system() == 'Darwin':  # Mac
         lock_dir = os.path.expanduser('~/Library/Application Support/WxPublicCrawler')
     elif platform.system() == 'Windows':
         lock_dir = os.path.expanduser('~/AppData/Local/WxPublicCrawler')
-    else:
+    else:  # Linux
         lock_dir = os.path.expanduser('~/.local/share/WxPublicCrawler')
     
     os.makedirs(lock_dir, exist_ok=True)
@@ -55,30 +44,38 @@ def is_port_in_use(port):
             return True
 
 def try_acquire_lock():
-    """尝试获取单实例锁(跨平台)"""
+    """尝试获取单实例锁（跨平台）"""
     lock_file_path = get_lock_file_path()
     
+    # 如果锁文件存在，检查进程是否还在运行
     if os.path.exists(lock_file_path):
         try:
             with open(lock_file_path, 'r') as f:
                 content = f.read().strip()
                 if not content:
+                    # 空文件，删除它
                     os.remove(lock_file_path)
                 else:
                     old_pid = int(content)
+                    
+                    # 检查进程是否还在运行
                     try:
-                        os.kill(old_pid, 0)
+                        os.kill(old_pid, 0)  # 发送信号 0 只检查不杀死
+                        # 进程存在，说明已有实例在运行
                         return None
                     except (OSError, ProcessLookupError):
-                        print(f"    清理僵尸锁文件(PID: {old_pid} 已不存在)")
+                        # 进程不存在，删除旧的锁文件
+                        print(f"    清理僵尸锁文件（PID: {old_pid} 已不存在）")
                         os.remove(lock_file_path)
         except (ValueError, IOError) as e:
-            print(f"    锁文件损坏,正在删除: {e}")
+            # 锁文件损坏，删除它
+            print(f"    锁文件损坏，正在删除: {e}")
             try:
                 os.remove(lock_file_path)
             except:
                 pass
     
+    # 创建新的锁文件
     try:
         with open(lock_file_path, 'w') as f:
             f.write(str(os.getpid()))
@@ -90,19 +87,16 @@ def try_acquire_lock():
 def start_server():
     """启动 FastAPI 服务器"""
     try:
-        print(f"🔵 服务器线程启动 - 线程ID: {threading.current_thread().ident}")
-        # ✅ 在这里导入，避免顶层导入触发问题
-        from app.main import app
         uvicorn.run(app, host="127.0.0.1", port=PORT, log_level="info")
     except Exception as e:
-        print(f"❌ 服务器启动失败: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"服务器启动失败: {e}")
+        # 不要在这里调用 os._exit()，让主线程处理
 
 def on_closed():
     """窗口关闭事件"""
-    print("应用窗口已关闭,正在清理...")
+    print("应用窗口已关闭，正在清理...")
     
+    # 清理锁文件
     lock_file_path = get_lock_file_path()
     if os.path.exists(lock_file_path):
         try:
@@ -127,16 +121,19 @@ def main():
     if lock_file_path is None:
         print("⚠️  检测到应用已在运行")
         
+        # 检查端口是否被占用
         if is_port_in_use(PORT):
             print(f"✓  服务器正在运行在 http://127.0.0.1:{PORT}")
-            print("\n⚠️  应用已经在运行,请检查任务栏或停靠栏。")
-            print("    如果看不到窗口,请尝试以下操作:")
+            print("\n⚠️  应用已经在运行，请检查任务栏或停靠栏。")
+            print("    如果看不到窗口，请尝试以下操作：")
             print(f"    1. 关闭其他实例")
             print(f"    2. 使用命令终止: lsof -ti:{PORT} | xargs kill -9")
+            print(f"    3. 或运行清理脚本: ./kill_app.sh")
             input("\n按回车键退出...")
             sys.exit(0)
         else:
-            print("✗  锁文件检测异常,请手动清理")
+            # 端口没有被占用，但lock返回None，说明清理失败
+            print("✗  锁文件检测异常，请手动清理")
             print(f"    运行: rm '{get_lock_file_path()}'")
             input("\n按回车键退出...")
             sys.exit(1)
@@ -147,7 +144,7 @@ def main():
     print("\n[2/4] 检查端口可用性...")
     if is_port_in_use(PORT):
         print(f"✗  端口 {PORT} 已被占用")
-        print(f"\n请关闭占用端口的程序,或使用以下命令:")
+        print(f"\n请关闭占用端口的程序，或使用以下命令查找并关闭:")
         print(f"    lsof -ti:{PORT} | xargs kill -9")
         input("\n按回车键退出...")
         sys.exit(1)
@@ -160,7 +157,7 @@ def main():
     server_thread.start()
     
     # 等待服务器启动
-    max_wait = 10
+    max_wait = 10  # 最多等待10秒
     waited = 0
     while waited < max_wait:
         if is_port_in_use(PORT):
@@ -187,17 +184,16 @@ def main():
         
         print("✓  应用窗口已创建")
         print("\n" + "=" * 60)
-        print("应用已启动,欢迎使用!")
+        print("应用已启动，欢迎使用！")
         print("=" * 60 + "\n")
         
         webview.start()
         
     except Exception as e:
         print(f"✗  窗口创建失败: {e}")
-        import traceback
-        traceback.print_exc()
         sys.exit(1)
     finally:
+        # 清理锁文件
         if lock_file_path and os.path.exists(lock_file_path):
             try:
                 os.remove(lock_file_path)
@@ -205,15 +201,22 @@ def main():
             except:
                 pass
 
-# ✅ 最严格的入口点保护
 if __name__ == '__main__':
+    # ⚠️ 重要：设置多进程启动方法为 'spawn'
+    # 这对于 PyInstaller 打包的应用很重要
+    if platform.system() == 'Darwin':  # macOS
+        try:
+            multiprocessing.set_start_method('spawn', force=True)
+        except RuntimeError:
+            pass  # 已经设置过了
+    
     try:
         main()
     except KeyboardInterrupt:
-        print("\n用户中断,正在退出...")
+        print("\n用户中断，正在退出...")
         sys.exit(0)
     except Exception as e:
-        print(f"\n❌ 应用启动失败: {e}")
+        print(f"\n应用启动失败: {e}")
         import traceback
         traceback.print_exc()
         input("\n按回车键退出...")
