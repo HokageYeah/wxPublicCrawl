@@ -107,12 +107,15 @@
 
 
 
-from fastapi import FastAPI
+
+
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import logging
 import os
 import sys
+import traceback
 
 from app.core.config import settings
 from app.api.api import api_router
@@ -121,17 +124,117 @@ from fastapi.exceptions import RequestValidationError, HTTPException, ResponseVa
 from app.middleware.exception_handlers import request_validation_error_handler, http_exception_handler, response_validation_error_handler
 from app.middleware.response_validator import ResponseValidatorMiddleware
 from app.schemas.common_data import ApiResponseData, PlatformEnum
-
+from contextlib import asynccontextmanager
+from typing import AsyncIterator
 # ✅ 只导入，不调用
 from app.core.logging_uru import setup_logging
+
+
+# 创建 lifespan 上下文管理器
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    """
+    应用生命周期管理器
+    
+    处理启动和关闭事件，替代已弃用的 @app.on_event
+    """
+    # 启动事件 - yield 之前的代码在应用启动时执行
+    try:
+        print("\n" + "=" * 80)
+        print("🚀 应用启动中...")
+        print("=" * 80)
+        
+        # 初始化日志系统
+        print("📝 初始化日志系统...")
+        setup_logging()
+        print("✅ 日志系统初始化完成")
+        
+        # 创建数据库连接
+        print("🗄️  初始化数据库连接...")
+        database.connect()
+        print("✅ 数据库连接完成")
+        
+        print("=" * 80)
+        print("✅ 应用启动完成")
+        print("=" * 80 + "\n")
+        
+        logging.info("应用启动完成")
+        
+    except Exception as e:
+        print("=" * 80)
+        print("❌ 应用启动失败:")
+        print(f"错误: {e}")
+        print(traceback.format_exc())
+        print("=" * 80)
+        raise
+    
+    # 应用运行 - yield 让应用开始接收请求
+    yield
+    
+    # 关闭事件 - yield 之后的代码在应用关闭时执行
+    print("\n🛑 应用正在关闭...")
+    logging.info("应用正在关闭...")
+    
+    # 这里可以添加清理逻辑，比如关闭数据库连接
+    # if database.is_connected:
+    #     database.disconnect()
+    #     logging.info("数据库连接已关闭")
+
 
 # 创建 FastAPI 应用
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description=settings.PROJECT_DESCRIPTION,
     version=settings.PROJECT_VERSION,
-    openapi_url=f"{settings.API_PREFIX}/openapi.json"
+    openapi_url=f"{settings.API_PREFIX}/openapi.json",
+    lifespan=lifespan
 )
+
+# ============================================================
+# 🔥 全局异常捕获中间件 - 用于调试 500 错误
+# ============================================================
+@app.middleware("http")
+async def catch_exceptions_middleware(request: Request, call_next):
+    """捕获所有未处理的异常并记录详细信息"""
+    try:
+        response = await call_next(request)
+        return response
+    except Exception as exc:
+        # 记录完整的错误堆栈
+        error_detail = {
+            "error": str(exc),
+            "type": type(exc).__name__,
+            "traceback": traceback.format_exc(),
+            "path": str(request.url),
+            "method": request.method
+        }
+        
+        # 打印到控制台
+        print("=" * 80)
+        print("🔥 捕获到未处理的异常:")
+        print(f"路径: {request.method} {request.url}")
+        print(f"错误类型: {type(exc).__name__}")
+        print(f"错误信息: {str(exc)}")
+        print("-" * 80)
+        print("完整堆栈:")
+        print(traceback.format_exc())
+        print("=" * 80)
+        
+        # 记录到日志
+        logging.error(f"未处理的异常: {error_detail}")
+        
+        # 返回详细的错误信息（开发/调试时）
+        return JSONResponse(
+            status_code=500,
+            content={
+                "detail": "Internal Server Error",
+                "error": str(exc),
+                "type": type(exc).__name__,
+                "path": str(request.url),
+                # 生产环境中可以移除 traceback
+                "traceback": traceback.format_exc().split('\n')
+            }
+        )
 
 # 设置CORS
 app.add_middleware(
@@ -157,21 +260,40 @@ app.include_router(api_router, prefix=settings.API_PREFIX)
 @app.on_event("startup")
 async def startup_event():
     """应用启动时执行"""
-    # 初始化日志系统
-    setup_logging()
-    
-    # 创建数据库连接
-    print('database.connect() - 启动时初始化')
-    database.connect()
-    
-    logging.info("应用启动完成")
+    try:
+        print("\n" + "=" * 80)
+        print("🚀 应用启动中...")
+        print("=" * 80)
+        
+        # 初始化日志系统
+        print("📝 初始化日志系统...")
+        setup_logging()
+        print("✅ 日志系统初始化完成")
+        
+        # 创建数据库连接
+        print("🗄️  初始化数据库连接...")
+        database.connect()
+        print("✅ 数据库连接完成")
+        
+        print("=" * 80)
+        print("✅ 应用启动完成")
+        print("=" * 80 + "\n")
+        
+        logging.info("应用启动完成")
+        
+    except Exception as e:
+        print("=" * 80)
+        print("❌ 应用启动失败:")
+        print(f"错误: {e}")
+        print(traceback.format_exc())
+        print("=" * 80)
+        raise
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """应用关闭时执行"""
+    print("\n🛑 应用正在关闭...")
     logging.info("应用正在关闭...")
-    # 这里可以添加清理逻辑，比如关闭数据库连接
-    # database.disconnect()
 
 
 # ============================================================
@@ -218,18 +340,32 @@ if os.path.exists(web_dist_path):
     @app.get("/crawl-desktop", include_in_schema=False)
     @app.get("/crawl-desktop/{full_path:path}", include_in_schema=False)
     async def serve_spa(full_path: str = ""):
-        # 尝试直接服务文件
-        if full_path:
-            file_path = os.path.join(web_dist_path, full_path)
-            if os.path.isfile(file_path):
-                return FileResponse(file_path)
-        
-        # 返回 index.html
-        index_path = os.path.join(web_dist_path, "index.html")
-        if os.path.exists(index_path):
-            return FileResponse(index_path)
-        else:
-            return {"error": "index.html not found", "path": index_path}
+        try:
+            # 尝试直接服务文件
+            if full_path:
+                file_path = os.path.join(web_dist_path, full_path)
+                if os.path.isfile(file_path):
+                    return FileResponse(file_path)
+            
+            # 返回 index.html
+            index_path = os.path.join(web_dist_path, "index.html")
+            if os.path.exists(index_path):
+                return FileResponse(index_path)
+            else:
+                return JSONResponse(
+                    status_code=500,
+                    content={"error": "index.html not found", "path": index_path}
+                )
+        except Exception as e:
+            print(f"❌ 服务静态文件时出错: {e}")
+            print(traceback.format_exc())
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "error": str(e),
+                    "traceback": traceback.format_exc()
+                }
+            )
 
 else:
     print(f"⚠️  警告: 前端资源目录不存在，API 模式运行")
@@ -241,6 +377,22 @@ else:
             "web_dist_path": web_dist_path,
             "exists": os.path.exists(web_dist_path)
         }
+
+# ============================================================
+# 健康检查端点 - 用于调试
+# ============================================================
+@app.get("/health")
+async def health_check():
+    """健康检查端点"""
+    return {
+        "status": "ok",
+        "environment": os.getenv("ENV", "unknown"),
+        "python_version": sys.version,
+        "is_packaged": hasattr(sys, '_MEIPASS'),
+        "base_path": sys._MEIPASS if hasattr(sys, '_MEIPASS') else os.getcwd(),
+        "web_dist_path": web_dist_path,
+        "web_dist_exists": os.path.exists(web_dist_path)
+    }
 
 
 if __name__ == "__main__":

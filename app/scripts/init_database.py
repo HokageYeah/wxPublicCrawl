@@ -18,8 +18,8 @@ from app.models import *  # 导入所有模型
 
 def init_database():
     """初始化数据库，创建所有表"""
-    print(f"使用连接URL: {DATABASE_URL}")
-    engine = create_engine(DATABASE_URL)
+    print(f"使用连接URL: {str(DATABASE_URL)}")
+    engine = create_engine(str(DATABASE_URL))
     
     try:
         # 创建所有表

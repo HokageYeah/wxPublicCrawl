@@ -2,9 +2,19 @@
 chcp 65001 >nul
 setlocal EnableDelayedExpansion
 
+REM ============================================================================
+REM 自动切换到项目根目录
+REM ============================================================================
+REM 获取脚本所在目录
+set "SCRIPT_DIR=%~dp0"
+REM 切换到项目根目录（脚本在 script\desktop\ 下，所以需要上两级）
+cd /d "%SCRIPT_DIR%..\.."
+set "PROJECT_ROOT=%CD%"
+
 echo ======================================
 echo   公众号爬虫助手 - Windows 打包脚本
 echo ======================================
+echo 项目目录: %PROJECT_ROOT%
 echo.
 
 REM 1. 检查 Python 版本

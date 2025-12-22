@@ -10,6 +10,7 @@ from app.schemas.wx_data import ArticleDetailRequest, ArticleListRequest, Cookie
 import json
 from app.utils.wx_article_handle import save_html_to_local, parse_wx_common_data, upload_to_aliyun
 from bs4 import BeautifulSoup
+from app.utils.src_path import get_temp_file_path
 # from PIL import Image
 cookies = {
     # "appmsglist_action_3964406050": "card",
@@ -349,14 +350,22 @@ async def fetch_get_wx_login_qrcode(request: Request):
             logger.info(f"二维码大小: {len(response.content)} bytes")
             
             # 保存二维码到本地文件用于调试
-            with open('qrcode.png', 'wb') as f:
+            # 获取临时文件路径
+            # 在 .app 包模式下：
+            # 当前工作目录 (CWD) 被设置为 .app 包内部
+            # 这个目录是只读的（macOS 安全机制）
+            # 所以无法写入文件
+            qrcode_file_path = get_temp_file_path('qrcode.png')
+            with open(qrcode_file_path, 'wb') as f:
                 f.write(response.content)
+            print('二维码保存路径:', qrcode_file_path)
                 
             # 直接返回二进制内容
             return response.content
     except Exception as e:
         logger.error(f"获取二维码时发生错误: {e}")
         raise HTTPException(status_code=500, detail=f"获取二维码失败: {str(e)}")
+
 
 # 微信公众号登录流程 - 第五步：获取二维码状态
 async def fetch_get_qrcode_status(request: Request):

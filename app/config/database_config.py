@@ -92,10 +92,10 @@ def get_database_url_lazy():
 class DatabaseURLProxy:
     """数据库URL代理，延迟求值"""
     def __str__(self):
-        return get_database_url()
+        return get_database_url()  # 使用时才获取URL
     
-    def __repr__(self):
-        return get_database_url()
+    def __repr__(self): 
+        return get_database_url()  # 使用时才获取URL
 
 # ✅ 导出代理对象而不是直接调用函数
 DATABASE_URL = DatabaseURLProxy()

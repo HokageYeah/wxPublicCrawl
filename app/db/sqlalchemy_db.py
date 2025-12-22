@@ -12,7 +12,7 @@ Base = declarative_base()
 class Database:
     def __init__(self):
         self.db_config = get_database_config()
-        self.db_url = DATABASE_URL
+        self.db_url = str(DATABASE_URL)
         self._engine = None
         self._session_factory = None
 

@@ -1,4 +1,5 @@
 import os
+import platform
 
 # 获取工程目录
 obj_path = os.path.dirname(os.path.abspath(__file__))
@@ -16,3 +17,21 @@ if ENV in ("development", "dev", "test"):
     print('root_path', root_path)
     print('app_path', app_path)
 
+
+def get_writable_dir(subdir='temp'):
+    """获取可写目录路径"""
+    if platform.system() == 'Darwin':  # macOS
+        base_dir = os.path.expanduser('~/Library/Application Support/WxPublicCrawler')
+    elif platform.system() == 'Windows':
+        base_dir = os.path.expanduser('~/AppData/Local/WxPublicCrawler')
+    else:  # Linux
+        base_dir = os.path.expanduser('~/.local/share/WxPublicCrawler')
+    
+    target_dir = os.path.join(base_dir, subdir)
+    os.makedirs(target_dir, exist_ok=True)
+    return target_dir
+
+def get_temp_file_path(filename):
+    """获取临时文件的完整路径"""
+    temp_dir = get_writable_dir('temp')
+    return os.path.join(temp_dir, filename)
