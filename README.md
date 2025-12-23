@@ -18,9 +18,9 @@
 ```bash
 # 1. 下载并解压应用包
 # 2. 双击运行
-open dist/WxPublicCrawler.app  # macOS
+open dist/wx公众号工具.app   # macOS
 # 或
-dist\WxPublicCrawler\WxPublicCrawler.exe  # Windows
+dist\wx公众号工具\wx公众号工具.exe  # Windows
 ```
 
 **特点**：
@@ -158,8 +158,8 @@ wxPublicCrawl/
 │   └── ...
 │
 ├── dist/                 # 打包输出（生成）
-│   ├── WxPublicCrawler.app       # macOS 应用包
-│   └── WxPublicCrawler/          # 独立可执行文件
+│   ├── wx公众号工具.app        # macOS 应用包
+│   └── wx公众号工具/          # 独立可执行文件
 │
 ├── logs/                 # 日志文件目录
 ├── .env                  # 环境变量配置
@@ -396,11 +396,11 @@ script\desktop\build_windows.bat
 
 ```
 dist/
-├── WxPublicCrawler.app       # macOS 应用包
-└── WxPublicCrawler/          # 独立可执行文件
+├── wx公众号工具.app        # macOS 应用包
+└── wx公众号工具/          # 独立可执行文件
     ├── _internal/            # 依赖文件
-    └── WxPublicCrawler       # 可执行文件 (macOS)
-                              # 或 WxPublicCrawler.exe (Windows)
+    └── wx公众号工具       # 可执行文件 (macOS)
+                              # 或 wx公众号工具.exe (Windows)
 ```
 
 ### 桌面应用特性
@@ -411,8 +411,8 @@ dist/
 | **数据库** | 使用 SQLite，数据保存在用户目录 |
 | **端口** | 固定使用 18000 |
 | **单实例** | 自动防止多开 |
-| **日志位置** | macOS: `~/Library/Logs/WxPublicCrawler/`<br/>Windows: `~/AppData/Local/WxPublicCrawler/Logs/` |
-| **数据位置** | macOS: `~/Library/Application Support/WxPublicCrawler/`<br/>Windows: `~/AppData/Local/WxPublicCrawler/` |
+| **日志位置** | macOS: `~/Library/Logs/wx公众号工具/`<br/>Windows: `~/AppData/Local/wx公众号工具/Logs/` |
+| **数据位置** | macOS: `~/Library/Application Support/wx公众号工具/`<br/>Windows: `~/AppData/Local/wx公众号工具/` |
 
 ### 桌面应用管理
 
@@ -551,8 +551,8 @@ venv\Scripts\activate
 **A**: 
 - Web API 模式：MySQL 数据库
 - 桌面应用：SQLite 数据库（用户目录）
-  - macOS: `~/Library/Application Support/WxPublicCrawler/`
-  - Windows: `~/AppData/Local/WxPublicCrawler/`
+  - macOS: `~/Library/Application Support/wx公众号工具/`
+  - Windows: `~/AppData/Local/wx公众号工具/`
 
 ### Q: 桌面应用可以同时打开多个吗？
 

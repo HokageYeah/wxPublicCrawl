@@ -21,11 +21,11 @@ if ENV in ("development", "dev", "test"):
 def get_writable_dir(subdir='temp'):
     """获取可写目录路径"""
     if platform.system() == 'Darwin':  # macOS
-        base_dir = os.path.expanduser('~/Library/Application Support/WxPublicCrawler')
+        base_dir = os.path.expanduser('~/Library/Application Support/wx公众号工具')
     elif platform.system() == 'Windows':
-        base_dir = os.path.expanduser('~/AppData/Local/WxPublicCrawler')
+        base_dir = os.path.expanduser('~/AppData/Local/wx公众号工具')
     else:  # Linux
-        base_dir = os.path.expanduser('~/.local/share/WxPublicCrawler')
+        base_dir = os.path.expanduser('~/.local/share/wx公众号工具')
     
     target_dir = os.path.join(base_dir, subdir)
     os.makedirs(target_dir, exist_ok=True)

@@ -256,45 +256,6 @@ app.add_middleware(ResponseValidatorMiddleware)
 # 添加路由
 app.include_router(api_router, prefix=settings.API_PREFIX)
 
-# ✅ 使用生命周期事件来初始化
-@app.on_event("startup")
-async def startup_event():
-    """应用启动时执行"""
-    try:
-        print("\n" + "=" * 80)
-        print("🚀 应用启动中...")
-        print("=" * 80)
-        
-        # 初始化日志系统
-        print("📝 初始化日志系统...")
-        setup_logging()
-        print("✅ 日志系统初始化完成")
-        
-        # 创建数据库连接
-        print("🗄️  初始化数据库连接...")
-        database.connect()
-        print("✅ 数据库连接完成")
-        
-        print("=" * 80)
-        print("✅ 应用启动完成")
-        print("=" * 80 + "\n")
-        
-        logging.info("应用启动完成")
-        
-    except Exception as e:
-        print("=" * 80)
-        print("❌ 应用启动失败:")
-        print(f"错误: {e}")
-        print(traceback.format_exc())
-        print("=" * 80)
-        raise
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """应用关闭时执行"""
-    print("\n🛑 应用正在关闭...")
-    logging.info("应用正在关闭...")
-
 
 # ============================================================
 # 静态文件服务 (支持 PyInstaller 打包)

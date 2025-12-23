@@ -4,9 +4,9 @@
 
 ```
 dist/
-├── WxPublicCrawler.app          # macOS 应用包（双击运行）
-└── WxPublicCrawler/
-    └── WxPublicCrawler          # 可执行文件（终端运行）
+├── wx公众号工具.app           # macOS 应用包（双击运行）
+└── wx公众号工具/
+    └── wx公众号工具          # 可执行文件（终端运行）
 ```
 
 ## 🚀 启动方式
@@ -14,7 +14,7 @@ dist/
 ### 方式1：图形界面启动（推荐）
 
 ```bash
-open dist/WxPublicCrawler.app
+open dist/wx公众号工具.app 
 ```
 
 - ✅ 无终端窗口，后台运行
@@ -24,7 +24,7 @@ open dist/WxPublicCrawler.app
 ### 方式2：终端启动（调试用）
 
 ```bash
-./dist/WxPublicCrawler/WxPublicCrawler
+./dist/wx公众号工具/wx公众号工具
 ```
 
 - ✅ 可以看到实时日志
@@ -38,7 +38,7 @@ open dist/WxPublicCrawler.app
 应用日志保存在 macOS 标准日志目录：
 
 ```bash
-~/Library/Logs/WxPublicCrawler/
+~/Library/Logs/wx公众号工具/
 ```
 
 日志文件命名规则：`app_YYYYMMDD_HHMMSS.log`
@@ -57,7 +57,7 @@ script/desktop/view_logs.sh
 
 1. **定位日志目录**
    ```bash
-   LOG_DIR="$HOME/Library/Logs/WxPublicCrawler"
+   LOG_DIR="$HOME/Library/Logs/wx公众号工具"
    ```
    - `$HOME` = 用户主目录 `/Users/yuye`
    - macOS 标准日志位置：`~/Library/Logs/应用名称`
@@ -88,13 +88,13 @@ script/desktop/view_logs.sh
 
 ```bash
 # 查看最新日志
-tail -f ~/Library/Logs/WxPublicCrawler/app_*.log | head -100
+tail -f ~/Library/Logs/wx公众号工具/app_*.log | head -100
 
 # 查看所有日志文件
-ls -lt ~/Library/Logs/WxPublicCrawler/
+ls -lt ~/Library/Logs/wx公众号工具/
 
 # 搜索错误信息
-grep -i error ~/Library/Logs/WxPublicCrawler/app_*.log
+grep -i error ~/Library/Logs/wx公众号工具/app_*.log
 ```
 
 ## 🗂️ 文件系统说明
@@ -104,7 +104,7 @@ grep -i error ~/Library/Logs/WxPublicCrawler/app_*.log
 macOS `.app` 包是**只读**的：
 
 ```
-WxPublicCrawler.app/
+wx公众号工具.app /
 ├── Contents/
     ├── MacOS/           # 可执行文件（只读）
     └── Resources/       # 资源文件（只读）
@@ -118,9 +118,9 @@ WxPublicCrawler.app/
 
 | 目录用途 | 路径 | 说明 |
 |---------|------|------|
-| **数据库** | `~/Library/Application Support/WxPublicCrawler/wxpublic.db` | SQLite 数据库 |
-| **临时文件** | `~/Library/Application Support/WxPublicCrawler/temp/` | 二维码、缓存等 |
-| **日志文件** | `~/Library/Logs/WxPublicCrawler/` | 应用日志 |
+| **数据库** | `~/Library/Application Support/wx公众号工具/wxpublic.db` | SQLite 数据库 |
+| **临时文件** | `~/Library/Application Support/wx公众号工具/temp/` | 二维码、缓存等 |
+| **日志文件** | `~/Library/Logs/wx公众号工具/` | 应用日志 |
 
 ### 代码实现
 
@@ -130,11 +130,11 @@ WxPublicCrawler.app/
 def get_writable_dir(subdir='temp'):
     """获取可写目录路径"""
     if platform.system() == 'Darwin':  # macOS
-        base_dir = os.path.expanduser('~/Library/Application Support/WxPublicCrawler')
+        base_dir = os.path.expanduser('~/Library/Application Support/wx公众号工具')
     elif platform.system() == 'Windows':
-        base_dir = os.path.expanduser('~/AppData/Local/WxPublicCrawler')
+        base_dir = os.path.expanduser('~/AppData/Local/wx公众号工具')
     else:  # Linux
-        base_dir = os.path.expanduser('~/.local/share/WxPublicCrawler')
+        base_dir = os.path.expanduser('~/.local/share/wx公众号工具')
     
     target_dir = os.path.join(base_dir, subdir)
     os.makedirs(target_dir, exist_ok=True)
@@ -159,7 +159,7 @@ from app.utils.src_path import get_temp_file_path
 qrcode_path = get_temp_file_path('qrcode.png')
 with open(qrcode_path, 'wb') as f:
     f.write(data)
-# 实际路径：~/Library/Application Support/WxPublicCrawler/temp/qrcode.png
+# 实际路径：~/Library/Application Support/wx公众号工具/temp/qrcode.png
 ```
 
 ## 🐛 常见问题排查
@@ -172,7 +172,7 @@ with open(qrcode_path, 'wb') as f:
 
 ```bash
 # 1. 终端启动查看错误
-./dist/WxPublicCrawler/WxPublicCrawler
+./dist/wx公众号工具/wx公众号工具
 
 # 2. 查看系统日志
 ./view_logs.sh
@@ -182,7 +182,7 @@ lsof -ti:18000
 
 # 4. 清理并重启
 script/desktop/kill_app.sh
-open dist/WxPublicCrawler.app
+open dist/wx公众号工具.app 
 ```
 
 ### 2. 文件写入失败
@@ -201,13 +201,13 @@ open dist/WxPublicCrawler.app
 **检查数据库文件**：
 
 ```bash
-ls -lh ~/Library/Application\ Support/WxPublicCrawler/wxpublic.db
+ls -lh ~/Library/Application\ Support/wx公众号工具/wxpublic.db
 ```
 
 **查看数据库内容**：
 
 ```bash
-sqlite3 ~/Library/Application\ Support/WxPublicCrawler/wxpublic.db
+sqlite3 ~/Library/Application\ Support/wx公众号工具/wxpublic.db
 
 sqlite> .tables
 sqlite> .schema
@@ -254,7 +254,7 @@ script/desktop/kill_app.sh
 
 | 特性 | 开发环境 | 桌面应用 |
 |------|---------|---------|
-| **启动方式** | `python run_desktop.py` | `open dist/WxPublicCrawler.app` |
+| **启动方式** | `python run_desktop.py` | `open dist/wx公众号工具.app ` |
 | **ENV** | `development` | `desktop` |
 | **数据库** | MySQL 或 SQLite | SQLite |
 | **日志输出** | 终端 + 文件 | 仅文件 |
@@ -277,31 +277,31 @@ script/desktop/kill_app.sh
 script/desktop/build_mac.sh
 
 # 测试打包结果
-./dist/WxPublicCrawler/WxPublicCrawler
+./dist/wx公众号工具/wx公众号工具
 
 # 正式启动
-open dist/WxPublicCrawler.app
+open dist/wx公众号工具.app 
 ```
 
 ## 📁 完整目录结构
 
 ```
-WxPublicCrawler/
+wx公众号工具/
 ├── 用户数据（可读写）
-│   ├── ~/Library/Application Support/WxPublicCrawler/
+│   ├── ~/Library/Application Support/wx公众号工具/
 │   │   ├── wxpublic.db                    # SQLite 数据库
 │   │   └── temp/
 │   │       └── qrcode.png                 # 临时二维码
-│   └── ~/Library/Logs/WxPublicCrawler/
+│   └── ~/Library/Logs/wx公众号工具/
 │       └── app_YYYYMMDD_HHMMSS.log       # 应用日志
 │
 └── 应用包（只读）
-    ├── dist/WxPublicCrawler.app/
+    ├── dist/wx公众号工具.app /
     │   └── Contents/
-    │       ├── MacOS/WxPublicCrawler      # 主程序
+    │       ├── MacOS/wx公众号工具      # 主程序
     │       └── Resources/                  # 前端资源
-    └── dist/WxPublicCrawler/
-        └── WxPublicCrawler                # 调试用可执行文件
+    └── dist/wx公众号工具/
+        └── wx公众号工具                # 调试用可执行文件
 ```
 
 ## 🎯 最佳实践
@@ -312,17 +312,17 @@ WxPublicCrawler/
    - 快速迭代调试
 
 2. **测试打包**：
-   - 使用 `./dist/WxPublicCrawler/WxPublicCrawler` 测试
+   - 使用 `./dist/wx公众号工具/wx公众号工具` 测试
    - 打开 `./view_logs.sh` 监控日志
    - 确认所有功能正常
 
 3. **正式使用**：
-   - 使用 `open dist/WxPublicCrawler.app` 启动
+   - 使用 `open dist/wx公众号工具.app ` 启动
    - 后台运行，无终端干扰
    - 出问题时查看日志文件
 
 ---
 
 **最后更新**: 2025-12-22  
-**适用版本**: WxPublicCrawler v1.0
+**适用版本**: wx公众号工具 v1.0
 

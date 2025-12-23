@@ -78,7 +78,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='WxPublicCrawler',
+    name='wx公众号工具',
     debug=False,  # 发布版本设为 False，调试时可设为 True
     bootloader_ignore_signals=False,
     strip=False,
@@ -100,14 +100,14 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='WxPublicCrawler',
+    name='wx公众号工具',
 )
 
 # Mac 特定：创建 .app 包
 if is_mac:
     app = BUNDLE(
         coll,
-        name='WxPublicCrawler.app',
+        name='wx公众号工具.app ',
         # icon='icon.icns',  # 取消注释以添加 Mac 图标（.icns 格式）
         bundle_identifier='com.wxcrawler.desktop',
         info_plist={

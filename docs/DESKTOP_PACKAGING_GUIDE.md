@@ -87,8 +87,8 @@ rm -rf build dist
 pyinstaller wx_crawler.spec
 
 # 4. 打包完成
-# 生成的应用在: dist/WxPublicCrawler/WxPublicCrawler
-# 或者: dist/WxPublicCrawler.app (如果配置为 onefile)
+# 生成的应用在: dist/wx公众号工具/wx公众号工具
+# 或者: dist/wx公众号工具.app  (如果配置为 onefile)
 ```
 
 **Mac 特定设置**：
@@ -98,9 +98,9 @@ pyinstaller wx_crawler.spec
 ```python
 app = BUNDLE(
     coll,
-    name='WxPublicCrawler.app',
+    name='wx公众号工具.app ',
     icon=None,  # 可以添加 .icns 图标文件
-    bundle_identifier='com.yourcompany.wxpubliccrawler',
+    bundle_identifier='com.yourcompany.wx公众号工具',
     info_plist={
         'NSHighResolutionCapable': 'True',
         'LSUIElement': False,  # False = 显示在 Dock
@@ -121,7 +121,7 @@ rmdir /s /q build dist
 pyinstaller wx_crawler.spec
 
 # 4. 打包完成
-# 生成的应用在: dist\WxPublicCrawler\WxPublicCrawler.exe
+# 生成的应用在: dist\wx公众号工具\wx公众号工具.exe
 ```
 
 **Windows 特定设置**：
@@ -186,11 +186,11 @@ class Config:
         """从用户配置目录加载配置"""
         import platform
         if platform.system() == 'Darwin':  # Mac
-            config_dir = os.path.expanduser('~/Library/Application Support/WxPublicCrawler')
+            config_dir = os.path.expanduser('~/Library/Application Support/wx公众号工具')
         elif platform.system() == 'Windows':
-            config_dir = os.path.expanduser('~/AppData/Local/WxPublicCrawler')
+            config_dir = os.path.expanduser('~/AppData/Local/wx公众号工具')
         else:  # Linux
-            config_dir = os.path.expanduser('~/.config/WxPublicCrawler')
+            config_dir = os.path.expanduser('~/.config/wx公众号工具')
         
         config_file = os.path.join(config_dir, 'config.ini')
         # 加载配置逻辑...
@@ -207,11 +207,11 @@ import os
 def get_user_data_dir():
     """获取用户数据目录"""
     if platform.system() == 'Darwin':  # Mac
-        return os.path.expanduser('~/Library/Application Support/WxPublicCrawler')
+        return os.path.expanduser('~/Library/Application Support/wx公众号工具')
     elif platform.system() == 'Windows':
-        return os.path.expanduser('~/AppData/Local/WxPublicCrawler')
+        return os.path.expanduser('~/AppData/Local/wx公众号工具')
     else:  # Linux
-        return os.path.expanduser('~/.local/share/WxPublicCrawler')
+        return os.path.expanduser('~/.local/share/wx公众号工具')
 
 # 确保目录存在
 USER_DATA_DIR = get_user_data_dir()
@@ -298,7 +298,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='WxPublicCrawler',
+    name='wx公众号工具',
     debug=False,  # 发布版本设为 False
     bootloader_ignore_signals=False,
     strip=False,
@@ -320,16 +320,16 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='WxPublicCrawler',
+    name='wx公众号工具',
 )
 
 # Mac 特定：创建 .app 包
 if is_mac:
     app = BUNDLE(
         coll,
-        name='WxPublicCrawler.app',
+        name='wx公众号工具.app ',
         icon='icon.icns',  # Mac 图标（.icns 格式）
-        bundle_identifier='com.yourcompany.wxpubliccrawler',
+        bundle_identifier='com.yourcompany.wx公众号工具',
         info_plist={
             'NSHighResolutionCapable': 'True',
             'LSUIElement': False,  # False = 显示在 Dock
@@ -420,10 +420,10 @@ pyinstaller wx_crawler.spec
 
 # 8. 完成
 echo "=== 打包完成 ==="
-echo "应用位置: dist/WxPublicCrawler.app"
+echo "应用位置: dist/wx公众号工具.app "
 echo ""
 echo "测试运行:"
-echo "open dist/WxPublicCrawler.app"
+echo "open dist/wx公众号工具.app "
 ```
 
 ### Windows 打包脚本 (build_windows.bat)
@@ -471,10 +471,10 @@ pyinstaller wx_crawler.spec
 
 REM 8. 完成
 echo === 打包完成 ===
-echo 应用位置: dist\WxPublicCrawler\WxPublicCrawler.exe
+echo 应用位置: dist\wx公众号工具\wx公众号工具.exe
 echo.
 echo 测试运行:
-echo dist\WxPublicCrawler\WxPublicCrawler.exe
+echo dist\wx公众号工具\wx公众号工具.exe
 
 pause
 ```
@@ -519,10 +519,10 @@ hiddenimports=[
 # 系统偏好设置 > 安全性与隐私 > 通用 > 仍要打开
 
 # 方法 2: 移除隔离属性
-xattr -cr dist/WxPublicCrawler.app
+xattr -cr dist/wx公众号工具.app 
 
 # 方法 3: 代码签名（需要 Apple Developer 账号）
-codesign --force --deep --sign - dist/WxPublicCrawler.app
+codesign --force --deep --sign - dist/wx公众号工具.app 
 ```
 
 ### 5. Windows Defender 警告

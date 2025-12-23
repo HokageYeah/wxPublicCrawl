@@ -91,8 +91,8 @@
 + ├── docs/                 # 文档目录
 + │   └── desktop/         # 桌面应用文档
 + ├── dist/                 # 打包输出（生成）
-+ │   ├── WxPublicCrawler.app       # macOS 应用包
-+ │   └── WxPublicCrawler/          # 独立可执行文件
++ │   ├── wx公众号工具.app        # macOS 应用包
++ │   └── wx公众号工具/          # 独立可执行文件
   ...
 + ├── run_desktop.py        # ⭐ 桌面应用启动入口
 + ├── wx_crawler.spec       # ⭐ PyInstaller 打包配置

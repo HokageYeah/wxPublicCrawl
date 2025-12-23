@@ -110,10 +110,10 @@ rm -rf dist build
 
 ```bash
 # 启动应用
-./dist/WxPublicCrawler/WxPublicCrawler
+./dist/wx公众号工具/wx公众号工具
 
 # 或
-open dist/WxPublicCrawler.app
+open dist/wx公众号工具.app 
 ```
 
 ## ✅ 预期结果

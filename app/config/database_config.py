@@ -58,11 +58,11 @@ def get_database_url() -> str:
         # 获取用户数据目录
         import platform
         if platform.system() == 'Darwin':  # Mac
-            data_dir = os.path.expanduser('~/Library/Application Support/WxPublicCrawler')
+            data_dir = os.path.expanduser('~/Library/Application Support/wx公众号工具')
         elif platform.system() == 'Windows':
-            data_dir = os.path.expanduser('~/AppData/Local/WxPublicCrawler')
+            data_dir = os.path.expanduser('~/AppData/Local/wx公众号工具')
         else:  # Linux
-            data_dir = os.path.expanduser('~/.local/share/WxPublicCrawler')
+            data_dir = os.path.expanduser('~/.local/share/wx公众号工具')
         
         # 确保目录存在
         os.makedirs(data_dir, exist_ok=True)

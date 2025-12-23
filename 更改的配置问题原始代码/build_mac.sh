@@ -94,7 +94,7 @@ echo -e "${YELLOW}[7/8] 开始打包应用...${NC}"
 echo "这可能需要几分钟时间，请耐心等待..."
 pyinstaller wx_crawler.spec
 
-if [ ! -d "dist/WxPublicCrawler.app" ]; then
+if [ ! -d "dist/wx公众号工具.app " ]; then
     echo -e "${RED}错误: 打包失败，应用文件不存在${NC}"
     exit 1
 fi
@@ -104,7 +104,7 @@ echo ""
 
 # 8. 移除隔离属性（避免 Mac 安全警告）
 echo -e "${YELLOW}[8/8] 处理 Mac 安全属性...${NC}"
-xattr -cr dist/WxPublicCrawler.app 2>/dev/null || true
+xattr -cr dist/wx公众号工具.app  2>/dev/null || true
 echo -e "${GREEN}✓ 安全属性处理完成${NC}"
 echo ""
 
@@ -113,16 +113,16 @@ echo "======================================"
 echo -e "${GREEN}  ✓ 打包成功！${NC}"
 echo "======================================"
 echo ""
-echo "应用位置: dist/WxPublicCrawler.app"
+echo "应用位置: dist/wx公众号工具.app "
 echo ""
 echo "测试运行:"
-echo "  open dist/WxPublicCrawler.app"
+echo "  open dist/wx公众号工具.app "
 echo ""
 echo "创建分发包:"
 echo "  # 方式 1: ZIP 压缩包"
-echo "  cd dist && zip -r WxPublicCrawler-mac.zip WxPublicCrawler.app"
+echo "  cd dist && zip -r wx公众号工具-mac.zip wx公众号工具.app "
 echo ""
 echo "  # 方式 2: DMG 安装包（需要安装 create-dmg）"
-echo "  create-dmg --volname 'WxPublicCrawler' --window-pos 200 120 --window-size 800 400 --icon-size 100 --icon 'WxPublicCrawler.app' 200 190 --hide-extension 'WxPublicCrawler.app' --app-drop-link 600 185 'WxPublicCrawler.dmg' 'dist/'"
+echo "  create-dmg --volname 'wx公众号工具' --window-pos 200 120 --window-size 800 400 --icon-size 100 --icon 'wx公众号工具.app ' 200 190 --hide-extension 'wx公众号工具.app ' --app-drop-link 600 185 'wx公众号工具.dmg' 'dist/'"
 echo ""
 

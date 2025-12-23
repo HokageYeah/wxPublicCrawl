@@ -35,7 +35,7 @@ fi
 # 清理锁文件
 echo ""
 echo "清理锁文件..."
-LOCK_FILE="$HOME/Library/Application Support/WxPublicCrawler/app.lock"
+LOCK_FILE="$HOME/Library/Application Support/wx公众号工具/app.lock"
 
 if [ -f "$LOCK_FILE" ]; then
     rm "$LOCK_FILE"

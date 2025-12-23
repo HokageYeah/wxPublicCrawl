@@ -46,9 +46,9 @@ def get_database_url() -> str:
     # SQLite 使用不同的 URL 格式
     if driver == "sqlite":
         # 数据库存储在用户数据目录
-        # Mac: ~/Library/Application Support/WxPublicCrawler/wxpublic.db
-        # Windows: ~/AppData/Local/WxPublicCrawler/wxpublic.db
-        # Linux: ~/.local/share/WxPublicCrawler/wxpublic.db
+        # Mac: ~/Library/Application Support/wx公众号工具/wxpublic.db
+        # Windows: ~/AppData/Local/wx公众号工具/wxpublic.db
+        # Linux: ~/.local/share/wx公众号工具/wxpublic.db
         ...
 ```
 
@@ -121,10 +121,10 @@ rm -rf dist build
 
 ```bash
 # 方式 1: 查看详细日志
-./dist/WxPublicCrawler/WxPublicCrawler
+./dist/wx公众号工具/wx公众号工具
 
 # 方式 2: 打开应用
-open dist/WxPublicCrawler.app
+open dist/wx公众号工具.app 
 ```
 
 ## 📋 预期的成功输出
@@ -138,7 +138,7 @@ open dist/WxPublicCrawler.app
 当前数据库环境信息:
 ----------------------------------------
 database_config.py---- ENV: development
-database_config.py---- SQLite 数据库路径: /Users/yuye/Library/Application Support/WxPublicCrawler/wxpublic.db
+database_config.py---- SQLite 数据库路径: /Users/yuye/Library/Application Support/wx公众号工具/wxpublic.db
 ----------------------------------------
 
 日志系统初始化完成 - 使用 loguru
@@ -159,17 +159,17 @@ SQLite 数据库文件会自动创建在：
 
 ### Mac
 ```
-~/Library/Application Support/WxPublicCrawler/wxpublic.db
+~/Library/Application Support/wx公众号工具/wxpublic.db
 ```
 
 ### Windows
 ```
-%APPDATA%\Local\WxPublicCrawler\wxpublic.db
+%APPDATA%\Local\wx公众号工具\wxpublic.db
 ```
 
 ### Linux
 ```
-~/.local/share/WxPublicCrawler/wxpublic.db
+~/.local/share/wx公众号工具/wxpublic.db
 ```
 
 ## 🔄 如果仍想使用 MySQL（高级用户）
@@ -187,7 +187,7 @@ export DB_PORT="3306"
 export DB_NAME="wx_public_dev"
 export DB_USER="root"
 export DB_PASSWORD="your_password"
-./dist/WxPublicCrawler/WxPublicCrawler
+./dist/wx公众号工具/wx公众号工具
 ```
 
 ### 方式 2: 修复 MySQL Connector 打包（复杂）
@@ -215,8 +215,8 @@ hiddenimports=[
 
 ```bash
 # Mac
-chmod 755 ~/Library/Application\ Support/WxPublicCrawler
-chmod 644 ~/Library/Application\ Support/WxPublicCrawler/wxpublic.db
+chmod 755 ~/Library/Application\ Support/wx公众号工具
+chmod 644 ~/Library/Application\ Support/wx公众号工具/wxpublic.db
 
 # Windows（在 PowerShell 中）
 # 通常不会有权限问题
@@ -228,7 +228,7 @@ chmod 644 ~/Library/Application\ Support/WxPublicCrawler/wxpublic.db
 
 ```bash
 # Mac
-rm ~/Library/Application\ Support/WxPublicCrawler/wxpublic.db
+rm ~/Library/Application\ Support/wx公众号工具/wxpublic.db
 
 # 重启应用，数据库会自动重新创建
 ```
@@ -239,7 +239,7 @@ rm ~/Library/Application\ Support/WxPublicCrawler/wxpublic.db
 
 ```bash
 # 安装 sqlite3（Mac 自带）
-sqlite3 ~/Library/Application\ Support/WxPublicCrawler/wxpublic.db
+sqlite3 ~/Library/Application\ Support/wx公众号工具/wxpublic.db
 
 # 查看表
 .tables
@@ -264,7 +264,7 @@ mysqldump -u root -p wx_public_dev > backup.sql
 
 3. 导入到 SQLite：
 ```bash
-sqlite3 ~/Library/Application\ Support/WxPublicCrawler/wxpublic.db < converted.sql
+sqlite3 ~/Library/Application\ Support/wx公众号工具/wxpublic.db < converted.sql
 ```
 
 ## 📊 SQLite vs MySQL 对比

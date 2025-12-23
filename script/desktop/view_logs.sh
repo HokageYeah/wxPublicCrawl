@@ -14,7 +14,7 @@
 # $HOME 是用户主目录的环境变量（例如：/Users/yuye）
 # macOS 标准日志目录为：~/Library/Logs/应用名称
 # 这是 Apple 推荐的应用日志存储位置
-LOG_DIR="$HOME/Library/Logs/WxPublicCrawler"
+LOG_DIR="$HOME/Library/Logs/wx公众号工具"
 
 # ============================================================================
 # 第二步：确保日志目录存在
@@ -83,7 +83,7 @@ else
     echo "没有日志文件"
     echo ""
     echo "提示："
-    echo "  1. 确保已运行过桌面应用（open dist/WxPublicCrawler.app）"
+    echo "  1. 确保已运行过桌面应用（open dist/wx公众号工具.app ）"
     echo "  2. 检查日志目录：$LOG_DIR"
 fi
 

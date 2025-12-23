@@ -18,7 +18,7 @@ echo "项目目录: $PROJECT_ROOT"
 echo ""
 
 # 1. 检查打包文件是否存在
-if [ ! -f "dist/WxPublicCrawler/WxPublicCrawler" ]; then
+if [ ! -f "dist/wx公众号工具/wx公众号工具" ]; then
     echo "❌ 打包文件不存在！"
     echo "   请先运行: script/desktop/build_mac.sh"
     exit 1
@@ -35,7 +35,7 @@ echo ""
 
 # 3. 启动应用（后台）
 echo "[2/3] 启动应用..."
-"$PROJECT_ROOT/dist/WxPublicCrawler/WxPublicCrawler" > /tmp/wx_test.log 2>&1 &
+"$PROJECT_ROOT/dist/wx公众号工具/wx公众号工具" > /tmp/wx_test.log 2>&1 &
 APP_PID=$!
 echo "✓ 应用已启动 (PID: $APP_PID)"
 echo ""

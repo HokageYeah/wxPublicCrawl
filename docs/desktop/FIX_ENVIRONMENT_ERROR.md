@@ -79,7 +79,7 @@ cd ..
 pyinstaller wx_crawler.spec
 
 # 5. 测试
-open dist/WxPublicCrawler.app
+open dist/wx公众号工具.app 
 ```
 
 ## 🧪 测试应用
@@ -87,14 +87,14 @@ open dist/WxPublicCrawler.app
 ### 测试 .app 包
 
 ```bash
-open dist/WxPublicCrawler.app
+open dist/wx公众号工具.app 
 ```
 
 ### 测试可执行文件（查看详细日志）
 
 ```bash
 # 这样可以看到详细的启动日志
-./dist/WxPublicCrawler/WxPublicCrawler
+./dist/wx公众号工具/wx公众号工具
 ```
 
 成功的输出应该是：
@@ -137,7 +137,7 @@ DB_PASSWORD = "aa123456"
 export N8N_WEBHOOK_URL="https://your-webhook-url.com"
 export DB_HOST="your-db-host"
 export DB_PASSWORD="your-password"
-./dist/WxPublicCrawler/WxPublicCrawler
+./dist/wx公众号工具/wx公众号工具
 ```
 
 #### 方式 2: 创建配置文件（未来改进）
@@ -146,10 +146,10 @@ export DB_PASSWORD="your-password"
 
 ```bash
 # Mac
-~/Library/Application Support/WxPublicCrawler/config.ini
+~/Library/Application Support/wx公众号工具/config.ini
 
 # Windows
-%APPDATA%\WxPublicCrawler\config.ini
+%APPDATA%\wx公众号工具\config.ini
 ```
 
 ## 🐛 如果还有其他错误

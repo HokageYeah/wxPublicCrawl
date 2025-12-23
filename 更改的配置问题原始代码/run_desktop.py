@@ -25,11 +25,11 @@ PORT = 18000
 def get_lock_file_path():
     """获取锁文件路径"""
     if platform.system() == 'Darwin':  # Mac
-        lock_dir = os.path.expanduser('~/Library/Application Support/WxPublicCrawler')
+        lock_dir = os.path.expanduser('~/Library/Application Support/wx公众号工具')
     elif platform.system() == 'Windows':
-        lock_dir = os.path.expanduser('~/AppData/Local/WxPublicCrawler')
+        lock_dir = os.path.expanduser('~/AppData/Local/wx公众号工具')
     else:  # Linux
-        lock_dir = os.path.expanduser('~/.local/share/WxPublicCrawler')
+        lock_dir = os.path.expanduser('~/.local/share/wx公众号工具')
     
     os.makedirs(lock_dir, exist_ok=True)
     return os.path.join(lock_dir, 'app.lock')

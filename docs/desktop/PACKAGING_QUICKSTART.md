@@ -23,11 +23,11 @@
 ./build_mac.sh
 
 # 2. 测试应用
-open dist/WxPublicCrawler.app
+open dist/wx公众号工具.app 
 
 # 3. 创建分发包
 cd dist
-zip -r WxPublicCrawler-mac.zip WxPublicCrawler.app
+zip -r wx公众号工具-mac.zip wx公众号工具.app 
 ```
 
 ### 在 Windows 上打包
@@ -37,11 +37,11 @@ REM 1. 运行打包脚本
 build_windows.bat
 
 REM 2. 测试应用
-dist\WxPublicCrawler\WxPublicCrawler.exe
+dist\wx公众号工具\wx公众号工具.exe
 
 REM 3. 创建分发包
 cd dist
-tar -a -c -f WxPublicCrawler-windows.zip WxPublicCrawler
+tar -a -c -f wx公众号工具-windows.zip wx公众号工具
 ```
 
 ## 📋 打包前准备
@@ -109,9 +109,9 @@ tar -a -c -f WxPublicCrawler-windows.zip WxPublicCrawler
 
 **桌面应用默认使用 SQLite**，无需安装数据库服务器：
 
-- **Mac**: `~/Library/Application Support/WxPublicCrawler/wxpublic.db`
-- **Windows**: `%APPDATA%\Local\WxPublicCrawler\wxpublic.db`
-- **Linux**: `~/.local/share/WxPublicCrawler/wxpublic.db`
+- **Mac**: `~/Library/Application Support/wx公众号工具/wxpublic.db`
+- **Windows**: `%APPDATA%\Local\wx公众号工具\wxpublic.db`
+- **Linux**: `~/.local/share/wx公众号工具/wxpublic.db`
 
 数据库文件会在首次启动时自动创建。
 
@@ -121,10 +121,10 @@ tar -a -c -f WxPublicCrawler-windows.zip WxPublicCrawler
 
 ```
 dist/
-└── WxPublicCrawler.app/     # Mac 应用包
+└── wx公众号工具.app /     # Mac 应用包
     ├── Contents/
     │   ├── MacOS/
-    │   │   └── WxPublicCrawler   # 可执行文件
+    │   │   └── wx公众号工具   # 可执行文件
     │   ├── Resources/
     │   │   └── web/
     │   │       └── dist/         # 前端资源
@@ -137,8 +137,8 @@ dist/
 
 ```
 dist/
-└── WxPublicCrawler/
-    ├── WxPublicCrawler.exe      # 可执行文件
+└── wx公众号工具/
+    ├── wx公众号工具.exe      # 可执行文件
     ├── web/
     │   └── dist/                # 前端资源
     └── _internal/               # 依赖文件
@@ -170,7 +170,7 @@ hiddenimports=[
 
 ```bash
 # 移除隔离属性（build_mac.sh 已自动处理）
-xattr -cr dist/WxPublicCrawler.app
+xattr -cr dist/wx公众号工具.app 
 ```
 
 ### 4. Windows Defender 报毒
@@ -285,10 +285,10 @@ create-dmg \
   --window-pos 200 120 \
   --window-size 800 400 \
   --icon-size 100 \
-  --icon "WxPublicCrawler.app" 200 190 \
-  --hide-extension "WxPublicCrawler.app" \
+  --icon "wx公众号工具.app " 200 190 \
+  --hide-extension "wx公众号工具.app " \
   --app-drop-link 600 185 \
-  "WxPublicCrawler-Installer.dmg" \
+  "wx公众号工具-Installer.dmg" \
   "dist/"
 ```
 

@@ -43,7 +43,7 @@ exe = EXE(
 if is_mac:
     app = BUNDLE(
         coll,
-        name='WxPublicCrawler.app',
+        name='wx公众号工具.app ',
         icon='resources/icon.icns',  # .app 包图标
         # ... 其他配置 ...
     )
@@ -139,7 +139,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='WxPublicCrawler',
+    name='wx公众号工具',
     debug=False,
     # ✨ 添加图标
     icon='resources/icon.icns' if is_mac else 'resources/icon.ico',
@@ -151,7 +151,7 @@ exe = EXE(
 if is_mac:
     app = BUNDLE(
         coll,
-        name='WxPublicCrawler.app',
+        name='wx公众号工具.app ',
         bundle_identifier='com.wxcrawler.desktop',
         # ✨ .app 包图标
         icon='resources/icon.icns',
@@ -191,7 +191,7 @@ REM 1. 打包
 script\desktop\build_windows.bat
 
 REM 2. 在资源管理器中查看
-explorer dist\WxPublicCrawler
+explorer dist\wx公众号工具
 
 REM 3. 检查 .exe 图标
 REM 应该显示自定义图标

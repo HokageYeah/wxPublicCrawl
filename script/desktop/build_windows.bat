@@ -97,7 +97,7 @@ echo [7/8] 开始打包应用...
 echo 这可能需要几分钟时间，请耐心等待...
 pyinstaller wx_crawler.spec
 
-if not exist dist\WxPublicCrawler\WxPublicCrawler.exe (
+if not exist dist\wx公众号工具\wx公众号工具.exe (
     echo [错误] 打包失败，应用文件不存在
     pause
     exit /b 1
@@ -114,14 +114,14 @@ echo ======================================
 echo   √ 打包成功！
 echo ======================================
 echo.
-echo 应用位置: dist\WxPublicCrawler\WxPublicCrawler.exe
+echo 应用位置: dist\wx公众号工具\wx公众号工具.exe
 echo.
 echo 测试运行:
-echo   dist\WxPublicCrawler\WxPublicCrawler.exe
+echo   dist\wx公众号工具\wx公众号工具.exe
 echo.
 echo 创建分发包:
 echo   方式 1: ZIP 压缩包
-echo   cd dist ^&^& tar -a -c -f WxPublicCrawler-windows.zip WxPublicCrawler
+echo   cd dist ^&^& tar -a -c -f wx公众号工具-windows.zip wx公众号工具
 echo.
 echo   方式 2: 创建安装程序（需要安装 Inno Setup）
 echo   使用 Inno Setup 创建 installer.iss 文件

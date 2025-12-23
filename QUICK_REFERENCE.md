@@ -11,10 +11,10 @@ script/desktop/build_windows.bat    # 打包 Windows 应用
 
 ```bash
 # 方式1：图形界面（推荐）
-open dist/WxPublicCrawler.app
+open dist/wx公众号工具.app 
 
 # 方式2：终端调试
-./dist/WxPublicCrawler/WxPublicCrawler
+./dist/wx公众号工具/wx公众号工具
 
 # 方式3：快速测试
 script/desktop/test_app.sh
@@ -27,10 +27,10 @@ script/desktop/test_app.sh
 script/desktop/view_logs.sh
 
 # 手动查看
-tail -f ~/Library/Logs/WxPublicCrawler/app_*.log
+tail -f ~/Library/Logs/wx公众号工具/app_*.log
 
 # 搜索错误
-grep -i error ~/Library/Logs/WxPublicCrawler/app_*.log
+grep -i error ~/Library/Logs/wx公众号工具/app_*.log
 ```
 
 ## 🛠️ 维护命令
@@ -46,10 +46,10 @@ lsof -ti:18000               # 查看端口占用
 
 | 用途 | 路径 |
 |------|------|
-| 数据库 | `~/Library/Application Support/WxPublicCrawler/wxpublic.db` |
-| 临时文件 | `~/Library/Application Support/WxPublicCrawler/temp/` |
-| 日志文件 | `~/Library/Logs/WxPublicCrawler/` |
-| 应用包 | `dist/WxPublicCrawler.app` |
+| 数据库 | `~/Library/Application Support/wx公众号工具/wxpublic.db` |
+| 临时文件 | `~/Library/Application Support/wx公众号工具/temp/` |
+| 日志文件 | `~/Library/Logs/wx公众号工具/` |
+| 应用包 | `dist/wx公众号工具.app ` |
 
 ## 🐛 常见错误
 
@@ -76,14 +76,14 @@ script/desktop/test_app.sh
 script/desktop/kill_app.sh && rm -rf dist build && script/desktop/build_mac.sh
 
 # 5. 查看数据库
-sqlite3 ~/Library/Application\ Support/WxPublicCrawler/wxpublic.db ".tables"
+sqlite3 ~/Library/Application\ Support/wx公众号工具/wxpublic.db ".tables"
 ```
 
 ## 📄 view_logs.sh 原理
 
 ```bash
 # 1. 定位日志目录
-LOG_DIR="$HOME/Library/Logs/WxPublicCrawler"
+LOG_DIR="$HOME/Library/Logs/wx公众号工具"
 
 # 2. 查找最新日志
 LATEST=$(ls -t "$LOG_DIR"/app_*.log 2>/dev/null | head -1)

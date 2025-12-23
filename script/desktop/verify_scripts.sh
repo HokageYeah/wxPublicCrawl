@@ -103,7 +103,7 @@ echo "  检查文档文件"
 echo "============================================================"
 echo ""
 
-verify_file "DESKTOP_APP_GUIDE.md" "$PROJECT_ROOT/DESKTOP_APP_GUIDE.md"
+verify_file "DESKTOP_APP_GUIDE.md" "$PROJECT_ROOT/docs/desktop/DESKTOP_APP_GUIDE.md"
 verify_file "QUICK_REFERENCE.md" "$PROJECT_ROOT/QUICK_REFERENCE.md"
 verify_file "README.md" "$PROJECT_ROOT/README.md"
 

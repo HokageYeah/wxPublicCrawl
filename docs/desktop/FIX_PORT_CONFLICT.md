@@ -29,8 +29,8 @@ def try_acquire_lock():
 ```
 
 **锁文件位置**:
-- Mac: `~/Library/Application Support/WxPublicCrawler/app.lock`
-- Windows: `%APPDATA%\Local\WxPublicCrawler\app.lock`
+- Mac: `~/Library/Application Support/wx公众号工具/app.lock`
+- Windows: `%APPDATA%\Local\wx公众号工具\app.lock`
 
 #### b) 端口检测
 
@@ -72,7 +72,7 @@ cd "/Users/yuye/YeahWork/Python项目/wxPublicCrawl"
 
 # 或手动终止
 lsof -ti:18000 | xargs kill -9
-rm ~/Library/Application\ Support/WxPublicCrawler/app.lock
+rm ~/Library/Application\ Support/wx公众号工具/app.lock
 ```
 
 ### 步骤 2: 清理并重新打包
@@ -90,10 +90,10 @@ rm -rf dist build
 
 ```bash
 # 方式 1: 查看详细日志（推荐）
-./dist/WxPublicCrawler/WxPublicCrawler
+./dist/wx公众号工具/wx公众号工具
 
 # 方式 2: 打开应用
-open dist/WxPublicCrawler.app
+open dist/wx公众号工具.app 
 ```
 
 ## ✅ 预期的成功输出
@@ -162,7 +162,7 @@ INFO:     Uvicorn running on http://127.0.0.1:18000
 
 # 或手动清理
 lsof -ti:18000 | xargs kill -9
-rm ~/Library/Application\ Support/WxPublicCrawler/app.lock
+rm ~/Library/Application\ Support/wx公众号工具/app.lock
 ```
 
 ### 问题 2: 端口被其他程序占用
@@ -183,17 +183,17 @@ lsof -ti:18000 | xargs kill -9
 
 ```bash
 # 检查权限
-ls -la ~/Library/Application\ Support/WxPublicCrawler/
+ls -la ~/Library/Application\ Support/wx公众号工具/
 
 # 强制删除
-sudo rm ~/Library/Application\ Support/WxPublicCrawler/app.lock
+sudo rm ~/Library/Application\ Support/wx公众号工具/app.lock
 ```
 
 ### 问题 4: 窗口打开后立即关闭
 
 **查看详细日志**:
 ```bash
-./dist/WxPublicCrawler/WxPublicCrawler
+./dist/wx公众号工具/wx公众号工具
 ```
 
 检查是否有错误信息（数据库、权限等）
@@ -219,16 +219,16 @@ lsof -i:18000
 lsof -ti:18000 | xargs kill -9
 
 # 删除锁文件 (Mac)
-rm ~/Library/Application\ Support/WxPublicCrawler/app.lock
+rm ~/Library/Application\ Support/wx公众号工具/app.lock
 
 # 删除锁文件 (Windows PowerShell)
-Remove-Item "$env:LOCALAPPDATA\WxPublicCrawler\app.lock"
+Remove-Item "$env:LOCALAPPDATA\wx公众号工具\app.lock"
 
 # 查看所有相关进程
-ps aux | grep WxPublicCrawler
+ps aux | grep wx公众号工具
 
 # 终止所有相关进程
-pkill -f WxPublicCrawler
+pkill -f wx公众号工具
 ```
 
 ## 📚 技术细节
@@ -282,7 +282,7 @@ ls -la kill_app.sh
 
 # 3. 重新打包并测试
 ./build_mac.sh
-./dist/WxPublicCrawler/WxPublicCrawler
+./dist/wx公众号工具/wx公众号工具
 ```
 
 ---

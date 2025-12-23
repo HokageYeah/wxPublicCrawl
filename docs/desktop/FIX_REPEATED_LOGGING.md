@@ -109,7 +109,7 @@ rm -rf dist build
 ./build_mac.sh
 
 # 测试
-./dist/WxPublicCrawler/WxPublicCrawler
+./dist/wx公众号工具/wx公众号工具
 ```
 
 ## ✅ 预期结果

@@ -79,8 +79,8 @@ cd script/desktop
 ```
 
 **输出**：
-- `dist/WxPublicCrawler.app` - macOS 应用包
-- `dist/WxPublicCrawler/WxPublicCrawler` - 可执行文件
+- `dist/wx公众号工具.app ` - macOS 应用包
+- `dist/wx公众号工具/wx公众号工具` - 可执行文件
 
 **时间**：首次约 5-10 分钟，后续约 2-3 分钟
 
@@ -102,7 +102,7 @@ build_windows.bat
 ```
 
 **输出**：
-- `dist\WxPublicCrawler\WxPublicCrawler.exe` - Windows 可执行文件
+- `dist\wx公众号工具\wx公众号工具.exe` - Windows 可执行文件
 
 ### 3. kill_app.sh - 清理应用
 
@@ -196,7 +196,7 @@ script/desktop/view_logs.sh
 
 ```bash
 # 1. 日志目录
-~/Library/Logs/WxPublicCrawler/
+~/Library/Logs/wx公众号工具/
 
 # 2. 查找最新日志
 ls -t app_*.log | head -1
@@ -206,8 +206,8 @@ tail -f latest.log
 ```
 
 **日志位置**：
-- macOS: `~/Library/Logs/WxPublicCrawler/app_YYYYMMDD_HHMMSS.log`
-- Windows: `%LOCALAPPDATA%\WxPublicCrawler\Logs\`
+- macOS: `~/Library/Logs/wx公众号工具/app_YYYYMMDD_HHMMSS.log`
+- Windows: `%LOCALAPPDATA%\wx公众号工具\Logs\`
 
 ## 🔧 技术细节
 

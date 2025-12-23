@@ -66,8 +66,8 @@ def get_database_url() -> str:
     
     if driver == "sqlite":
         # 数据库存储在用户数据目录
-        # Mac: ~/Library/Application Support/WxPublicCrawler/wxpublic.db
-        # Windows: %APPDATA%\Local\WxPublicCrawler\wxpublic.db
+        # Mac: ~/Library/Application Support/wx公众号工具/wxpublic.db
+        # Windows: %APPDATA%\Local\wx公众号工具\wxpublic.db
         ...
         return f"sqlite:///{db_file}"
     else:
@@ -206,7 +206,7 @@ cd "/Users/yuye/YeahWork/Python项目/wxPublicCrawl"
 
 # 或手动清理
 lsof -ti:18000 | xargs kill -9
-rm ~/Library/Application\ Support/WxPublicCrawler/app.lock
+rm ~/Library/Application\ Support/wx公众号工具/app.lock
 ```
 
 ### 步骤 1: 清理旧的打包文件
@@ -226,10 +226,10 @@ rm -rf dist build
 
 ```bash
 # 查看详细日志（推荐，首次测试）
-./dist/WxPublicCrawler/WxPublicCrawler
+./dist/wx公众号工具/wx公众号工具
 
 # 或直接打开应用
-open dist/WxPublicCrawler.app
+open dist/wx公众号工具.app 
 ```
 
 ## ✅ 预期的成功输出
@@ -252,7 +252,7 @@ open dist/WxPublicCrawler.app
 当前数据库环境信息:
 ----------------------------------------
 database_config.py---- ENV: development
-database_config.py---- SQLite 数据库路径: /Users/yuye/Library/Application Support/WxPublicCrawler/wxpublic.db
+database_config.py---- SQLite 数据库路径: /Users/yuye/Library/Application Support/wx公众号工具/wxpublic.db
 ----------------------------------------
 
 日志系统初始化完成 - 使用 loguru
@@ -279,7 +279,7 @@ INFO:     Uvicorn running on http://127.0.0.1:18000
 
 ### 数据库文件
 
-**Mac**: `~/Library/Application Support/WxPublicCrawler/wxpublic.db`
+**Mac**: `~/Library/Application Support/wx公众号工具/wxpublic.db`
 
 ### 爬取的文件
 
@@ -324,17 +324,17 @@ INFO:     Uvicorn running on http://127.0.0.1:18000
 
 ```bash
 # 运行可执行文件查看完整日志
-./dist/WxPublicCrawler/WxPublicCrawler
+./dist/wx公众号工具/wx公众号工具
 ```
 
 ### 检查数据库文件
 
 ```bash
 # Mac
-ls -la ~/Library/Application\ Support/WxPublicCrawler/
+ls -la ~/Library/Application\ Support/wx公众号工具/
 
 # 查看数据库内容
-sqlite3 ~/Library/Application\ Support/WxPublicCrawler/wxpublic.db ".tables"
+sqlite3 ~/Library/Application\ Support/wx公众号工具/wxpublic.db ".tables"
 ```
 
 ### 重置数据库
@@ -343,7 +343,7 @@ sqlite3 ~/Library/Application\ Support/WxPublicCrawler/wxpublic.db ".tables"
 
 ```bash
 # Mac
-rm ~/Library/Application\ Support/WxPublicCrawler/wxpublic.db
+rm ~/Library/Application\ Support/wx公众号工具/wxpublic.db
 # 重启应用
 ```
 
@@ -381,7 +381,7 @@ rm -rf dist build
 ./build_mac.sh
 
 # 4. 测试
-./dist/WxPublicCrawler/WxPublicCrawler
+./dist/wx公众号工具/wx公众号工具
 ```
 
 ---

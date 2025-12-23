@@ -36,11 +36,11 @@
 # def get_lock_file_path():
 #     """获取锁文件路径"""
 #     if platform.system() == 'Darwin':
-#         lock_dir = os.path.expanduser('~/Library/Application Support/WxPublicCrawler')
+#         lock_dir = os.path.expanduser('~/Library/Application Support/wx公众号工具')
 #     elif platform.system() == 'Windows':
-#         lock_dir = os.path.expanduser('~/AppData/Local/WxPublicCrawler')
+#         lock_dir = os.path.expanduser('~/AppData/Local/wx公众号工具')
 #     else:
-#         lock_dir = os.path.expanduser('~/.local/share/WxPublicCrawler')
+#         lock_dir = os.path.expanduser('~/.local/share/wx公众号工具')
     
 #     os.makedirs(lock_dir, exist_ok=True)
 #     return os.path.join(lock_dir, 'app.lock')
@@ -235,11 +235,11 @@ def setup_stdout_logging():
     """设置标准输出到日志文件"""
     # 获取日志目录
     if platform.system() == 'Darwin':  # Mac
-        log_dir = os.path.expanduser('~/Library/Logs/WxPublicCrawler')
+        log_dir = os.path.expanduser('~/Library/Logs/wx公众号工具')
     elif platform.system() == 'Windows':
-        log_dir = os.path.expanduser('~/AppData/Local/WxPublicCrawler/Logs')
+        log_dir = os.path.expanduser('~/AppData/Local/wx公众号工具/Logs')
     else:  # Linux
-        log_dir = os.path.expanduser('~/.local/share/WxPublicCrawler/logs')
+        log_dir = os.path.expanduser('~/.local/share/wx公众号工具/logs')
     
     os.makedirs(log_dir, exist_ok=True)
     
@@ -288,11 +288,11 @@ def get_resource_path(relative_path):
 def get_lock_file_path():
     """获取锁文件路径"""
     if platform.system() == 'Darwin':
-        lock_dir = os.path.expanduser('~/Library/Application Support/WxPublicCrawler')
+        lock_dir = os.path.expanduser('~/Library/Application Support/wx公众号工具')
     elif platform.system() == 'Windows':
-        lock_dir = os.path.expanduser('~/AppData/Local/WxPublicCrawler')
+        lock_dir = os.path.expanduser('~/AppData/Local/wx公众号工具')
     else:
-        lock_dir = os.path.expanduser('~/.local/share/WxPublicCrawler')
+        lock_dir = os.path.expanduser('~/.local/share/wx公众号工具')
     
     os.makedirs(lock_dir, exist_ok=True)
     return os.path.join(lock_dir, 'app.lock')
@@ -439,7 +439,7 @@ def main():
             '公众号爬虫助手', 
             f'http://127.0.0.1:{PORT}/crawl-desktop/',
             width=1280,
-            height=800,
+            height=1000,
             resizable=True
         )
         
