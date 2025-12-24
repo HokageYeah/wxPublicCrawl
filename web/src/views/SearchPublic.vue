@@ -27,10 +27,10 @@
       <div 
         v-for="item in results" 
         :key="item.fakeid" 
-        class="card hover:shadow-lg transition-all cursor-pointer p-0 overflow-hidden"
+        class="card hover:shadow-lg transition-all cursor-pointer p-0 overflow-hidden flex flex-col"
         @click="selectAccount(item)"
       >
-        <div class="p-6 flex flex-col items-center">
+        <div class="p-6 flex flex-col items-center flex-1">
           <img :src="item.round_head_img" class="w-20 h-20 rounded-full mb-4 object-cover" alt="" referrerpolicy="no-referrer" />
           <h3 class="font-bold text-lg mb-2 text-center" v-html="item.nickname"></h3>
           <p class="text-sm text-gray-500 mb-2">{{ item.alias }}</p>
