@@ -1,9 +1,11 @@
 import { defineStore } from 'pinia';
 import { LoginStep, QRCodeStatus } from '@/types/wechat';
 import { wechatService } from '@/services/wechatService';
+import { sessionService } from '@/services/sessionService'; // 新增
+import type {UserInfo,SessionResponse} from '@/services/sessionService';
+import api from '@/utils/request'
 
 export const useWechatLoginStore = defineStore('wechatLogin', {
-  // 状态定义
   state: () => ({
     sessionId: '',
     qrCodeUrl: '',
@@ -13,12 +15,12 @@ export const useWechatLoginStore = defineStore('wechatLogin', {
     token: '',
     redirectUrl: '',
     userInfo: null as any,
+    cookies: {} as Record<string, any>,  // 新增：存储cookies
     loginComplete: false,
     statusPollingInterval: null as number | null,
     createdBlobUrls: [] as string[]
   }),
 
-  // 计算属性
   getters: {
     isLoading: (state) => {
       return [
@@ -43,59 +45,73 @@ export const useWechatLoginStore = defineStore('wechatLogin', {
       }
     },
     
-    // 判断用户是否已登录
     isLoggedIn: (state) => {
       return !!state.userInfo && state.loginComplete;
     }
   },
 
-  // 操作方法
   actions: {
-    // 初始化 - 检查本地存储的用户信息
-    initialize() {
+    // ✅ 修改：从后端加载会话
+    async initialize() {
       try {
-        // 从 localStorage 读取用户信息
-        const savedUserInfo = localStorage.getItem('wxUserInfo');
-        if (savedUserInfo) {
-          const userData = JSON.parse(savedUserInfo);
-          // 恢复用户登录状态
-          this.userInfo = userData;
+        console.log('正在从后端加载用户会话...');
+        const sessionResponse = await sessionService.loadSession();
+        
+        if (sessionResponse.logged_in && sessionResponse.user_info) {
+          this.userInfo = sessionResponse.user_info;
+          alert('用户已登录'+ JSON.stringify(sessionResponse));
+          this.cookies = sessionResponse.cookies || {};  // 恢复cookies
+          this.token = sessionResponse.token || '';  // 恢复token
           this.loginComplete = true;
           this.currentStep = LoginStep.REDIRECT_SUCCESS;
-          console.log('从本地存储恢复用户登录状态', userData);
+          console.log('✓ 从后端恢复用户登录状态', this.userInfo);
+          console.log('✓ 从后端恢复 cookies', Object.keys(this.cookies).length, '个');
+          console.log('✓ 从后端恢复 token', this.token);
+          // 在应用设置了cookie和token后调用 getter，让所有请求都能自动携带
+          api.setCookiesGetter(() => this.cookies);
+          api.setTokenGetter(() => this.token);
+        } else {
+          console.log('未找到有效的用户会话');
         }
+        
       } catch (error) {
-        console.error('读取本地存储的用户信息失败:', error);
-        // 清除可能损坏的数据
-        localStorage.removeItem('wxUserInfo');
+        console.error('加载用户会话失败:', error);
       }
     },
     
-    // 保存用户信息到本地存储
-    saveUserInfoToLocalStorage() {
+    // ✅ 修改：保存会话到后端
+    async saveUserInfoToLocalStorage() {
       if (this.userInfo) {
         try {
-          localStorage.setItem('wxUserInfo', JSON.stringify(this.userInfo));
-          console.log('用户信息已保存到本地存储');
+          const success = await sessionService.saveSession(this.userInfo, this.cookies, this.token);
+          if (success) {
+            console.log('✓ 用户信息、cookies和token已保存到后端');
+          } else {
+            console.error('✗ 保存用户信息到后端失败');
+          }
         } catch (error) {
-          console.error('保存用户信息到本地存储失败:', error);
+          console.error('保存用户信息失败:', error);
         }
       }
     },
     
-    // 退出登录
-    logout() {
-      // 清除本地存储的用户信息
-      localStorage.removeItem('wxUserInfo');
+    // ✅ 修改：退出登录
+    async logout() {
+      try {
+        // 清除后端会话
+        await sessionService.clearSession();
+        console.log('✓ 后端会话已清除');
+      } catch (error) {
+        console.error('清除后端会话失败:', error);
+      }
       
       // 重置状态
       this.reset();
-      
       console.log('用户已退出登录');
     },
 
     async startLoginFlow() {
-      // 检查是否已有本地存储的用户信息
+      // 检查是否已有会话
       if (this.isLoggedIn) {
         console.log('用户已登录，无需重新扫码');
         return;
@@ -126,7 +142,6 @@ export const useWechatLoginStore = defineStore('wechatLogin', {
         // Step 1: Generate session ID
         this.currentStep = LoginStep.INIT;
         this.sessionId = await wechatService.generateSessionId();
-        console.log('sessionId', this.sessionId);
         
         // Step 2: Prelogin
         this.currentStep = LoginStep.PRELOGIN;
@@ -152,17 +167,13 @@ export const useWechatLoginStore = defineStore('wechatLogin', {
         
         // Step 5: Get QR code
         try {
-          // 获取二维码
           this.qrCodeUrl = await wechatService.getLoginQRCode();
-          console.log('QR code URL set:', this.qrCodeUrl);
           this.currentStep = LoginStep.QRCODE_GENERATED;
           
-          // 如果是Blob URL，添加到列表中以便后续清理
           if (this.qrCodeUrl && this.qrCodeUrl.startsWith('blob:')) {
             this.createdBlobUrls.push(this.qrCodeUrl);
           }
           
-          // Start polling for QR code status
           this.startStatusPolling();
         } catch (qrError: any) {
           console.error('获取二维码失败:', qrError);
@@ -178,14 +189,11 @@ export const useWechatLoginStore = defineStore('wechatLogin', {
     },
     
     startStatusPolling() {
-      // Check status every 2 seconds
       this.statusPollingInterval = window.setInterval(async () => {
         try {
           const statusResponse = await wechatService.getQRCodeStatus();
           this.qrCodeStatus = statusResponse.status;
-          console.log('QR code status:', this.qrCodeStatus);
           
-          // Handle status changes
           if (this.qrCodeStatus === QRCodeStatus.SCANNED) {
             this.currentStep = LoginStep.QRCODE_SCANNED;
           } else if (this.qrCodeStatus === QRCodeStatus.CONFIRMED) {
@@ -210,30 +218,35 @@ export const useWechatLoginStore = defineStore('wechatLogin', {
     
     async handleConfirmedLogin() {
       try {
-        // Stop polling
         this.stopStatusPolling();
-        // Step 6: Get login info
+        
         const loginInfoResponse = await wechatService.getLoginInfo();
         this.token = loginInfoResponse.token;
         this.redirectUrl = loginInfoResponse.redirect_url;
+        
+        // 提取并保存cookies
+        if (loginInfoResponse.headers && loginInfoResponse.headers['set-cookie']) {
+          const cookieStr = loginInfoResponse.headers['set-cookie'];
+          this.cookies = this.parseCookieString(cookieStr);
+          console.log('✓ 已提取 cookies:', Object.keys(this.cookies).length, '个');
+        }
+        
         this.currentStep = LoginStep.LOGIN_SUCCESS;
-        console.log('loginInfoResponse', loginInfoResponse);
         
-        // Step 7: Verify user info
         const verifyResponse = await wechatService.verifyUserInfo(this.token);
-        // 此时先不设置 userInfo，等待重定向响应
-        console.log('verifyResponse', verifyResponse);
         
-        // Step 8: Redirect login info
         const redirectResponse = await wechatService.redirectLoginInfo(this.redirectUrl);
-        // 使用重定向响应中的用户数据
-        this.userInfo = redirectResponse;
+        this.userInfo = redirectResponse.userInfo;
+        this.cookies = redirectResponse.cookies;
+        this.token = redirectResponse.token;  // 更新token（可能已更新）
+        // 在应用设置了cookie和token后调用 getter，让所有请求都能自动携带
+        api.setCookiesGetter(() => this.cookies);
+        api.setTokenGetter(() => this.token);
         this.currentStep = LoginStep.REDIRECT_SUCCESS;
         this.loginComplete = true;
-        console.log('redirectResponse', redirectResponse);
         
-        // 保存用户信息到本地存储
-        this.saveUserInfoToLocalStorage();
+        // ✅ 保存到后端
+        await this.saveUserInfoToLocalStorage();
       } catch (err: any) {
         console.error('登录完成流程失败:', err);
         this.error = err.message || 'Failed to complete login';
@@ -245,7 +258,6 @@ export const useWechatLoginStore = defineStore('wechatLogin', {
     reset() {
       this.stopStatusPolling();
       
-      // 清理Blob URL
       if (this.qrCodeUrl && this.qrCodeUrl.startsWith('blob:')) {
         URL.revokeObjectURL(this.qrCodeUrl);
       }
@@ -258,13 +270,28 @@ export const useWechatLoginStore = defineStore('wechatLogin', {
       this.token = '';
       this.redirectUrl = '';
       this.userInfo = null;
+      this.cookies = {};  // 清除cookies
       this.loginComplete = false;
+    },
+    
+    // 解析Cookie字符串
+    parseCookieString(cookieStr: string): Record<string, any> {
+      const cookies: Record<string, any> = {};
+      if (!cookieStr) return cookies;
+      
+      const pairs = cookieStr.split(';');
+      pairs.forEach(pair => {
+        const [key, value] = pair.trim().split('=');
+        if (key && value) {
+          cookies[key] = value;
+        }
+      });
+      return cookies;
     },
     
     cleanup() {
       this.stopStatusPolling();
       
-      // 清理所有创建的Blob URLs
       this.createdBlobUrls.forEach(url => {
         if (url && url.startsWith('blob:')) {
           URL.revokeObjectURL(url);
@@ -272,11 +299,10 @@ export const useWechatLoginStore = defineStore('wechatLogin', {
       });
       this.createdBlobUrls = [];
       
-      // 清理当前使用的Blob URL
       if (this.qrCodeUrl && this.qrCodeUrl.startsWith('blob:')) {
         URL.revokeObjectURL(this.qrCodeUrl);
       }
       this.qrCodeUrl = '';
     }
   }
-}); 
+});

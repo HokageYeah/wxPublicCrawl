@@ -183,9 +183,9 @@ const stepStyle = (step: LoginStep) => {
   return 'border-gray-600 text-gray-400';
 };
 
-const restart = () => {
-  wechatStore.reset();
-  wechatStore.startLoginFlow();
+const restart = async () => {
+  await wechatStore.reset();
+  await wechatStore.startLoginFlow();
 };
 
 const router = useRouter();
@@ -204,9 +204,9 @@ const onLogout = () => {
 };
 
 // Lifecycle hooks
-onMounted(() => {
+onMounted(async() => {
   // 初始化用户状态 - 检查本地存储
-  wechatStore.initialize();
+  await wechatStore.initialize();
   
   // 如果用户未登录，则启动登录流程
   if (!wechatStore.isLoggedIn) {

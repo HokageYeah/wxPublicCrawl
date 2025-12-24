@@ -26,23 +26,24 @@ router = APIRouter()
 
 
 @router.get("/search-wx-public",response_model=ApiResponseData)
-async def search_wx_articles(query: str = Query(..., description="搜索关键词"),
+async def search_wx_articles(request: Request,
+                             query: str = Query(..., description="搜索关键词"),
                              begin: int = Query(0, description="开始位置"),
                              count: int = Query(5, description="数量")):
     """搜索微信公众号"""
-    result = await fetch_wx_public(query, begin, count)
+    result = await fetch_wx_public(request, query, begin, count)
     return result
 
 # 根据公众号id搜索公众号文章列表
 @router.post("/get-wx-article-list", response_model=ApiResponseData)
-async def get_wx_article_list(params: ArticleListRequest):
+async def get_wx_article_list(request: Request, params: ArticleListRequest):
     """使用公众号ID搜索公众号文章列表（使用Query参数）"""
-    result = await fetch_wx_article_list(params)
+    result = await fetch_wx_article_list(request, params)
     return result
 
 # 根据文章链接请求得到文章详情（需要传递公众号id以及公众号名称，做网站本地化保存使用）
 @router.post("/get-wx-article-detail-by-link", response_model=ApiResponseData)
-async def get_wx_article_detail_by_link(params: ArticleDetailRequest):
+async def get_wx_article_detail_by_link(request: Request, params: ArticleDetailRequest):
     """根据文章链接请求得到文章详情（需要传递公众号id以及公众号名称，做网站本地化保存使用）
     
     此端点用于测试body参数的异常处理
@@ -56,7 +57,7 @@ async def get_wx_article_detail_by_link(params: ArticleDetailRequest):
     }
     ```
     """
-    result = await fetch_wx_article_detail_by_link(params)
+    result = await fetch_wx_article_detail_by_link(request, params)
     return result
 
 # 设置cookie、token接口

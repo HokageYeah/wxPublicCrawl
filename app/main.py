@@ -247,7 +247,9 @@ app.add_middleware(
 
 # 定义全局异常处理器
 app.add_exception_handler(RequestValidationError, request_validation_error_handler)
+# 定义全局错误处理器，单独封装成一个中间价，并且统一返回相同的格式
 app.add_exception_handler(HTTPException, http_exception_handler)
+# 定义全局响应格式验证异常处理器
 app.add_exception_handler(ResponseValidationError, response_validation_error_handler)
 
 # 添加响应格式验证中间件

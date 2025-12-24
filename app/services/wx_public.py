@@ -3,6 +3,7 @@ import urllib.parse
 import time
 import math
 import random
+from typing import Dict, Any
 from fastapi import HTTPException, Request
 import logging
 from loguru import logger
@@ -11,6 +12,7 @@ import json
 from app.utils.wx_article_handle import save_html_to_local, parse_wx_common_data, upload_to_aliyun
 from bs4 import BeautifulSoup
 from app.utils.src_path import get_temp_file_path
+from app.decorators.request_decorator import extract_wx_credentials
 # from PIL import Image
 cookies = {
     # "appmsglist_action_3964406050": "card",
@@ -43,30 +45,31 @@ def handle_error(base_resp):
         raise HTTPException(status_code=400, detail=f"HTTP错误: {err_msg}")
     return base_resp
 
-async def fetch_wx_public(query: str,begin:int,count:int):
+@extract_wx_credentials(cookies, token)
+async def fetch_wx_public(request: Request, query: str, begin: int, count: int):
     """获取微信公众号"""
-    print('cookies---token', cookies, token)
-    print('query', query)
-    url = f"https://mp.weixin.qq.com/cgi-bin/searchbiz?action=search_biz&begin={begin}&count={count}&query={query}&token={token}&lang=zh_CN&f=json&ajax=1"
-    # url = 'https://mp.weixin.qq.com/cgi-bin/searchbiz?action=search_biz&begin=0&count=5&query=%E9%83%91%E5%B7%9E%E5%8F%91%E5%B8%83&fingerprint=9b1ea719e1ba482a27d45364d3c7f877&token=1316584330&lang=zh_CN&f=json&ajax=1'
+    # 从 request.state 中获取装饰器处理后的 cookies 和 token
+    merged_cookies = request.state.wx_cookies
+    final_token = request.state.wx_token
+    
+    print('🔍 [DEBUG] 查询参数 query:', query)
+    
+    url = f"https://mp.weixin.qq.com/cgi-bin/searchbiz?action=search_biz&begin={begin}&count={count}&query={query}&token={final_token}&lang=zh_CN&f=json&ajax=1"
     
     try:
         async with httpx.AsyncClient(verify=False) as client:
             logging.info(f"正在请求URL: {url}")
-            logging.debug(f"请求头")
-            logging.warning(f"请求头")
-            logging.error(f"请求头")
-            logging.critical(f"请求头")
             headers = {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
             }
-            response = await client.get(url, headers=headers,timeout=10,cookies=cookies)
+            # 使用合并后的 cookies
+            response = await client.get(url, headers=headers, timeout=10, cookies=merged_cookies)
             response.raise_for_status()
             # 整理成json
             json_data = json.loads(response.text)
-            base_resp = json_data.get('base_resp',{})
+            base_resp = json_data.get('base_resp', {})
             handle_error(base_resp)
-            return json_data.get('list',[])
+            return json_data.get('list', [])
     except httpx.HTTPStatusError as e:
         raise HTTPException(status_code=e.response.status_code, detail=f"HTTP错误: {e}")
     except httpx.RequestError as e:
@@ -74,16 +77,20 @@ async def fetch_wx_public(query: str,begin:int,count:int):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"未知错误: {e}")
 
-async def fetch_wx_article_list(params: ArticleListRequest):
+@extract_wx_credentials(cookies, token)
+async def fetch_wx_article_list(request: Request, params: ArticleListRequest):
     """使用Query参数获取微信公众号文章详情"""
+    # 从 request.state 中获取装饰器处理后的 cookies 和 token
+    merged_cookies = request.state.wx_cookies
+    final_token = request.state.wx_token
     if len(params.query) <= 0:
-        url = f"https://mp.weixin.qq.com/cgi-bin/appmsgpublish?sub=list&begin={params.begin}&count={params.count}&fakeid={params.wx_public_id}&type=101_1&free_publish_type=1&sub_action=list_ex&token={token}&lang=zh_CN&f=json&ajax=1"
+        url = f"https://mp.weixin.qq.com/cgi-bin/appmsgpublish?sub=list&begin={params.begin}&count={params.count}&fakeid={params.wx_public_id}&type=101_1&free_publish_type=1&sub_action=list_ex&token={final_token}&lang=zh_CN&f=json&ajax=1"
     else:
-        url = f"https://mp.weixin.qq.com/cgi-bin/appmsgpublish?sub=search&search_field=7&begin={params.begin}&count={params.count}&query={params.query}&fakeid={params.wx_public_id}&type=101_1&free_publish_type=1&sub_action=list_ex&token={token}&lang=zh_CN&f=json&ajax=1"
+        url = f"https://mp.weixin.qq.com/cgi-bin/appmsgpublish?sub=search&search_field=7&begin={params.begin}&count={params.count}&query={params.query}&fakeid={params.wx_public_id}&type=101_1&free_publish_type=1&sub_action=list_ex&token={final_token}&lang=zh_CN&f=json&ajax=1"
     print('url', url)
     try:
         async with httpx.AsyncClient(verify=False) as client:
-            response = await client.get(url,timeout=10,cookies=cookies)
+            response = await client.get(url,timeout=10,cookies=merged_cookies)
             response.raise_for_status()
             json_data = json.loads(response.text)
             base_resp = json_data.get('base_resp',{})
@@ -96,8 +103,12 @@ async def fetch_wx_article_list(params: ArticleListRequest):
         raise HTTPException(status_code=e.response.status_code, detail=f"HTTP错误: {e}")
 
 
-async def fetch_wx_article_detail_by_link(request_data: ArticleDetailRequest):
+@extract_wx_credentials(cookies, token)
+async def fetch_wx_article_detail_by_link(request: Request, request_data: ArticleDetailRequest):
     """根据文章链接请求得到文章详情（需要传递公众号id以及公众号名称，做网站本地化保存使用）"""
+    # 从 request.state 中获取装饰器处理后的 cookies 和 token
+    merged_cookies = request.state.wx_cookies
+    final_token = request.state.wx_token
     article_link = request_data.article_link
     wx_public_id = request_data.wx_public_id
     wx_public_name = request_data.wx_public_name
@@ -117,7 +128,7 @@ async def fetch_wx_article_detail_by_link(request_data: ArticleDetailRequest):
                 "Referer": article_link,
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
             }
-            response = await client.get(article_link, headers=headers)
+            response = await client.get(article_link, headers=headers, cookies=merged_cookies)
             response.raise_for_status()
             # 返回一个html
             html_content = response.text
@@ -174,6 +185,23 @@ headers = {
 }
 cookies = {}
 newsessionid = ""
+token = ""
+
+
+def restore_cookies_and_token(session_cookies: Dict[str, Any], session_token: str = ""):
+    """从会话数据中恢复全局cookies和token
+    
+    Args:
+        session_cookies: 会话中保存的cookies
+        session_token: 会话中保存的token (可选)
+    """
+    global cookies, token
+    if session_cookies:
+        cookies = session_cookies
+        print(f"✓ 已恢复 cookies: {len(cookies)} 个")
+    if session_token:
+        token = session_token
+        print(f"✓ 已恢复 token")
 
 
 # 微信公众号登录流程 - 第一步：预登录获取忽略密码列表
@@ -467,7 +495,11 @@ async def fetch_redirect_login_info(request: Request, redirect_url: str):
         wx_data = parse_wx_common_data(response.text)
         # 解析出
         print('第七步：根据重定向获取微信公众号个人登录信息---重定向地址--wx_data', wx_data)
-        return wx_data
+        return {
+            "userInfo": wx_data,
+            "cookies": request_cookies,
+            "token": token
+        }
     
 
 async def generate_session_id():

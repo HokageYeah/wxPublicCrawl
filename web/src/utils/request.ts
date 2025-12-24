@@ -45,6 +45,12 @@ class Request {
     timeout: 60000,
     withCredentials: true,
   };
+  
+  // 用于获取 cookies 的函数，由外部设置
+  private getCookies: (() => Record<string, any>) | null = null;
+  
+  // 用于获取 token 的函数，由外部设置
+  private getToken: (() => string) | null = null;
 
   constructor(config: AxiosRequestConfig) {
     console.log('import.meta.env.VITE_API_BASE_URL------', import.meta.env);
@@ -53,11 +59,34 @@ class Request {
     // 请求拦截器
     this.instance.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
-        // 这里可以添加 token 等请求头
-        // const token = localStorage.getItem('token');
-        // if (token) {
-        //   config.headers.Authorization = `Bearer ${token}`;
-        // }
+        // 从注入的 getter 函数获取 cookies
+        if (this.getCookies) {
+          const cookies = this.getCookies();
+          console.log('🍪 获取到的 cookies:', cookies);
+          if (cookies && Object.keys(cookies).length > 0) {
+            // 将 cookies 对象转换为 Cookie 字符串
+            const cookieStr = Object.entries(cookies)
+              .map(([key, value]) => `${key}=${value}`)
+              .join('; ');
+            
+            // ⚠️ 重要：浏览器不允许 JavaScript 手动设置 Cookie 请求头
+            // 因此我们使用自定义请求头 X-WX-Cookies 来传递 Cookie 信息
+            config.headers['X-WX-Cookies'] = cookieStr;
+            console.log('✅ 已通过自定义请求头发送 cookies:', cookieStr);
+          }
+        }
+        
+        // 从注入的 getter 函数获取 token
+        if (this.getToken) {
+          const token = this.getToken();
+          console.log('🔑 获取到的 token:', token);
+          if (token) {
+            // 使用自定义请求头 X-WX-Token 来传递 Token 信息
+            config.headers['X-WX-Token'] = token;
+            console.log('✅ 已通过自定义请求头发送 token:', token);
+          }
+        }
+        
         return config;
       },
       (error: AxiosError) => {
@@ -193,6 +222,22 @@ class Request {
     // 如果没有具体信息，尝试从错误码映射中查找
     const errorPrefix = parts[0] + '::';
     return ERROR_CODE_MAP[errorPrefix] || statusCode;
+  }
+
+  /**
+   * 设置获取 cookies 的函数
+   * @param getter 返回 cookies 对象的函数
+   */
+  public setCookiesGetter(getter: () => Record<string, any>): void {
+    this.getCookies = getter;
+  }
+
+  /**
+   * 设置获取 token 的函数
+   * @param getter 返回 token 字符串的函数
+   */
+  public setTokenGetter(getter: () => string): void {
+    this.getToken = getter;
   }
 
   public request<T = any>(config: AxiosRequestConfig): Promise<T> {

@@ -37,16 +37,20 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router';
-import { useWechatLoginStore } from '@/stores/wechatLoginStore';
+import { useWechatLoginStore } from '@/stores/wechatLoginStore'
+import { useRouter } from 'vue-router'
+import { onMounted } from 'vue'
 
-const router = useRouter();
-const wechatStore = useWechatLoginStore();
+const wechatStore = useWechatLoginStore()
+const router = useRouter()
 
-const handleLogout = () => {
-    if (confirm('确定要退出登录吗？')) {
-        wechatStore.logout();
-        router.push('/');
-    }
-};
-</script> 
+
+onMounted(() => {
+  console.log('✓ 已设置 cookies getter')
+})
+
+const handleLogout = async () => {
+  await wechatStore.logout()
+  router.push('/')
+}
+</script>

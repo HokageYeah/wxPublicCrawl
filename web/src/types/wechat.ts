@@ -58,6 +58,7 @@ export interface LoginInfoResponse {
   redirect_url: string;
   token: string;
   cookie_str: string;
+  headers?: Record<string, any>;  // 新增：用于存储响应头中的cookies
 }
 
 // User info response

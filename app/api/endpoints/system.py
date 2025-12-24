@@ -2,7 +2,7 @@ from fastapi import APIRouter
 import subprocess
 import platform
 import os
-from app.services.system import fetch_select_folder
+from app.services.system import system_manager
 from app.schemas.common_data import ApiResponseData
 
 # 9. 检查文章是否已下载
@@ -13,7 +13,7 @@ router = APIRouter()
 
 @router.get("/select-folder", response_model=ApiResponseData)
 async def select_folder():
-    result = fetch_select_folder()
+    result = system_manager.fetch_select_folder()
     return result
 
 
@@ -53,3 +53,41 @@ async def check_downloaded_status(params: CheckDownloadRequest):
                 downloaded_aids.append(article.aid)
                 
     return downloaded_aids
+
+
+@router.post("/session/save", response_model=ApiResponseData)
+async def save_session(data: dict):
+    """保存用户会话 (包括cookies和token)"""
+    user_info = data.get('user_info', {})
+    cookies = data.get('cookies', {})
+    token = data.get('token', '')
+    success = system_manager.save_session(user_info, cookies, token)
+    if success:
+        return {"success": True, "message": "会话保存成功"}
+    else:
+        return {"success": False, "message": "会话保存失败"}
+
+
+@router.get("/session/load", response_model=ApiResponseData)
+async def load_session():
+    """加载用户会话"""
+    user_info = system_manager.load_session()
+    if user_info:
+        return {
+            "success": True,
+            "logged_in": True,
+            **user_info
+        }
+    else:
+        return {
+            "success": True,
+            "logged_in": False,
+            "user_info": None
+        }
+
+
+@router.post("/session/clear", response_model=ApiResponseData)
+async def clear_session():
+    """清除用户会话"""
+    success = system_manager.clear_session()
+    return {"success": success}
