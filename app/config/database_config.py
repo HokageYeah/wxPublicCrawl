@@ -64,7 +64,7 @@ def get_database_url() -> str:
         else:  # Linux
             data_dir = os.path.expanduser('~/.local/share/wx公众号工具')
         
-        # 确保目录存在
+        # 确保目录存在 exist_ok=True 表示如果目录存在则不创建
         os.makedirs(data_dir, exist_ok=True)
         
         # SQLite 数据库文件路径
