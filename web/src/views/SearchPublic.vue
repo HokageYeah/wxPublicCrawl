@@ -3,6 +3,55 @@
     <h1 class="text-2xl font-bold mb-8 text-center">搜索公众号</h1>
     
     <div class="card p-8 mb-8">
+      <!-- 标签区域 -->
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-2">热门标签</label>
+        <div class="flex flex-wrap gap-2">
+          <div 
+            v-for="tag in tags" 
+            :key="tag.id"
+            class="group relative inline-flex items-center px-3 py-1 rounded-full text-sm cursor-pointer transition-colors border"
+            :class="query === tag.name 
+              ? 'bg-primary text-white border-primary border-opacity-100' 
+              : 'bg-gray-100 text-gray-700 border-transparent hover:bg-gray-200'"
+            @click="toggleTag(tag.name)"
+          >
+            {{ tag.name }}
+            
+            <!-- 删除按钮 (hover 显示) -->
+            <button 
+              class="ml-2 opacity-0 group-hover:opacity-100 transition-opacity text-xs rounded-full bg-black bg-opacity-20 w-4 h-4 flex items-center justify-center hover:bg-opacity-40"
+              @click="handleDeleteTag(tag.id, $event)"
+              title="删除标签"
+            >
+              ×
+            </button>
+          </div>
+          
+          <!-- 添加标签按钮 -->
+          <div v-if="!isAddingTag" 
+            class="inline-flex items-center px-3 py-1 rounded-full text-sm border border-dashed border-gray-300 text-gray-500 hover:border-primary hover:text-primary cursor-pointer transition-colors"
+            @click="isAddingTag = true"
+          >
+            + 添加
+          </div>
+          
+          <!-- 添加标签输入框 -->
+          <div v-else class="inline-flex items-center">
+            <input 
+              v-model="newTagName"
+              type="text"
+              class="px-3 py-1 rounded-full text-sm border border-primary focus:outline-none w-24"
+              placeholder="输入标签"
+              @keyup.enter="handleAddTag"
+              @blur="handleAddTag"
+              ref="newTagInput"
+              autoFocus
+            />
+          </div>
+        </div>
+      </div>
+
       <div class="flex gap-4">
         <input 
           v-model="query" 
@@ -49,7 +98,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 // 使用 axios 直接调用或导入预配置的实例
 // import axios from 'axios';
@@ -64,11 +113,104 @@ interface PublicAccount {
   signature: string;
 }
 
+interface SearchTag {
+  id: number;
+  name: string;
+}
+
 const router = useRouter();
 const query = ref('');
 const loading = ref(false);
 const hasSearched = ref(false);
 const results = ref<PublicAccount[]>([]);
+
+// 标签相关状态
+const tags = ref<SearchTag[]>([]);
+const isAddingTag = ref(false);
+const newTagName = ref('');
+
+// 获取标签列表
+const fetchTags = async () => {
+  try {
+    const res = await request.get<SearchTag[]>('/system/tags');
+    tags.value = res || [];
+    
+    // 如果没有标签，尝试初始化
+    if (tags.value.length === 0) {
+      await initTags();
+    }
+  } catch (error) {
+    console.error('获取标签失败:', error);
+  }
+};
+
+// 初始化默认标签
+const initTags = async () => {
+  try {
+    const res = await request.post<SearchTag[]>('/system/tags/init');
+    if (res) {
+      tags.value = res;
+    }
+  } catch (error) {
+    console.error('初始化标签失败:', error);
+  }
+};
+
+// 添加新标签
+const handleAddTag = async () => {
+  const name = newTagName.value.trim();
+  if (!name) {
+    isAddingTag.value = false;
+    return;
+  }
+  
+  // 检查是否重复
+  if (tags.value.some(t => t.name === name)) {
+    alert('标签已存在');
+    return;
+  }
+  
+  try {
+    await request.post('/system/tags', { name });
+    newTagName.value = '';
+    isAddingTag.value = false;
+    await fetchTags();
+  } catch (error: any) {
+    console.error('添加标签失败:', error);
+    alert(error.response?.data?.message || '添加失败');
+  }
+};
+
+// 删除标签
+const handleDeleteTag = async (id: number, event: Event) => {
+  event.stopPropagation(); // 防止触发选择
+  if (!confirm('确定删除该标签吗？')) return;
+  
+  try {
+    await request.delete(`/system/tags?tag_id=${id}`);
+    // 如果当前搜索框内容等于该标签，清空搜索框
+    const tag = tags.value.find(t => t.id === id);
+    if (tag && query.value === tag.name) {
+      query.value = '';
+    }
+    await fetchTags();
+  } catch (error) {
+    console.error('删除标签失败:', error);
+  }
+};
+
+// 切换标签选择
+const toggleTag = (tagName: string) => {
+  if (query.value === tagName) {
+    query.value = ''; // 取消选择
+  } else {
+    query.value = tagName; // 选中
+  }
+};
+
+onMounted(() => {
+  fetchTags();
+});
 
 const handleSearch = async () => {
   if (!query.value.trim()) return;

@@ -90,4 +90,46 @@ async def load_session():
 async def clear_session():
     """清除用户会话"""
     success = system_manager.clear_session()
+    success = system_manager.clear_session()
     return {"success": success}
+
+# ------------------------------------------------------------
+# 标签管理 API
+# ------------------------------------------------------------
+
+@router.get("/tags", response_model=ApiResponseData)
+async def get_tags():
+    """获取所有搜索标签"""
+    tags = system_manager.get_tags()
+    return tags
+
+@router.post("/tags/init", response_model=ApiResponseData)
+async def init_tags():
+    """初始化默认标签（如果为空）"""
+    system_manager.init_default_tags()
+    return system_manager.get_tags()
+
+@router.post("/tags", response_model=ApiResponseData)
+async def add_tag(data: dict):
+    """添加标签"""
+    name = data.get("name")
+    if not name:
+        return {"success": False, "message": "标签名称不能为空"}
+    return system_manager.add_tag(name)
+
+@router.delete("/tags", response_model=ApiResponseData)
+async def delete_tag(tag_id: int = None, name: str = None):
+    """删除标签 (通过ID或名称)"""
+    # FastAPI Query parameters for DELETE
+    # 使用 query params: DELETE /system/tags?tag_id=1 或 DELETE /system/tags?name=郑州
+    from fastapi import Query
+    
+    # 注意：这里我们重新获取参数，因为上面的定义方式可能不被FastAPI完全捕获为Query
+    # 实际上，上面的定义在FastAPI中就是Query参数
+    
+    if tag_id:
+        return system_manager.delete_tag(tag_id)
+    elif name:
+        return system_manager.delete_tag_by_name(name)
+    else:
+        return {"success": False, "message": "必须提供 tag_id 或 name"}

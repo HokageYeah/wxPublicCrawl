@@ -5,6 +5,9 @@ from datetime import datetime, timedelta
 import json
 from typing import Dict, Any, Optional
 from app.utils.src_path import get_writable_dir
+from app.models.search_tag import SearchTag
+from app.db.sqlalchemy_db import database
+from sqlalchemy.exc import IntegrityError
 
 class SystemManager:
     """管理用户会话的单例类"""
@@ -18,6 +21,17 @@ class SystemManager:
             # 初始化会话文件路径
             session_dir = get_writable_dir('sessions')
             cls._session_file = os.path.join(session_dir, 'user_session.json')
+            
+            # 确保初始化默认标签（如果数据库连接可用）
+            try:
+                # 只有在数据库连接初始化后才能调用，这里可能需要一种机制确保 DB init 之后调用
+                # 由于 SystemManager 在 system.py 中初始化，而 database 在 sqlalchemy_db.py 初始化
+                # 它们之间可能存在循环依赖如果在这里直接调用。
+                # 更好的方式是在应用启动时调用，或者在首次获取标签时调用。
+                pass
+            except Exception:
+                pass
+                
         return cls._instance
     
 
@@ -149,6 +163,105 @@ class SystemManager:
     def is_logged_in(self) -> bool:
         """检查用户是否已登录"""
         return self.load_session() is not None
+
+    # ------------------------------------------------------------
+    # 标签管理相关方法
+    # ------------------------------------------------------------
+
+    def init_default_tags(self):
+        """初始化默认标签"""
+        default_tags = ["郑州", "教育", "金水区", "中原区", "小学", "惠济区"]
+        session_gen = database.get_session()
+        session = next(session_gen)
+        try:
+            # 检查是否已有便签
+            count = session.query(SearchTag).count()
+            if count == 0:
+                print("初始化默认搜索标签...")
+                for tag_name in default_tags:
+                    tag = SearchTag(name=tag_name)
+                    session.add(tag)
+                session.commit()
+                print("默认标签初始化完成")
+        except Exception as e:
+            print(f"初始化默认标签失败: {e}")
+            session.rollback()
+        finally:
+            session.close()
+
+    def get_tags(self):
+        """获取所有搜索标签"""
+        session_gen = database.get_session()
+        session = next(session_gen)
+        try:
+            tags = session.query(SearchTag).all()
+            return [{"id": tag.id, "name": tag.name} for tag in tags]
+        except Exception as e:
+            print(f"获取标签失败: {e}")
+            return []
+        finally:
+            session.close()
+
+    def add_tag(self, name: str):
+        """添加新标签"""
+        # 限制标签数量最多20个
+        session_gen = database.get_session()
+        session = next(session_gen)
+        try:
+            count = session.query(SearchTag).count()
+            if count >= 20:
+                return {"success": False, "message": "标签数量已达上限(20个)"}
+            
+            new_tag = SearchTag(name=name)
+            session.add(new_tag)
+            session.commit()
+            return {"success": True, "message": "添加成功", "data": {"id": new_tag.id, "name": new_tag.name}}
+        except IntegrityError:
+            session.rollback()
+            return {"success": False, "message": "标签已存在"}
+        except Exception as e:
+            session.rollback()
+            print(f"添加标签失败: {e}")
+            return {"success": False, "message": f"添加失败: {str(e)}"}
+        finally:
+            session.close()
+
+    def delete_tag(self, tag_id: int):
+        """根据ID删除标签"""
+        session_gen = database.get_session()
+        session = next(session_gen)
+        try:
+            tag = session.query(SearchTag).filter(SearchTag.id == tag_id).first()
+            if tag:
+                session.delete(tag)
+                session.commit()
+                return {"success": True, "message": "删除成功"}
+            return {"success": False, "message": "标签不存在"}
+        except Exception as e:
+            session.rollback()
+            print(f"删除标签失败: {e}")
+            return {"success": False, "message": f"删除失败: {str(e)}"}
+        finally:
+            session.close()
+            
+    def delete_tag_by_name(self, name: str):
+        """根据名称删除标签"""
+        session_gen = database.get_session()
+        session = next(session_gen)
+        try:
+            # 兼容处理
+            tag = session.query(SearchTag).filter(SearchTag.name == name).first()
+            if tag:
+                session.delete(tag)
+                session.commit()
+                return {"success": True, "message": "删除成功"}
+            return {"success": False, "message": "标签不存在"}
+        except Exception as e:
+            session.rollback()
+            print(f"删除标签失败: {e}")
+            return {"success": False, "message": f"删除失败: {str(e)}"}
+        finally:
+            session.close()
 
 
 # 全局单例

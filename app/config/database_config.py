@@ -11,7 +11,10 @@ def get_database_config():
     global _config_printed
     
     env = os.getenv("ENV", "development").lower()
-    
+    print("\n数据库初始化配置:")
+    print("----------------------------------------")
+    print(f"database_config.py---- ENV: {env}")
+    print("----------------------------------------")
     # ✅ 只在开发环境且未打印过时才打印
     if env in ("development", "dev", "test") and not _config_printed:
         print("\n当前数据库环境信息:")
@@ -52,7 +55,10 @@ def get_database_url() -> str:
     
     config = get_database_config()
     driver = config['driver']
-    
+    print("\n数据库URL:")
+    print("----------------------------------------")
+    print(f"database_config.py---- driver: {driver}")
+    print("----------------------------------------")
     # SQLite 使用不同的 URL 格式
     if driver == "sqlite":
         # 获取用户数据目录

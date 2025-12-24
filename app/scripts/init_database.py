@@ -9,6 +9,8 @@ sys.path.append(str(project_root))
 
 # 设置环境变量
 os.environ["ENV"] = "production"
+if "ENV" not in os.environ:
+    os.environ["ENV"] = "development"
 
 # 导入必要的模块
 from sqlalchemy import create_engine

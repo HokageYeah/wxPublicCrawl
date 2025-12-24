@@ -4,3 +4,6 @@
 venv/
 build/
 dist/
+logs/*
+/web/logs/*
+/web/dist/*
