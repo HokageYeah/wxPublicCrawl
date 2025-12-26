@@ -59,7 +59,7 @@ export const useWechatLoginStore = defineStore('wechatLogin', {
         
         if (sessionResponse.logged_in && sessionResponse.user_info) {
           this.userInfo = sessionResponse.user_info;
-          alert('用户已登录'+ JSON.stringify(sessionResponse));
+          // alert('用户已登录'+ JSON.stringify(sessionResponse));
           this.cookies = sessionResponse.cookies || {};  // 恢复cookies
           this.token = sessionResponse.token || '';  // 恢复token
           this.loginComplete = true;

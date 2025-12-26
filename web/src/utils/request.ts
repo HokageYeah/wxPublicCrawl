@@ -42,7 +42,7 @@ class Request {
   private instance: AxiosInstance;
   private baseConfig: AxiosRequestConfig = {
     baseURL: import.meta.env.VITE_API_BASE_URL,
-    timeout: 60000,
+    timeout: 200000,
     withCredentials: true,
   };
   

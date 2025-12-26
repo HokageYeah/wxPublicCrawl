@@ -1,9 +1,9 @@
 <template>
   <div class="h-screen flex flex-col bg-gray-100 font-sans text-gray-900">
-    <!-- Top Section: Header & Controls -->
+    <!-- 顶部区域：标题头和控制 -->
     <div class="flex-none bg-white border-b border-gray-200 shadow-sm z-20">
         <div class="max-w-7xl mx-auto px-6 py-4">
-            <!-- Header -->
+            <!-- 标题头 -->
             <div class="flex items-center justify-between mb-6">
                 <div class="flex items-center gap-4">
                     <button @click="router.back()" class="p-2 rounded-full hover:bg-gray-100 text-gray-600 transition-colors" title="返回">
@@ -37,10 +37,10 @@
                 </div>
             </div>
 
-            <!-- Controls (Compact) -->
+            <!-- 控制区（紧凑版） -->
             <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
                 <div class="flex flex-col md:flex-row gap-6 md:items-center justify-between">
-                    <!-- Config Switches -->
+                    <!-- 配置开关 -->
                     <div class="flex gap-6">
                         <label class="flex items-center space-x-2.5 cursor-pointer group select-none">
                             <input type="checkbox" v-model="isSaveToLocal" class="form-checkbox h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500 transition duration-150 ease-in-out">
@@ -52,7 +52,7 @@
                         </label>
                     </div>
 
-                    <!-- Path Selection -->
+                    <!-- 路径选择 -->
                     <div v-if="isSaveToLocal" class="flex-1 max-w-2xl flex flex-col md:flex-row gap-3 md:items-center">
                          <div class="flex-1 relative">
                             <input 
@@ -78,7 +78,7 @@
         </div>
     </div>
 
-    <!-- Middle Section: Scrollable List -->
+    <!-- 中间区域：可滚动列表 -->
     <div class="flex-1 overflow-hidden relative">
         <div class="absolute inset-0 overflow-auto custom-scrollbar bg-gray-100 px-6 py-6 max-w-7xl mx-auto w-full">
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden min-h-[400px]">
@@ -93,13 +93,16 @@
                   </thead>
                   <tbody class="bg-white divide-y divide-gray-100">
                     <tr v-for="article in articles" :key="article.aid" 
-                        class="transition-colors group"
-                        :class="[
-                            article.is_education ? 'bg-amber-50 hover:bg-amber-100' : 'hover:bg-blue-50/50'
-                        ]"
+                        class="transition-colors group hover:bg-blue-50/50"
                     >
                       <td class="px-6 py-4">
-                        <div class="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-blue-700 transition-colors" :title="article.title">{{ article.title }}</div>
+                        <div class="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-blue-700 transition-colors" :title="article.title">
+                            <!-- AI分析标签（仅文本） -->
+                            <span v-if="article.is_education" class="font-bold mr-1 align-middle select-none ai-text-shimmer">
+                                教育 | AI严选
+                            </span>
+                            <span class="align-middle">{{ article.title }}</span>
+                        </div>
                          <div class="flex items-center gap-3 mt-1.5">
                               <a :href="article.link" target="_blank" class="text-xs text-gray-400 hover:text-blue-600 flex items-center transition-colors">
                                   <span class="i-carbon-link mr-1"></span> 原文链接
@@ -150,13 +153,13 @@
                   </tbody>
                 </table>
                 
-                <!-- Empty State -->
+                <!-- 空状态 -->
                 <div v-if="articles.length === 0 && !loading" class="flex flex-col items-center justify-center py-20 text-gray-400">
                     <span class="i-carbon-document-blank text-4xl mb-3 text-gray-300"></span>
                     <p class="text-sm">暂无文章数据</p>
                 </div>
                 
-                <!-- Loading State -->
+                <!-- 加载状态 -->
                 <div v-if="loading && articles.length === 0" class="flex flex-col items-center justify-center py-20 text-gray-500">
                     <span class="i-carbon-renew animate-spin text-3xl mb-3 text-blue-500"></span>
                     <p class="text-sm">正在加载文章列表...</p>
@@ -166,12 +169,12 @@
             <div class="h-6"></div> <!-- Bottom Spacer -->
         </div>
     </div>
-    
-    <!-- Bottom Section: Pagination -->
+
+    <!-- 底部区域：分页 -->
     <div class="flex-none bg-white border-t border-gray-200 px-6 py-4 z-20">
         <div class="max-w-7xl mx-auto">
             <div v-if="totalCount > 0" class="flex items-center justify-between">
-              <!-- Mobile Pagination -->
+              <!-- 移动端分页 -->
               <div class="flex flex-1 justify-between sm:hidden">
                 <button 
                     @click="handlePageChange(currentPage - 1)" 
@@ -188,8 +191,8 @@
                   下一页
                 </button>
               </div>
-              
-              <!-- Desktop Pagination -->
+
+              <!-- 桌面端分页 -->
               <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
                 <div>
                   <p class="text-sm text-gray-500">
@@ -248,6 +251,7 @@ import { useRoute, useRouter } from 'vue-router';
 import request from '@/utils/request';
 import { useWechatLoginStore } from '@/stores/wechatLoginStore';
 
+// 文章数据接口
 interface Article {
   aid: string;
   title: string;
@@ -267,7 +271,7 @@ const wechatStore = useWechatLoginStore();
 const fakeid = route.query.fakeid as string;
 const nickname = route.query.nickname as string;
 
-// Configuration
+// 配置项
 const downloadPath = ref(''); 
 const isSaveToLocal = ref(true);
 const isUploadToAliyun = ref(false);
@@ -276,7 +280,7 @@ const articles = ref<Article[]>([]);
 const loading = ref(false);
 const analyzing = ref(false);
 
-// Pagination
+// 分页
 const currentPage = ref(1);
 const pageSize = 15;
 const totalCount = ref(0);
@@ -316,7 +320,7 @@ const checkDownloadStatus = async () => {
         if (Array.isArray(downloadedAids)) {
             articles.value.forEach(article => {
                 article.downloaded = false;
-                if (downloadedAids.includes(article.aid)) {
+                if (downloadedAids.some(d => d.aid === article.aid)) {
                     article.downloaded = true;
                 }
             });
@@ -401,8 +405,8 @@ const fetchArticles = async (page = 1) => {
 
 const downloadArticle = async (article: Article) => {
   if (article.downloading) return;
-  
-  // Validation
+
+  // 校验
   if (isSaveToLocal.value && !downloadPath.value) {
       alert('请先选择下载保存路径');
       return;
@@ -504,3 +508,37 @@ onMounted(() => {
     }
 });
 </script>
+
+
+
+<style scoped>
+/* AI文本闪光效果的动画 */
+.ai-text-shimmer {
+  /* 渐变色：深蓝 -> 亮青 -> 白色（闪光） -> 亮青 -> 深蓝 */
+  background: linear-gradient(
+    110deg, 
+    #1e40af 0%,    /* deep-blue-800 */
+    #3b82f6 30%,   /* blue-500 */
+    #22d3ee 45%,   /* cyan-400 */
+    #ffffff 50%,   /* 白色（闪光点） */
+    #22d3ee 55%,   /* cyan-400 */
+    #3b82f6 70%,   /* blue-500 */
+    #1e40af 100%   /* deep-blue-800 */
+  );
+  background-size: 200% auto;
+  background-position: -200% center;
+  color: #2563eb;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 2.5s linear infinite;
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.3); /* 柔和发光效果 */
+  font-weight: 800; /* 加粗以提升可见度 */
+}
+
+@keyframes shimmer {
+  to {
+    background-position: 200% center;
+  }
+}
+</style>
