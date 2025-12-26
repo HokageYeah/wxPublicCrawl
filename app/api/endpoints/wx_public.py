@@ -17,7 +17,8 @@ from app.services.wx_public import (
     fetch_redirect_login_info,
     fetch_verify_user_info,
 )
-from app.schemas.wx_data import ArticleDetailRequest, ArticleListRequest, CookieTokenRequest, PreloginRequest, WebreportRequest, StartLoginRequest, RedirectLoginInfoRequest
+from app.schemas.wx_data import ArticleDetailRequest, ArticleListRequest, CookieTokenRequest, PreloginRequest, WebreportRequest, StartLoginRequest, RedirectLoginInfoRequest, EducationAnalyzeRequest
+from app.ai.code.education_analyze import analyze_education_articles
 from app.schemas.common_data import ApiResponseData
 from app.decorators.cache_decorator import ttl_cache, timed_cache, get_cache
 
@@ -66,6 +67,16 @@ async def set_wx_cookie_token(params: CookieTokenRequest):
     """设置cookie、token"""
     result = await fetch_set_wx_cookie_token(params)
     return result
+
+
+# AI分析教育相关文章
+@router.post("/analyze-education-content", response_model=ApiResponseData)
+async def analyze_education_content(params: EducationAnalyzeRequest):
+    """
+    AI分析教育相关文章
+    """
+    result = await analyze_education_articles(params.articles)
+    return {"code": 0, "msg": "success", "data": result}
 
 
 # 微信二维码登录流程
@@ -180,4 +191,3 @@ async def get_session_id():
     """
     session_id = await generate_session_id()
     return {"session_id": session_id}
-

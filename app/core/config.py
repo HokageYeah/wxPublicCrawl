@@ -1,22 +1,45 @@
+
+import sys
 from typing import Any, Dict, Optional
 import os
 from dotenv import load_dotenv
 from pydantic import field_validator
 from pydantic_settings import BaseSettings
-
+from app.utils.src_path import get_resource_path
 # 获取当前环境
 ENV = os.getenv("ENV", "development")
 
 # 只在开发环境打印调试信息
-DEBUG_MODE = ENV in ("development", "dev", "test")
+DEBUG_MODE = ENV in ("development", "dev", "test","desktop")
 
 if DEBUG_MODE:
     print(f"当前环境: {ENV}")
 
-# 桌面应用环境直接使用默认配置，不加载 .env
+
+# 桌面应用环境或者打包环境
 if ENV == "desktop":
-    if DEBUG_MODE:
-        print("桌面应用模式：使用内置默认配置")
+    print('[DEBUG] ENV:', ENV)
+    
+    # 1. 尝试加载基础 .env 文件
+    # env_path = get_resource_path(".env")
+    # if os.path.exists(env_path):
+    #     if DEBUG_MODE:
+    #         print(f"加载基础配置文件: {env_path}")
+    #     load_dotenv(env_path, override=True)
+    # else:
+    #     if DEBUG_MODE:
+    #         print(f"基础配置文件 {env_path} 不存在")
+
+    # 2. 尝试加载 .env.desktop 文件 (覆盖基础配置)
+    desktop_env_path = get_resource_path(".env.desktop")
+    if os.path.exists(desktop_env_path):
+        if DEBUG_MODE:
+            print(f"加载桌面端配置文件: {desktop_env_path}")
+        load_dotenv(desktop_env_path, override=True)
+    else:
+        if DEBUG_MODE:
+            print(f"桌面端配置文件 {desktop_env_path} 不存在")
+            
 else:
     # 根据环境选择配置文件（老方法，根据文件名去拿文件配置，未使用dotenv库）以下使用dotenv库
     # env_file = f".env.{ENV}" if os.path.exists(f".env.{ENV}") else ".env"
@@ -64,9 +87,14 @@ class Settings(BaseSettings):
     REGION: str = '' # 阿里云Region
     ENDPOINT: str = '' # 阿里云Endpoint
 
+    # AI API Key
+    AI_API_KEY: str = '' # AI API Key
+    AI_BASE_URL: str = '' # AI Base URL
+    AI_MODEL: str = '' # AI Model
+
     # 数据库配置
     # 桌面应用默认使用 SQLite，服务器环境使用 MySQL
-    DB_DRIVER: Optional[str] = "sqlite"  # desktop 环境默认使用 sqlite
+    DB_DRIVER: Optional[str] = ""  # desktop 环境默认使用 sqlite
     DB_USER: Optional[str] = "root"
     DB_PASSWORD: Optional[str] = "aa123456"
     DB_HOST: Optional[str] = "localhost"
@@ -87,7 +115,10 @@ class Settings(BaseSettings):
     #     return v
 
     class Config:
-        env_file = ".env"
+        if ENV == "desktop":
+            env_file = get_resource_path(".env")
+        else:
+            env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = True
 

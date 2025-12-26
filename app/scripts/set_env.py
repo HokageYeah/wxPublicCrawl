@@ -16,6 +16,11 @@ def set_project_env(env_type):
         env_file = ".env.test"
         db_env_var = "DB_NAME"
         print("已切换到测试环境")
+    elif env_type == "desktop":
+        env_value = "desktop"
+        env_file = ".env.desktop"
+        db_env_var = "DB_NAME"
+        print("已切换到桌面环境")
     else:
         env_value = "development"
         env_file = ".env.development"

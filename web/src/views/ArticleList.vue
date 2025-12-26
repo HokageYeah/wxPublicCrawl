@@ -17,12 +17,23 @@
                         </div>
                     </div>
                 </div>
-                <div class="flex gap-2">
-                    <button @click="fetchArticles(1)" :disabled="loading" class="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm disabled:opacity-70 disabled:cursor-not-allowed">
-                        <span v-if="loading" class="i-carbon-renew animate-spin mr-2 text-lg"></span>
-                        <span v-else class="i-carbon-renew mr-2 text-lg"></span>
-                        刷新列表
-                    </button>
+                <div class="flex flex-col items-end gap-2">
+                    <div class="flex gap-2">
+                        <button @click="fetchArticles(1)" :disabled="loading" class="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm disabled:opacity-70 disabled:cursor-not-allowed">
+                            <span v-if="loading" class="i-carbon-renew animate-spin mr-2 text-lg"></span>
+                            <span v-else class="i-carbon-renew mr-2 text-lg"></span>
+                            刷新列表
+                        </button>
+                        <button @click="analyzeEducation" :disabled="analyzing || articles.length === 0" class="flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm disabled:opacity-70 disabled:cursor-not-allowed">
+                            <span v-if="analyzing" class="i-carbon-circle-dash animate-spin mr-2 text-lg"></span>
+                            <span v-else class="i-carbon-idea mr-2 text-lg"></span>
+                            AI帮分析
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 flex items-center">
+                        <span class="i-carbon-information mr-1"></span>
+                        AI帮助分析哪些文章是跟教育类有关的
+                    </p>
                 </div>
             </div>
 
@@ -81,7 +92,12 @@
                     </tr>
                   </thead>
                   <tbody class="bg-white divide-y divide-gray-100">
-                    <tr v-for="article in articles" :key="article.aid" class="hover:bg-blue-50/50 transition-colors group">
+                    <tr v-for="article in articles" :key="article.aid" 
+                        class="transition-colors group"
+                        :class="[
+                            article.is_education ? 'bg-amber-50 hover:bg-amber-100' : 'hover:bg-blue-50/50'
+                        ]"
+                    >
                       <td class="px-6 py-4">
                         <div class="text-sm font-medium text-gray-900 line-clamp-2 group-hover:text-blue-700 transition-colors" :title="article.title">{{ article.title }}</div>
                          <div class="flex items-center gap-3 mt-1.5">
@@ -241,6 +257,7 @@ interface Article {
   downloading?: boolean;
   downloaded?: boolean;
   uploadedUrl?: string; // For Aliyun upload result
+  is_education?: boolean; // AI分析结果
 }
 
 const route = useRoute();
@@ -257,6 +274,7 @@ const isUploadToAliyun = ref(false);
 
 const articles = ref<Article[]>([]);
 const loading = ref(false);
+const analyzing = ref(false);
 
 // Pagination
 const currentPage = ref(1);
@@ -426,6 +444,41 @@ const downloadArticle = async (article: Article) => {
   } finally {
     article.downloading = false;
   }
+
+};
+
+const analyzeEducation = async () => {
+    if (articles.value.length === 0) return;
+    
+    analyzing.value = true;
+    try {
+        const articleList = articles.value.map(a => ({ aid: a.aid, title: a.title }));
+        // API response format: { code: 0, msg: "success", data: ["aid1", "aid2"] }
+        const res = await request.post<{code: number, msg: string, data: string[]}>('/analyze-education-content', {
+            articles: articleList
+        });
+        
+        let educationCount = 0;
+        if (res && res.data) {
+            const educationAids = res.data;
+            articles.value.forEach(article => {
+                if (educationAids.includes(article.aid)) {
+                    article.is_education = true;
+                    educationCount++;
+                } else {
+                    article.is_education = false; 
+                }
+            });
+            alert(`分析完成！\n本页共有 ${educationCount} 条教育相关文章。`);
+        } else {
+            alert('分析完成，未发现教育相关文章或返回数据异常。');
+        }
+    } catch (error) {
+        console.error('AI Analysis failed:', error);
+        alert('AI分析请求失败，请稍后重试。');
+    } finally {
+        analyzing.value = false;
+    }
 };
 
 const handlePageChange = (newPage: number) => {

@@ -99,8 +99,14 @@ rm -rf build dist 2>/dev/null || {
 echo -e "${GREEN}✓ 清理完成${NC}"
 echo ""
 
-# 7. 打包应用
-echo -e "${YELLOW}[7/8] 开始打包应用...${NC}"
+# 7. 设置桌面环境并打包应用
+echo -e "${YELLOW}[7/8] 设置桌面环境并打包应用...${NC}"
+
+# 注入桌面端环境变量配置 下面的这行代码其实没有用处，需要在启动desktop的时候手动设置环境变量
+echo "注入桌面端环境变量..."
+python3 -m app.scripts.set_env desktop
+
+echo "开始打包应用..."
 echo "这可能需要几分钟时间，请耐心等待..."
 pyinstaller wx_crawler.spec
 

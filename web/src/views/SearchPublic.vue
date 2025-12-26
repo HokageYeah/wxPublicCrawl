@@ -103,6 +103,7 @@ import { useRouter } from 'vue-router';
 // 使用 axios 直接调用或导入预配置的实例
 // import axios from 'axios';
 import request from '@/utils/request';
+import { useWechatLoginStore } from '@/stores/wechatLoginStore';
 
 // 定义搜索结果接口
 interface PublicAccount {
@@ -123,6 +124,7 @@ const query = ref('');
 const loading = ref(false);
 const hasSearched = ref(false);
 const results = ref<PublicAccount[]>([]);
+const wechatStore = useWechatLoginStore();
 
 // 标签相关状态
 const tags = ref<SearchTag[]>([]);
@@ -210,6 +212,10 @@ const toggleTag = (tagName: string) => {
 
 onMounted(() => {
   fetchTags();
+  // 进入这个页面，如果用户没有登录，则再初始化登录信息
+  // if (!wechatStore.isLoggedIn) {
+  //   wechatStore.initialize();
+  // }
 });
 
 const handleSearch = async () => {

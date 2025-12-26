@@ -47,6 +47,9 @@ a = Analysis(
     # --------------------------------------------------------------------
     datas=[
         ('web/dist', 'web/dist'),  # Vue3 前端构建产物（HTML/CSS/JS）
+        ('app/ai/prompt', 'app/ai/prompt'),  # AI 提示词文件
+        ('.env', '.'),  # 打包 .env 文件到根目录
+        ('.env.desktop', '.'),  # 打包 .env.desktop 文件到根目录
         # 如果有其他资源文件，在此添加：
         # ('resources/images', 'resources/images'),
         # ('config/default.yaml', 'config'),

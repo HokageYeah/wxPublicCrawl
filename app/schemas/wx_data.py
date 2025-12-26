@@ -65,3 +65,12 @@ class CheckDownloadRequest(BaseModel):
     base_path: str = Field(..., description="下载根目录")
     wx_public_name: str = Field(..., description="公众号名称")
     articles: list[ArticleItem] = Field(..., description="文章列表")
+
+
+class ArticleSimple(BaseModel):
+    aid: str
+    title: str
+
+
+class EducationAnalyzeRequest(BaseModel):
+    articles: list[ArticleSimple]

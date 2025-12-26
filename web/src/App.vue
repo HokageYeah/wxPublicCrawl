@@ -47,6 +47,9 @@ const router = useRouter()
 
 onMounted(() => {
   console.log('✓ 已设置 cookies getter')
+  if (!wechatStore.isLoggedIn) {
+    wechatStore.initialize();
+  }
 })
 
 const handleLogout = async () => {
