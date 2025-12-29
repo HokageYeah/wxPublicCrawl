@@ -206,7 +206,7 @@ template_v2 = manager.get_prompt_with_version("education_prompt", "v2.0")
 
 ```python
 # 1. 基础对话
-from app.ai.code.ai_client import AIClient
+from app.ai.llm.ai_client import AIClient
 
 client = AIClient()
 response = await client.chat(user_message="你好")
@@ -217,7 +217,7 @@ result = await client.chat_with_json_response(
 )
 
 # 3. 使用提示词
-from app.ai.code.prompt_manager import get_prompt_manager
+from app.ai.utils.prompt_manager import get_prompt_manager
 
 manager = get_prompt_manager()
 prompt = manager.render_prompt("education_prompt", articles_json="...")
@@ -235,8 +235,8 @@ prompt = manager.render_prompt("education_prompt", articles_json="...")
 2. **创建业务模块**
    ```python
    # app/ai/code/your_feature_analyze.py
-   from app.ai.code.ai_client import AIClient
-   from app.ai.code.prompt_manager import get_prompt_manager
+   from app.ai.llm.ai_client import AIClient
+   from app.ai.utils.prompt_manager import get_prompt_manager
    
    async def analyze_your_feature(data):
        manager = get_prompt_manager()
@@ -267,7 +267,7 @@ prompt = manager.render_prompt("education_prompt", articles_json="...")
 ```python
 # tests/test_ai_client.py
 import pytest
-from app.ai.code.ai_client import AIClient
+from app.ai.llm.ai_client import AIClient
 
 @pytest.mark.asyncio
 async def test_basic_chat():
@@ -306,7 +306,7 @@ content = response.choices[0].message.content
 
 **迁移后：**
 ```python
-from app.ai.code.ai_client import AIClient
+from app.ai.llm.ai_client import AIClient
 client = AIClient()
 content = await client.chat(user_message="...")
 ```

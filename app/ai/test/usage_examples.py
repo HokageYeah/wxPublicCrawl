@@ -13,8 +13,8 @@ if str(project_root) not in sys.path:
 import asyncio
 import json
 from loguru import logger
-from app.ai.code.ai_client import AIClient, create_default_client
-from app.ai.code.prompt_manager import (
+from app.ai.llm.ai_client import AIClient, create_default_client
+from app.ai.utils.prompt_manager import (
     get_prompt_manager, 
     PromptBuilder,
     load_and_render_prompt

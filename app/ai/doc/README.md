@@ -51,7 +51,7 @@ python app/ai/test/quick_test.py
 #### 简单对话
 
 ```python
-from app.ai.code.ai_client import AIClient
+from app.ai.llm.ai_client import AIClient
 
 # 创建AI客户端
 client = AIClient()
@@ -91,7 +91,7 @@ async for chunk in client.stream_chat(
 #### 加载和渲染提示词
 
 ```python
-from app.ai.code.prompt_manager import get_prompt_manager
+from app.ai.utils.prompt_manager import get_prompt_manager
 
 # 获取全局提示词管理器（单例）
 manager = get_prompt_manager()
@@ -109,7 +109,7 @@ prompt = manager.render_prompt(
 #### 便捷函数
 
 ```python
-from app.ai.code.prompt_manager import load_and_render_prompt
+from app.ai.utils.prompt_manager import load_and_render_prompt
 
 # 一步完成加载和渲染
 prompt = load_and_render_prompt(
@@ -121,7 +121,7 @@ prompt = load_and_render_prompt(
 #### 动态构建提示词
 
 ```python
-from app.ai.code.prompt_manager import PromptBuilder
+from app.ai.utils.prompt_manager import PromptBuilder
 
 prompt = (PromptBuilder()
     .add_system_context("你是一个专业的数据分析师")
@@ -159,7 +159,7 @@ education_aids = await analyze_education_articles(articles)
 ### 自定义AI客户端
 
 ```python
-from app.ai.code.ai_client import AIClient
+from app.ai.llm.ai_client import AIClient
 
 client = AIClient(
     api_key="your-api-key",           # 覆盖默认配置
@@ -195,7 +195,7 @@ client.clear_history()
 ### 自定义提示词目录
 
 ```python
-from app.ai.code.prompt_manager import PromptManager
+from app.ai.utils.prompt_manager import PromptManager
 
 # 使用自定义目录
 manager = PromptManager(prompt_dir="/path/to/prompts")
@@ -290,7 +290,7 @@ prompt = manager.render_prompt(
 
 ```python
 # ✅ 推荐：使用全局单例
-from app.ai.code.prompt_manager import get_prompt_manager
+from app.ai.utils.prompt_manager import get_prompt_manager
 manager = get_prompt_manager()
 
 # ❌ 不推荐：每次创建新实例

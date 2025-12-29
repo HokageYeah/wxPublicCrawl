@@ -63,7 +63,7 @@ class AIClient:
     扩展方向：
     - 接入向量数据库（如Pinecone、Weaviate）进行知识检索
     - RAG（检索增强生成）功能
-    - 函数调用（Function Calling）支持
+    - 函数调用（Function Calling，MCP）支持
     - 多模态支持（图片、音频等）
     """
     

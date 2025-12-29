@@ -48,7 +48,7 @@ async def test_ai_client():
     print("="*60)
     
     try:
-        from app.ai.code.ai_client import AIClient
+        from app.ai.llm.ai_client import AIClient
         
         print("正在创建AI客户端...")
         client = AIClient(temperature=0.7)
@@ -77,7 +77,7 @@ async def test_json_response():
     print("="*60)
     
     try:
-        from app.ai.code.ai_client import AIClient
+        from app.ai.llm.ai_client import AIClient
         import json
         
         client = AIClient(temperature=0.1)
@@ -104,7 +104,7 @@ async def test_prompt_manager():
     print("="*60)
     
     try:
-        from app.ai.code.prompt_manager import get_prompt_manager, PromptBuilder
+        from app.ai.utils.prompt_manager import get_prompt_manager, PromptBuilder
         
         print("正在初始化提示词管理器...")
         manager = get_prompt_manager('app/ai/prompt')

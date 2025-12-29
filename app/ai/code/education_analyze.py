@@ -5,8 +5,8 @@
 import json
 from loguru import logger
 from app.schemas.wx_data import ArticleSimple
-from app.ai.code.ai_client import AIClient
-from app.ai.code.prompt_manager import get_prompt_manager
+from app.ai.llm.ai_client import AIClient
+from app.ai.utils.prompt_manager import get_prompt_manager
 
 
 async def analyze_education_articles(articles: list[ArticleSimple]) -> list[str]:

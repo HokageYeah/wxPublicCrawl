@@ -4,6 +4,7 @@
 """
 from typing import Dict, Any, Optional
 from pathlib import Path
+import os
 from jinja2 import Template, Environment, FileSystemLoader, TemplateNotFound
 from loguru import logger
 from app.utils.src_path import get_resource_path
@@ -61,9 +62,22 @@ class PromptManager:
         
         参数:
             prompt_dir: 提示词文件夹路径，默认为 app/ai/prompt/
+                       支持相对路径（会自动使用get_resource_path处理）或绝对路径
         """
+        # 记录原始路径用于调试
+        original_path = prompt_dir
+        
         if prompt_dir is None:
+            # 使用默认路径
             prompt_dir = get_resource_path('app/ai/prompt')
+            logger.debug(f"使用默认提示词路径: {prompt_dir}")
+        else:
+            # 如果传入的是相对路径（不是绝对路径），使用get_resource_path处理
+            # 这样可以正确处理打包后的资源路径
+            if not os.path.isabs(prompt_dir):
+                logger.debug(f"相对路径 '{original_path}' 转换为绝对路径...")
+                prompt_dir = get_resource_path(prompt_dir)
+                logger.debug(f"转换后: {prompt_dir}")
         
         self.prompt_dir = Path(prompt_dir)
         self._cache: Dict[str, PromptTemplate] = {}
@@ -71,9 +85,17 @@ class PromptManager:
         # 验证目录是否存在
         if not self.prompt_dir.exists():
             logger.warning(f"提示词目录不存在: {self.prompt_dir}")
+            logger.warning(f"原始路径: {original_path}, 解析后路径: {prompt_dir}")
+            # 列出父目录内容帮助调试
+            parent_dir = self.prompt_dir.parent
+            if parent_dir.exists():
+                logger.debug(f"父目录 {parent_dir} 内容: {list(parent_dir.iterdir())}")
             # 不抛出异常，允许后续手动添加提示词
         else:
-            logger.info(f"提示词管理器已初始化 - 目录: {self.prompt_dir}")
+            logger.info(f"✅ 提示词管理器已初始化 - 目录: {self.prompt_dir}")
+            # 列出目录中的提示词文件
+            prompt_files = list(self.prompt_dir.glob("*.txt"))
+            logger.info(f"找到 {len(prompt_files)} 个提示词文件: {[f.name for f in prompt_files]}")
     
     def load_prompt(self, name: str, file_name: Optional[str] = None) -> PromptTemplate:
         """

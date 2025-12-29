@@ -74,15 +74,35 @@ def get_resource_path(relative_path):
     if hasattr(sys, '_MEIPASS'):
         # PyInstaller 打包后的临时目录
         base_path = sys._MEIPASS
-        print(f"📦 [打包模式] 资源基础路径: {base_path}")
+        mode = "打包模式"
+        if ENV in ("desktop", "production"):
+            print(f"📦 [打包模式] sys._MEIPASS: {base_path}")
     else:
         # 开发环境：从当前文件向上找到项目根目录
         base_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        print(f"🔧 [开发模式] 资源基础路径: {base_path}")
+        mode = "开发模式"
+        if ENV in ("development", "dev", "test"):
+            print(f"🔧 [开发模式] 项目根目录: {base_path}")
     
     full_path = os.path.join(base_path, relative_path)
-    print(f"📄 资源完整路径: {full_path}")
-    print(f"📄 文件是否存在: {os.path.exists(full_path)}")
+    
+    # 详细日志（调试时启用）
+    if ENV in ("development", "dev", "test", "desktop"):
+        file_exists = os.path.exists(full_path)
+        print(f"📄 [{mode}] 资源路径解析:")
+        print(f"   相对路径: {relative_path}")
+        print(f"   完整路径: {full_path}")
+        print(f"   文件存在: {'✅ 是' if file_exists else '❌ 否'}")
+        
+        # 如果文件不存在，尝试列出父目录内容帮助调试
+        if not file_exists:
+            parent_dir = os.path.dirname(full_path)
+            if os.path.exists(parent_dir):
+                try:
+                    contents = os.listdir(parent_dir)
+                    print(f"   父目录内容: {contents[:5]}{'...' if len(contents) > 5 else ''}")
+                except Exception as e:
+                    print(f"   无法列出父目录: {e}")
     
     return full_path
 
