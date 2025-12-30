@@ -5,6 +5,20 @@
             "transport": "streamable-http",
             "url": "http://localhost:8008/mcp",
             "description": "FastMCP Server 天气、知识库测试"
+        },
+        "windows-cli": {
+            "transport": "stdio",
+            "command": "npx",
+            "args": ["-y", "@simonb97/server-win-cli"],
+            "link": "https://github.com/SimonB97/win-cli-mcp-server"
+          },
+        "baidu-map": {
+            "transport": "stdio",
+            "command": "npx",
+            "args": ["-y", "@baidumap/mcp-server-baidu-map"],
+            "env": {
+                "BAIDU_MAP_API_KEY": "gRQJd8BlJZOBJpJ3as5YQJ6zN14cSAMe"
+            }
         }
     }
 }
