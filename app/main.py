@@ -128,6 +128,8 @@ from contextlib import asynccontextmanager
 from typing import AsyncIterator
 # ✅ 只导入，不调用
 from app.core.logging_uru import setup_logging
+# 导入AI助手初始化函数
+from app.api.endpoints.ai_assistant import init_ai_assistant
 
 
 # 创建 lifespan 上下文管理器
@@ -153,6 +155,17 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         print("🗄️  初始化数据库连接...")
         database.connect()
         print("✅ 数据库连接完成")
+        
+        # 初始化AI助手
+        print("🤖 初始化AI助手...")
+        try:
+            await init_ai_assistant(llm_conn=None)
+            print("✅ AI助手初始化完成")
+            logging.info("AI助手初始化完成")
+        except Exception as e:
+            print(f"⚠️  AI助手初始化失败: {e}")
+            logging.warning(f"AI助手初始化失败: {e}")
+            logging.warning("应用将继续运行，但AI助手功能不可用")
         
         print("=" * 80)
         print("✅ 应用启动完成")
