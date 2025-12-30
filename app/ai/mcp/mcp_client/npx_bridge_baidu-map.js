@@ -5,16 +5,17 @@ const { execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
-console.log('[NPX Bridge] Starting @baidumap/mcp-server-baidu-map...');
+// 所有日志输出到stderr，避免干扰stdout的JSON RPC消息
+console.error('[NPX Bridge] Starting @baidumap/mcp-server-baidu-map...');
 
 // 首先确保包已安装
 try {
     // 检查是否已安装
     require.resolve('@baidumap/mcp-server-baidu-map');
-    console.log('[NPX Bridge] Package @baidumap/mcp-server-baidu-map is already installed');
+    console.error('[NPX Bridge] Package @baidumap/mcp-server-baidu-map is already installed');
 } catch (e) {
     // 如果未安装，使用npx安装
-    console.log('[NPX Bridge] Installing @baidumap/mcp-server-baidu-map...');
+    console.error('[NPX Bridge] Installing @baidumap/mcp-server-baidu-map...');
     execSync('npx -y @baidumap/mcp-server-baidu-map', { stdio: 'inherit' });
 }
 

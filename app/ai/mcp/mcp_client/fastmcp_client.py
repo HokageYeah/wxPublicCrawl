@@ -459,16 +459,17 @@ const {{ execSync }} = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
-console.log('[NPX Bridge] Starting {package_name}...');
+// 所有日志输出到stderr，避免干扰stdout的JSON RPC消息
+console.error('[NPX Bridge] Starting {package_name}...');
 
 // 首先确保包已安装
 try {{
     // 检查是否已安装
     require.resolve('{package_name}');
-    console.log('[NPX Bridge] Package {package_name} is already installed');
+    console.error('[NPX Bridge] Package {package_name} is already installed');
 }} catch (e) {{
     // 如果未安装，使用npx安装
-    console.log('[NPX Bridge] Installing {package_name}...');
+    console.error('[NPX Bridge] Installing {package_name}...');
     execSync('npx -y {package_name}', {{ stdio: 'inherit' }});
 }}
 

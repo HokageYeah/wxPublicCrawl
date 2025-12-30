@@ -5,16 +5,17 @@ const { execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
-console.log('[NPX Bridge] Starting @simonb97/server-win-cli...');
+// 所有日志输出到stderr，避免干扰stdout的JSON RPC消息
+console.error('[NPX Bridge] Starting @simonb97/server-win-cli...');
 
 // 首先确保包已安装
 try {
     // 检查是否已安装
     require.resolve('@simonb97/server-win-cli');
-    console.log('[NPX Bridge] Package @simonb97/server-win-cli is already installed');
+    console.error('[NPX Bridge] Package @simonb97/server-win-cli is already installed');
 } catch (e) {
     // 如果未安装，使用npx安装
-    console.log('[NPX Bridge] Installing @simonb97/server-win-cli...');
+    console.error('[NPX Bridge] Installing @simonb97/server-win-cli...');
     execSync('npx -y @simonb97/server-win-cli', { stdio: 'inherit' });
 }
 

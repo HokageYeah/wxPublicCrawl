@@ -48,7 +48,7 @@ class MCPLLMConnect:
         self,
         mcp_manager: MCPClientManager = None,
         ai_client: Optional[AIClient] = None,
-        max_tool_calls: int = 10,
+        max_tool_calls: int = 15,
         auto_execute_tools: bool = True
     ):
         """
