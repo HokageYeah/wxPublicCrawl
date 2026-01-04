@@ -38,6 +38,7 @@ def get_writable_dir(subdir='temp'):
         base_dir = os.path.expanduser('~/.local/share/wx公众号工具')
     
     target_dir = os.path.join(base_dir, subdir)
+    # 如果目录不存在，则创建目录 exist_ok=True 表示如果目录存在，则不创建
     os.makedirs(target_dir, exist_ok=True)
     return target_dir
 
@@ -52,6 +53,13 @@ def get_temp_file_path(filename):
         str: 临时文件的完整路径
     """
     temp_dir = get_writable_dir('temp')
+    return os.path.join(temp_dir, filename)
+
+def get_npx_bridge_file_path(filename):
+    """
+    获取npx桥接文件的完整路径
+    """
+    temp_dir = get_writable_dir('npx_bridge')
     return os.path.join(temp_dir, filename)
 
 

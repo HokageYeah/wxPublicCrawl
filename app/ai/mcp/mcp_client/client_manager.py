@@ -97,105 +97,141 @@ class MCPClientManager:
         Returns:
             bool: 初始化是否成功
         """
-        # 1. 加载配置
-        if not self.load_config():
-            logger.bind(tag=TAG).error("配置加载失败，跳过MCP客户端初始化")
-            return False
+        # 禁用代理以避免本地连接被拦截
+        import os
+        old_proxies = {}
+        proxy_keys = ['HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy', 'https_proxy', 'ALL_PROXY', 'all_proxy', 'NO_PROXY', 'no_proxy']
         
-        if not self.mcp_servers:
-            logger.bind(tag=TAG).warning("没有配置MCP服务")
-            return False
+        # logger.bind(tag=TAG).info(f"原始代理设置: {os.environ}")
+        # 保存原始代理设置
+        for key in proxy_keys:
+            if key in os.environ:
+                old_proxies[key] = os.environ[key]
         
-        logger.bind(tag=TAG).info(f"开始初始化 {len(self.mcp_servers)} 个MCP客户端...")
+        # 清除所有代理环境变量
+        for key in ['HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy', 'https_proxy', 'ALL_PROXY', 'all_proxy']:
+            if key in os.environ:
+                del os.environ[key]
         
-        success_count = 0
-        fail_count = 0
+        # 设置 NO_PROXY 以绕过系统代理（macOS 系统代理设置）
+        # 包括所有本地地址和回环地址
+        os.environ['NO_PROXY'] = 'localhost,127.0.0.1,0.0.0.0,::1,.local'
+        os.environ['no_proxy'] = 'localhost,127.0.0.1,0.0.0.0,::1,.local'
         
-        # 2. 遍历所有服务配置
-        for server_name, server_config in self.mcp_servers.items():
-            logger.bind(tag=TAG).info(f"📡 正在初始化MCP服务: {server_name}")
+        # logger.bind(tag=TAG).info(f"清除代理后环境变量: {os.environ}")
+        
+        if old_proxies:
+            logger.bind(tag=TAG).info("🚫 已临时禁用系统代理（避免本地MCP连接失败）")
+            logger.bind(tag=TAG).debug(f"设置 NO_PROXY: {os.environ['NO_PROXY']}")
+        
+        try:
+            # 1. 加载配置
+            if not self.load_config():
+                logger.bind(tag=TAG).error("配置加载失败，跳过MCP客户端初始化")
+                return False
             
-            try:
-                # 3. 创建并初始化客户端
-                client = FastMCPClient(name=server_name, config=server_config)
-                await client.init_client()
+            if not self.mcp_servers:
+                logger.bind(tag=TAG).warning("没有配置MCP服务")
+                return False
+            
+            logger.bind(tag=TAG).info(f"开始初始化 {len(self.mcp_servers)} 个MCP客户端...")
+            
+            success_count = 0
+            fail_count = 0
+            
+            # 2. 遍历所有服务配置
+            for server_name, server_config in self.mcp_servers.items():
+                logger.bind(tag=TAG).info(f"📡 正在初始化MCP服务: {server_name}")
                 
-                # 保存客户端实例
-                self.clients[server_name] = client
-                
-                # 4. 获取工具列表
-                client_tools = client.get_tool()
-                
-                if not client_tools:
-                    logger.bind(tag=TAG).warning(
-                        f"⚠️  服务 {server_name} 没有可用工具"
-                    )
-                    continue
-                
-                # 保存工具
-                tool_count_before = len(self.tools)
-                self.tools.extend(client_tools)
-                new_tool_count = len(self.tools) - tool_count_before
-                
-                logger.bind(tag=TAG).info(
-                    f"✅ 服务 {server_name} 初始化成功，"
-                    f"获取到 {new_tool_count} 个工具"
-                )
-                
-                # 5. 注册工具到函数注册表
-                for tool in client_tools:
-                    try:
-                        tool_name = tool["function"]["name"]
-                        func_name = f"mcp_{tool_name}"
-                        
-                        # 注册函数装饰器
-                        register_function(
-                            func_name, 
-                            tool, 
-                            ToolType.MCP_CLIENT
-                        )(self.execute_tool)
-                        
-                        # 注册到LLM函数处理器
-                        self.llm_conn.func_handler.function_registry.register_function(func_name)
-                        
-                        logger.bind(tag=TAG).debug(
-                            f"  ✓ 工具已注册: {func_name}"
-                        )
-                        
-                    except Exception as e:
-                        logger.bind(tag=TAG).error(
-                            f"  ✗ 工具注册失败 [{tool_name}]: {e}"
+                try:
+                    # 3. 创建并初始化客户端
+                    client = FastMCPClient(name=server_name, config=server_config)
+                    await client.init_client()
+                    
+                    # 保存客户端实例
+                    self.clients[server_name] = client
+                    
+                    # 4. 获取工具列表
+                    client_tools = client.get_tool()
+                    
+                    if not client_tools:
+                        logger.bind(tag=TAG).warning(
+                            f"⚠️  服务 {server_name} 没有可用工具"
                         )
                         continue
-                
-                success_count += 1
-                
+                    
+                    # 保存工具
+                    tool_count_before = len(self.tools)
+                    self.tools.extend(client_tools)
+                    new_tool_count = len(self.tools) - tool_count_before
+                    
+                    logger.bind(tag=TAG).info(
+                        f"✅ 服务 {server_name} 初始化成功，"
+                        f"获取到 {new_tool_count} 个工具"
+                    )
+                    
+                    # 5. 注册工具到函数注册表
+                    for tool in client_tools:
+                        try:
+                            tool_name = tool["function"]["name"]
+                            func_name = f"mcp_{tool_name}"
+                            
+                            # 注册函数装饰器
+                            register_function(
+                                func_name, 
+                                tool, 
+                                ToolType.MCP_CLIENT
+                            )(self.execute_tool)
+                            
+                            # 注册到LLM函数处理器
+                            self.llm_conn.func_handler.function_registry.register_function(func_name)
+                            
+                            logger.bind(tag=TAG).debug(
+                                f"  ✓ 工具已注册: {func_name}"
+                            )
+                            
+                        except Exception as e:
+                            logger.bind(tag=TAG).error(
+                                f"  ✗ 工具注册失败 [{tool_name}]: {e}"
+                            )
+                            continue
+                    
+                    success_count += 1
+                    
+                except Exception as e:
+                    fail_count += 1
+                    logger.bind(tag=TAG).error(
+                        f"❌ 服务 {server_name} 初始化失败: {e}",
+                        exc_info=True
+                    )
+                    continue
+            
+            # 6. 更新函数描述
+            try:
+                self.llm_conn.func_handler.upload_functions_desc()
+                logger.bind(tag=TAG).info("✅ LLM函数描述已更新")
             except Exception as e:
-                fail_count += 1
-                logger.bind(tag=TAG).error(
-                    f"❌ 服务 {server_name} 初始化失败: {e}",
-                    exc_info=True
+                logger.bind(tag=TAG).error(f"更新LLM函数描述失败: {e}")
+            
+            # 总结
+            logger.bind(tag=TAG).info(
+                f"\n{'='*60}\n"
+                f"MCP客户端初始化完成\n"
+                f"  成功: {success_count}/{len(self.mcp_servers)}\n"
+                f"  失败: {fail_count}/{len(self.mcp_servers)}\n"
+                f"  工具总数: {len(self.tools)}\n"
+                f"{'='*60}"
                 )
-                continue
-        
-        # 6. 更新函数描述
-        try:
-            self.llm_conn.func_handler.upload_functions_desc()
-            logger.bind(tag=TAG).info("✅ LLM函数描述已更新")
-        except Exception as e:
-            logger.bind(tag=TAG).error(f"更新LLM函数描述失败: {e}")
-        
-        # 总结
-        logger.bind(tag=TAG).info(
-            f"\n{'='*60}\n"
-            f"MCP客户端初始化完成\n"
-            f"  成功: {success_count}/{len(self.mcp_servers)}\n"
-            f"  失败: {fail_count}/{len(self.mcp_servers)}\n"
-            f"  工具总数: {len(self.tools)}\n"
-            f"{'='*60}"
-        )
-        
-        return success_count > 0
+            
+            return success_count > 0
+            
+        finally:
+            # 恢复原始代理设置
+            for key, value in old_proxies.items():
+                os.environ[key] = value
+            
+            if old_proxies:
+                logger.bind(tag=TAG).debug("✅ 已恢复系统代理设置")
 
     def get_all_tools(self) -> List[Dict[str, Any]]:
         """
@@ -224,7 +260,7 @@ class MCPClientManager:
         
         logger.bind(tag=TAG).debug(f"工具 {tool_name} 不是MCP工具")
         return False
-    
+
     async def execute_tool(self, tool_name: str, tool_args: Dict[str, Any]) -> Any:
         """
         执行MCP工具调用
@@ -292,7 +328,7 @@ class MCPClientManager:
             error_msg = f"工具 [{actual_tool_name}] 执行失败: {e}"
             logger.bind(tag=TAG).error(error_msg, exc_info=True)
             raise ValueError(error_msg)
-    
+        
     async def cleanup(self):
         """
         清理所有MCP客户端资源

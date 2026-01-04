@@ -9,7 +9,7 @@ from contextlib import AsyncExitStack
 from loguru import logger
 from fastmcp import Client
 from fastmcp.client.transports import PythonStdioTransport, NodeStdioTransport
-
+from app.utils.src_path import get_writable_dir, get_npx_bridge_file_path
 
 TAG = "FASTMCP_CLIENT"
 
@@ -36,6 +36,9 @@ class FastMCPClient:
         Args:
             name: 客户端名称（用于日志标识）
             config: 客户端配置字典
+            client: 客户端实例
+            exit_stack: 退出栈
+            tools: 工具列表
         """
         self.name = name
         self.config = config
@@ -98,12 +101,42 @@ class FastMCPClient:
             base_url += '/'
         
         logger.bind(tag=TAG).info(f"[{self.name}] 📡 连接HTTP服务: {base_url}")
-        
-        # 创建HTTP传输并连接
-        self.client = await self.exit_stack.enter_async_context(
-            Client(base_url)
+        logger.bind(tag=TAG).debug(
+            f"[{self.name}] 当前环境: "
+            f"HTTP_PROXY={os.environ.get('HTTP_PROXY', 'None')}, "
+            f"HTTPS_PROXY={os.environ.get('HTTPS_PROXY', 'None')}, "
+            f"NO_PROXY={os.environ.get('NO_PROXY', 'None')}"
         )
-    
+        
+        # 方案：Monkey patch httpx 的 Client 禁用代理
+        import httpx
+        
+        # 保存原始的 Client 类
+        original_client = httpx.AsyncClient
+        
+        # 创建包装器，强制禁用代理
+        class NoProxyAsyncClient(original_client):
+            def __init__(self, *args, **kwargs):
+                # 强制设置 trust_env=False 以忽略系统代理
+                kwargs['trust_env'] = False
+                # 移除 proxies 参数（如果存在），因为 httpx.AsyncClient 不接受此参数
+                kwargs.pop('proxies', None)
+                super().__init__(*args, **kwargs)
+        
+        # 临时替换 httpx.AsyncClient
+        httpx.AsyncClient = NoProxyAsyncClient
+        
+        try:
+            # 创建HTTP传输并连接
+            self.client = await self.exit_stack.enter_async_context(
+                Client(base_url)
+            )
+            logger.bind(tag=TAG).debug(f"[{self.name}] ✅ HTTP客户端创建成功（已禁用代理）")
+            
+        finally:
+            # 恢复原始的 httpx.AsyncClient
+            httpx.AsyncClient = original_client
+                
     async def _init_stdio_client(self):
         """初始化stdio传输客户端"""
         command = self.config.get("command")
@@ -202,10 +235,11 @@ class FastMCPClient:
         package_name = package_args[0]
         logger.bind(tag=TAG).info(f"[{self.name}] NPX包名: {package_name}")
         
-        # 创建桥接脚本
-        temp_dir = os.path.dirname(os.path.abspath(__file__))
-        bridge_file = os.path.join(temp_dir, f"npx_bridge_{self.name}.js")
-        
+        # 创建桥接脚本 创建在了本地
+        # temp_dir = os.path.dirname(os.path.abspath(__file__))
+        # bridge_file = os.path.join(temp_dir, f"npx_bridge_{self.name}.js")
+        temp_dir = get_writable_dir('npx_bridge')
+        bridge_file = get_npx_bridge_file_path(f"npx_bridge_{self.name}.js")
         self._create_npx_bridge_script(bridge_file, package_name)
         
         logger.bind(tag=TAG).debug(f"[{self.name}] 桥接脚本: {bridge_file}")
@@ -241,7 +275,7 @@ class FastMCPClient:
                         f"[{self.name}] ✓ 工具 [{tool_name}] 存在"
                     )
                     return True
-                    
+                
             except Exception as e:
                 logger.bind(tag=TAG).warning(
                     f"[{self.name}] 检查工具时出错: {e}"
@@ -292,7 +326,7 @@ class FastMCPClient:
         if not self.tools:
             logger.bind(tag=TAG).warning(f"[{self.name}] 没有可用工具")
             return None
-        
+            
         result = []
         
         for tool in self.tools:
@@ -306,8 +340,8 @@ class FastMCPClient:
                 
                 # 构建工具函数定义
                 tool_def = {
-                    "type": "function",
-                    "function": {
+                    "type": "function", 
+                    "function": { 
                         "name": tool.name,
                         "description": tool.description,
                         "parameters": tool.inputSchema if hasattr(tool, 'inputSchema') else {}
@@ -464,21 +498,21 @@ console.error('[NPX Bridge] Starting {package_name}...');
 
 // 首先确保包已安装
 try {{
-    // 检查是否已安装
-    require.resolve('{package_name}');
+// 检查是否已安装
+require.resolve('{package_name}');
     console.error('[NPX Bridge] Package {package_name} is already installed');
 }} catch (e) {{
-    // 如果未安装，使用npx安装
+// 如果未安装，使用npx安装
     console.error('[NPX Bridge] Installing {package_name}...');
-    execSync('npx -y {package_name}', {{ stdio: 'inherit' }});
+execSync('npx -y {package_name}', {{ stdio: 'inherit' }});
 }}
 
 // 导入并运行包
 try {{
-    require('{package_name}');
+require('{package_name}');
 }} catch (e) {{
     console.error('[NPX Bridge] Failed to run {package_name}:', e);
-    process.exit(1);
+process.exit(1);
 }}
 """
         

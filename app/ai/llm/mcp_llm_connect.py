@@ -126,8 +126,9 @@ class MCPLLMConnect:
             if all_tools:
                 logger.bind(tag=TAG).debug("可用MCP工具:")
                 for tool in all_tools:
+                    function = tool.get('function', {})
                     logger.bind(tag=TAG).debug(
-                        f"   • {tool.get('name', 'N/A')}: {tool.get('description', 'N/A')}"
+                        f"   • {function.get('name', 'N/A')}: {function.get('description', 'N/A')}"
                     )
             
             # 4. 检查本地Function Handler

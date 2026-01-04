@@ -418,7 +418,7 @@ def main():
     server_thread.start()
     
     # 等待服务器启动
-    max_wait = 10
+    max_wait = 120
     waited = 0
     while waited < max_wait:
         if is_port_in_use(PORT):

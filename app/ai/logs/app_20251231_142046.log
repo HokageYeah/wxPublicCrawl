@@ -1,0 +1,494 @@
+日志文件: /Users/yuye/Library/Logs/wx公众号工具/app_20260104_113541.log
+🔵 主程序启动 - PID: 30745, 父进程: 1
+============================================================
+公众号爬虫助手 - 桌面版
+============================================================
+日志文件位置: /Users/yuye/Library/Logs/wx公众号工具/app_20260104_113541.log
+
+
+[1/4] 检查应用实例...
+✓  没有其他实例在运行
+
+[2/4] 检查端口可用性...
+✓  端口 18000 可用
+
+[3/4] 启动后端服务器...
+🔵 服务器线程启动 - 线程ID: 13000630272
+当前环境: desktop
+[DEBUG] ENV: desktop
+📦 [打包模式] sys._MEIPASS: /Users/yuye/YeahWork/Python项目/wxPublicCrawl/dist/wx公众号工具.app/Contents/Frameworks
+📄 [打包模式] 资源路径解析:
+   相对路径: .env.desktop
+   完整路径: /Users/yuye/YeahWork/Python项目/wxPublicCrawl/dist/wx公众号工具.app/Contents/Frameworks/.env.desktop
+   文件存在: ✅ 是
+加载桌面端配置文件: /Users/yuye/YeahWork/Python项目/wxPublicCrawl/dist/wx公众号工具.app/Contents/Frameworks/.env.desktop
+📦 [打包模式] sys._MEIPASS: /Users/yuye/YeahWork/Python项目/wxPublicCrawl/dist/wx公众号工具.app/Contents/Frameworks
+📄 [打包模式] 资源路径解析:
+   相对路径: .env
+   完整路径: /Users/yuye/YeahWork/Python项目/wxPublicCrawl/dist/wx公众号工具.app/Contents/Frameworks/.env
+   文件存在: ✅ 是
+
+数据库初始化配置:
+----------------------------------------
+database_config.py---- ENV: desktop
+----------------------------------------
+
+数据库初始化配置:
+----------------------------------------
+database_config.py---- ENV: desktop
+----------------------------------------
+
+数据库URL:
+----------------------------------------
+database_config.py---- driver: sqlite
+----------------------------------------
+database_config.py---- SQLite 数据库路径: /Users/yuye/Library/Application Support/wx公众号工具/wxpublic.db
+📦 打包模式 - 资源路径: /Users/yuye/YeahWork/Python项目/wxPublicCrawl/dist/wx公众号工具.app/Contents/Frameworks/web/dist
+🌐 前端资源路径: /Users/yuye/YeahWork/Python项目/wxPublicCrawl/dist/wx公众号工具.app/Contents/Frameworks/web/dist
+🌐 路径是否存在: True
+✅ 挂载静态资源: /crawl-desktop/assets -> /Users/yuye/YeahWork/Python项目/wxPublicCrawl/dist/wx公众号工具.app/Contents/Frameworks/web/dist/assets
+websockets/legacy/__init__.py:6: DeprecationWarning: websockets.legacy is deprecated; see https://websockets.readthedocs.io/en/stable/howto/upgrade.html for upgrade instructions
+uvicorn/protocols/websockets/websockets_impl.py:17: DeprecationWarning: websockets.server.WebSocketServerProtocol is deprecated
+INFO:     Started server process [30745]
+INFO:     Waiting for application startup.
+
+================================================================================
+🚀 应用启动中...
+================================================================================
+📝 初始化日志系统...
+[32m2026-01-04 11:35:42[0m | [1mINFO    [0m | [36mapp.core.logging_uru[0m:[36msetup_logging[0m:[36m126[0m - [1m日志系统初始化完成 - 使用 loguru[0m
+✅ 日志系统初始化完成
+🗄️  初始化数据库连接...
+2026-01-04 11:35:42,717 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+[32m2026-01-04 11:35:42[0m | [1mINFO    [0m | [36mlogging[0m:[36mcallHandlers[0m:[36m1736[0m - [1mBEGIN (implicit)[0m
+2026-01-04 11:35:42,718 INFO sqlalchemy.engine.Engine SELECT 1
+2026-01-04 11:35:42,719 INFO sqlalchemy.engine.Engine [generated in 0.00034s] ()
+[32m2026-01-04 11:35:42[0m | [1mINFO    [0m | [36mlogging[0m:[36mcallHandlers[0m:[36m1736[0m - [1mSELECT 1[0m
+[32m2026-01-04 11:35:42[0m | [1mINFO    [0m | [36mlogging[0m:[36mcallHandlers[0m:[36m1736[0m - [1m[generated in 0.00034s] ()[0m
+[32m2026-01-04 11:35:42[0m | [1mINFO    [0m | [36mlogging[0m:[36mcallHandlers[0m:[36m1736[0m - [1msqlalchemy数据库连接成功 - 数据库类型: SQLite[0m
+2026-01-04 11:35:42,722 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-01-04 11:35:42,722 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("articles")
+[32m2026-01-04 11:35:42[0m | [1mINFO    [0m | [36mlogging[0m:[36mcallHandlers[0m:[36m1736[0m - [1mBEGIN (implicit)[0m
+2026-01-04 11:35:42,722 INFO sqlalchemy.engine.Engine [raw sql] ()
+[32m2026-01-04 11:35:42[0m | [1mINFO    [0m | [36mlogging[0m:[36mcallHandlers[0m:[36m1736[0m - [1mPRAGMA main.table_info("articles")[0m
+[32m2026-01-04 11:35:42[0m | [1mINFO    [0m | [36mlogging[0m:[36mcallHandlers[0m:[36m1736[0m - [1m[raw sql] ()[0m
+2026-01-04 11:35:42,723 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("search_tags")
+[32m2026-01-04 11:35:42[0m | [1mINFO    [0m | [36mlogging[0m:[36mcallHandlers[0m:[36m1736[0m - [1mPRAGMA main.table_info("search_tags")[0m
+2026-01-04 11:35:42,723 INFO sqlalchemy.engine.Engine [raw sql] ()
+[32m2026-01-04 11:35:42[0m | [1mINFO    [0m | [36mlogging[0m:[36mcallHandlers[0m:[36m1736[0m - [1m[raw sql] ()[0m
+2026-01-04 11:35:42,724 INFO sqlalchemy.engine.Engine COMMIT
+[32m2026-01-04 11:35:42[0m | [1mINFO    [0m | [36mlogging[0m:[36mcallHandlers[0m:[36m1736[0m - [1mCOMMIT[0m
+2026-01-04 11:35:42,724 INFO sqlalchemy.engine.Engine ROLLBACK
+[32m2026-01-04 11:35:42[0m | [1mINFO    [0m | [36mlogging[0m:[36mcallHandlers[0m:[36m1736[0m - [1mSQLite 数据库表结构已创建[0m
+✅ 数据库连接完成
+[32m2026-01-04 11:35:42[0m | [1mINFO    [0m | [36mlogging[0m:[36mcallHandlers[0m:[36m1736[0m - [1mROLLBACK[0m
+🔌 启动本地 MCP Server...
+[32m2026-01-04 11:35:42[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_server.server_manager[0m:[36mstart_server[0m:[36m158[0m - [1m🚀 启动 MCP Server - streamable-http://127.0.0.1:8008/mcp[0m
+[32m2026-01-04 11:35:42[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_server.server_manager[0m:[36mstart_server[0m:[36m167[0m - [34m[1m打包环境 - Python: /Users/yuye/YeahWork/Python项目/wxPublicCrawl/dist/wx公众号工具.app/Contents/MacOS/wx公众号工具[0m
+[32m2026-01-04 11:35:42[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_server.server_manager[0m:[36mstart_server[0m:[36m168[0m - [34m[1m打包环境 - Script: /Users/yuye/YeahWork/Python项目/wxPublicCrawl/dist/wx公众号工具.app/Contents/Frameworks/app/ai/mcp/mcp_server/run_server.py[0m
+[32m2026-01-04 11:35:42[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_server.server_manager[0m:[36mstart_server[0m:[36m169[0m - [34m[1m打包环境 - Script exists: False[0m
+[32m2026-01-04 11:35:45[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_server.server_manager[0m:[36mstart_server[0m:[36m204[0m - [1m✅ MCP Server 启动成功 - 地址: http://127.0.0.1:8008/mcp[0m
+[32m2026-01-04 11:35:45[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_server.server_manager[0m:[36mstart_server[0m:[36m205[0m - [1m   进程 PID: 30778[0m
+✅ MCP Server 启动完成 - 地址: http://localhost:8008/mcp
+🤖 初始化AI助手...
+[32m2026-01-04 11:35:45[0m | [1mINFO    [0m | [36mlogging[0m:[36mcallHandlers[0m:[36m1736[0m - [1mMCP Server 启动完成[0m
+📦 [打包模式] sys._MEIPASS: /Users/yuye/YeahWork/Python项目/wxPublicCrawl/dist/wx公众号工具.app/Contents/Frameworks
+[32m2026-01-04 11:35:45[0m | [1mINFO    [0m | [36mapp.services.ai_assistant[0m:[36minit_ai_assistant_service[0m:[36m35[0m - [1m================================================================================[0m
+[32m2026-01-04 11:35:45[0m | [1mINFO    [0m | [36mapp.services.ai_assistant[0m:[36minit_ai_assistant_service[0m:[36m36[0m - [1m🚀 开始初始化AI助手服务...[0m
+📄 [打包模式] 资源路径解析:
+   相对路径: app/ai/mcp/mcp_client/mcp_settings.json
+[32m2026-01-04 11:35:45[0m | [1mINFO    [0m | [36mapp.services.ai_assistant[0m:[36minit_ai_assistant_service[0m:[36m37[0m - [1m================================================================================[0m
+   完整路径: /Users/yuye/YeahWork/Python项目/wxPublicCrawl/dist/wx公众号工具.app/Contents/Frameworks/app/ai/mcp/mcp_client/mcp_settings.json
+[32m2026-01-04 11:35:45[0m | [1mINFO    [0m | [36mapp.services.ai_assistant[0m:[36minit_ai_assistant_service[0m:[36m41[0m - [1m📝 创建MCP-LLM连接器实例...[0m
+   文件存在: ✅ 是
+[32m2026-01-04 11:35:45[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36m__init__[0m:[36m49[0m - [1mMCP客户端管理器已初始化，配置文件: /Users/yuye/YeahWork/Python项目/wxPublicCrawl/dist/wx公众号工具.app/Contents/Frameworks/app/ai/mcp/mcp_client/mcp_settings.json[0m
+[32m2026-01-04 11:35:45[0m | [1mINFO    [0m | [36mapp.ai.llm.ai_client[0m:[36m__init__[0m:[36m113[0m - [1mAI客户端已初始化 - 模型: GLM-4.7, BaseURL: https://open.bigmodel.cn/api/coding/paas/v4[0m
+[32m2026-01-04 11:35:45[0m | [1mINFO    [0m | [36mapp.ai.utils.functionHandler[0m:[36mcurrent_support_functions[0m:[36m32[0m - [1m当前支持的函数列表: [][0m
+[32m2026-01-04 11:35:45[0m | [1mINFO    [0m | [36mapp.ai.llm.mcp_llm_connect[0m:[36m__init__[0m:[36m80[0m - [1m🔧 MCP-LLM连接器实例已创建
+   AI模型: GLM-4.7
+   最大工具调用: 15
+   自动执行工具: True[0m
+[32m2026-01-04 11:35:45[0m | [1mINFO    [0m | [36mapp.services.ai_assistant[0m:[36minit_ai_assistant_service[0m:[36m43[0m - [1m✅ 连接器实例创建成功[0m
+[32m2026-01-04 11:35:45[0m | [1mINFO    [0m | [36mapp.services.ai_assistant[0m:[36minit_ai_assistant_service[0m:[36m46[0m - [1m🔌 开始异步初始化...[0m
+[32m2026-01-04 11:35:45[0m | [1mINFO    [0m | [36mapp.ai.llm.mcp_llm_connect[0m:[36masync_init[0m:[36m99[0m - [1m🚀 开始异步初始化MCP-LLM连接器...[0m
+[32m2026-01-04 11:35:45[0m | [1mINFO    [0m | [36mapp.ai.llm.mcp_llm_connect[0m:[36masync_init[0m:[36m103[0m - [1m🔌 正在初始化MCP客户端管理器...[0m
+[32m2026-01-04 11:35:45[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36mload_config[0m:[36m69[0m - [1m✅ 配置加载成功 - 服务地址: http://127.0.0.1:8008/mcp, 服务数量: 3[0m
+[32m2026-01-04 11:35:45[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36mload_config[0m:[36m73[0m - [34m[1mMCP服务列表: ['fastmcp-demo-tools', 'windows-cli', 'baidu-map'][0m
+[32m2026-01-04 11:35:45[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36minit_mcp_clients[0m:[36m137[0m - [1m开始初始化 3 个MCP客户端...[0m
+[32m2026-01-04 11:35:45[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36minit_mcp_clients[0m:[36m144[0m - [1m📡 正在初始化MCP服务: fastmcp-demo-tools[0m
+[32m2026-01-04 11:35:45[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36m__init__[0m:[36m49[0m - [34m[1m[fastmcp-demo-tools] 客户端实例已创建[0m
+[32m2026-01-04 11:35:45[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36minit_client[0m:[36m63[0m - [1m[fastmcp-demo-tools] 开始初始化MCP客户端 - 传输方式: streamable-http[0m
+[32m2026-01-04 11:35:45[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36m_init_http_client[0m:[36m103[0m - [1m[fastmcp-demo-tools] 📡 连接HTTP服务: http://127.0.0.1:8008/mcp/[0m
+[32m2026-01-04 11:35:45[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36m_init_http_client[0m:[36m104[0m - [34m[1m[fastmcp-demo-tools] 当前环境: HTTP_PROXY=None, HTTPS_PROXY=None, NO_PROXY=localhost,127.0.0.1,0.0.0.0,::1,.local[0m
+[32m2026-01-04 11:35:45[0m | [34m[1mDEBUG   [0m | [36mlogging[0m:[36mcallHandlers[0m:[36m1736[0m - [34m[1mConnecting to StreamableHTTP endpoint: http://127.0.0.1:8008/mcp/[0m
+[32m2026-01-04 11:35:45[0m | [34m[1mDEBUG   [0m | [36mlogging[0m:[36mcallHandlers[0m:[36m1736[0m - [34m[1mSending client message: root=JSONRPCRequest(method='initialize', params={'protocolVersion': '2025-06-18', 'capabilities': {}, 'clientInfo': {'name': 'mcp', 'version': '0.1.0'}}, jsonrpc='2.0', id=0)[0m
+[32m2026-01-04 11:35:45[0m | [34m[1mDEBUG   [0m | [36mlogging[0m:[36mcallHandlers[0m:[36m1736[0m - [34m[1mconnect_tcp.started host='127.0.0.1' port=8008 local_address=None timeout=30 socket_options=None[0m
+[32m2026-01-04 11:35:45[0m | [34m[1mDEBUG   [0m | [36mlogging[0m:[36mcallHandlers[0m:[36m1736[0m - [34m[1mconnect_tcp.failed exception=ConnectError(OSError('All connection attempts failed'))[0m
+[32m2026-01-04 11:35:45[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36m_init_http_client[0m:[36m134[0m - [34m[1m[fastmcp-demo-tools] ✅ HTTP客户端创建成功（已禁用代理）[0m
+[32m2026-01-04 11:35:45[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36minit_client[0m:[36m74[0m - [34m[1m[fastmcp-demo-tools] 测试连接...[0m
+[32m2026-01-04 11:35:45[0m | [31m[1mERROR   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36minit_client[0m:[36m88[0m - [31m[1m[fastmcp-demo-tools] ❌ 初始化客户端失败: Client is not connected. Use the 'async with client:' context manager first.[0m
+[32m2026-01-04 11:35:45[0m | [31m[1mERROR   [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36minit_mcp_clients[0m:[36m203[0m - [31m[1m❌ 服务 fastmcp-demo-tools 初始化失败: Client is not connected. Use the 'async with client:' context manager first.[0m
+[32m2026-01-04 11:35:45[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36minit_mcp_clients[0m:[36m144[0m - [1m📡 正在初始化MCP服务: windows-cli[0m
+[32m2026-01-04 11:35:45[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36m__init__[0m:[36m49[0m - [34m[1m[windows-cli] 客户端实例已创建[0m
+[32m2026-01-04 11:35:45[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36minit_client[0m:[36m63[0m - [1m[windows-cli] 开始初始化MCP客户端 - 传输方式: stdio[0m
+[32m2026-01-04 11:35:45[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36m_init_stdio_client[0m:[36m148[0m - [1m[windows-cli] 📡 连接stdio服务: npx -y @simonb97/server-win-cli[0m
+[32m2026-01-04 11:35:45[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36m_create_npx_transport[0m:[36m227[0m - [34m[1m[windows-cli] 处理npx命令: ['-y', '@simonb97/server-win-cli'][0m
+[32m2026-01-04 11:35:45[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36m_create_npx_transport[0m:[36m236[0m - [1m[windows-cli] NPX包名: @simonb97/server-win-cli[0m
+[32m2026-01-04 11:35:45[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36m_create_npx_bridge_script[0m:[36m485[0m - [34m[1m[windows-cli] 创建桥接脚本: /Users/yuye/Library/Application Support/wx公众号工具/npx_bridge/npx_bridge_windows-cli.js[0m
+[32m2026-01-04 11:35:45[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36m_create_npx_bridge_script[0m:[36m523[0m - [1m[windows-cli] ✅ 桥接脚本已创建: /Users/yuye/Library/Application Support/wx公众号工具/npx_bridge/npx_bridge_windows-cli.js[0m
+[32m2026-01-04 11:35:45[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36m_create_npx_transport[0m:[36m245[0m - [34m[1m[windows-cli] 桥接脚本: /Users/yuye/Library/Application Support/wx公众号工具/npx_bridge/npx_bridge_windows-cli.js[0m
+[NPX Bridge] Starting @simonb97/server-win-cli...
+[NPX Bridge] Installing @simonb97/server-win-cli...
+Windows CLI MCP Server running on stdio
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36m_init_stdio_client[0m:[36m169[0m - [34m[1m[windows-cli] 客户端创建成功，超时时间: 15.0s[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36minit_client[0m:[36m74[0m - [34m[1m[windows-cli] 测试连接...[0m
+[32m2026-01-04 11:35:49[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36minit_client[0m:[36m76[0m - [1m[windows-cli] ✅ 连接测试成功[0m
+[32m2026-01-04 11:35:49[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36minit_client[0m:[36m83[0m - [1m[windows-cli] 🔧 获取到 9 个工具: ['execute_command', 'get_command_history', 'ssh_execute', 'ssh_disconnect', 'create_ssh_connection', 'read_ssh_connections', 'update_ssh_connection', 'delete_ssh_connection', 'get_current_directory'][0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36mget_tool[0m:[36m360[0m - [34m[1m[windows-cli] ✓ 工具转换成功: execute_command[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36mget_tool[0m:[36m360[0m - [34m[1m[windows-cli] ✓ 工具转换成功: get_command_history[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36mget_tool[0m:[36m360[0m - [34m[1m[windows-cli] ✓ 工具转换成功: ssh_execute[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36mget_tool[0m:[36m360[0m - [34m[1m[windows-cli] ✓ 工具转换成功: ssh_disconnect[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36mget_tool[0m:[36m360[0m - [34m[1m[windows-cli] ✓ 工具转换成功: create_ssh_connection[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36mget_tool[0m:[36m360[0m - [34m[1m[windows-cli] ✓ 工具转换成功: read_ssh_connections[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36mget_tool[0m:[36m360[0m - [34m[1m[windows-cli] ✓ 工具转换成功: update_ssh_connection[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36mget_tool[0m:[36m360[0m - [34m[1m[windows-cli] ✓ 工具转换成功: delete_ssh_connection[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36mget_tool[0m:[36m360[0m - [34m[1m[windows-cli] ✓ 工具转换成功: get_current_directory[0m
+[32m2026-01-04 11:35:49[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36mget_tool[0m:[36m371[0m - [1m[windows-cli] 共转换 9 个工具[0m
+[32m2026-01-04 11:35:49[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36minit_mcp_clients[0m:[36m168[0m - [1m✅ 服务 windows-cli 初始化成功，获取到 9 个工具[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.utils.register[0m:[36mdecorator[0m:[36m53[0m - [34m[1m函数 'mcp_execute_command' 已加载，可以注册使用[0m
+[32m2026-01-04 11:35:49[0m | [1mINFO    [0m | [36mapp.ai.utils.register[0m:[36mregister_function[0m:[36m69[0m - [1m函数 'mcp_execute_command' 注册成功[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36minit_mcp_clients[0m:[36m189[0m - [34m[1m  ✓ 工具已注册: mcp_execute_command[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.utils.register[0m:[36mdecorator[0m:[36m53[0m - [34m[1m函数 'mcp_get_command_history' 已加载，可以注册使用[0m
+[32m2026-01-04 11:35:49[0m | [1mINFO    [0m | [36mapp.ai.utils.register[0m:[36mregister_function[0m:[36m69[0m - [1m函数 'mcp_get_command_history' 注册成功[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36minit_mcp_clients[0m:[36m189[0m - [34m[1m  ✓ 工具已注册: mcp_get_command_history[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.utils.register[0m:[36mdecorator[0m:[36m53[0m - [34m[1m函数 'mcp_ssh_execute' 已加载，可以注册使用[0m
+[32m2026-01-04 11:35:49[0m | [1mINFO    [0m | [36mapp.ai.utils.register[0m:[36mregister_function[0m:[36m69[0m - [1m函数 'mcp_ssh_execute' 注册成功[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36minit_mcp_clients[0m:[36m189[0m - [34m[1m  ✓ 工具已注册: mcp_ssh_execute[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.utils.register[0m:[36mdecorator[0m:[36m53[0m - [34m[1m函数 'mcp_ssh_disconnect' 已加载，可以注册使用[0m
+[32m2026-01-04 11:35:49[0m | [1mINFO    [0m | [36mapp.ai.utils.register[0m:[36mregister_function[0m:[36m69[0m - [1m函数 'mcp_ssh_disconnect' 注册成功[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36minit_mcp_clients[0m:[36m189[0m - [34m[1m  ✓ 工具已注册: mcp_ssh_disconnect[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.utils.register[0m:[36mdecorator[0m:[36m53[0m - [34m[1m函数 'mcp_create_ssh_connection' 已加载，可以注册使用[0m
+[32m2026-01-04 11:35:49[0m | [1mINFO    [0m | [36mapp.ai.utils.register[0m:[36mregister_function[0m:[36m69[0m - [1m函数 'mcp_create_ssh_connection' 注册成功[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36minit_mcp_clients[0m:[36m189[0m - [34m[1m  ✓ 工具已注册: mcp_create_ssh_connection[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.utils.register[0m:[36mdecorator[0m:[36m53[0m - [34m[1m函数 'mcp_read_ssh_connections' 已加载，可以注册使用[0m
+[32m2026-01-04 11:35:49[0m | [1mINFO    [0m | [36mapp.ai.utils.register[0m:[36mregister_function[0m:[36m69[0m - [1m函数 'mcp_read_ssh_connections' 注册成功[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36minit_mcp_clients[0m:[36m189[0m - [34m[1m  ✓ 工具已注册: mcp_read_ssh_connections[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.utils.register[0m:[36mdecorator[0m:[36m53[0m - [34m[1m函数 'mcp_update_ssh_connection' 已加载，可以注册使用[0m
+[32m2026-01-04 11:35:49[0m | [1mINFO    [0m | [36mapp.ai.utils.register[0m:[36mregister_function[0m:[36m69[0m - [1m函数 'mcp_update_ssh_connection' 注册成功[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36minit_mcp_clients[0m:[36m189[0m - [34m[1m  ✓ 工具已注册: mcp_update_ssh_connection[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.utils.register[0m:[36mdecorator[0m:[36m53[0m - [34m[1m函数 'mcp_delete_ssh_connection' 已加载，可以注册使用[0m
+[32m2026-01-04 11:35:49[0m | [1mINFO    [0m | [36mapp.ai.utils.register[0m:[36mregister_function[0m:[36m69[0m - [1m函数 'mcp_delete_ssh_connection' 注册成功[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36minit_mcp_clients[0m:[36m189[0m - [34m[1m  ✓ 工具已注册: mcp_delete_ssh_connection[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.utils.register[0m:[36mdecorator[0m:[36m53[0m - [34m[1m函数 'mcp_get_current_directory' 已加载，可以注册使用[0m
+[32m2026-01-04 11:35:49[0m | [1mINFO    [0m | [36mapp.ai.utils.register[0m:[36mregister_function[0m:[36m69[0m - [1m函数 'mcp_get_current_directory' 注册成功[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36minit_mcp_clients[0m:[36m189[0m - [34m[1m  ✓ 工具已注册: mcp_get_current_directory[0m
+[32m2026-01-04 11:35:49[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36minit_mcp_clients[0m:[36m144[0m - [1m📡 正在初始化MCP服务: baidu-map[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36m__init__[0m:[36m49[0m - [34m[1m[baidu-map] 客户端实例已创建[0m
+[32m2026-01-04 11:35:49[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36minit_client[0m:[36m63[0m - [1m[baidu-map] 开始初始化MCP客户端 - 传输方式: stdio[0m
+[32m2026-01-04 11:35:49[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36m_init_stdio_client[0m:[36m148[0m - [1m[baidu-map] 📡 连接stdio服务: npx -y @baidumap/mcp-server-baidu-map[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36m_init_stdio_client[0m:[36m156[0m - [34m[1m[baidu-map] 添加环境变量: ['BAIDU_MAP_API_KEY'][0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36m_create_npx_transport[0m:[36m227[0m - [34m[1m[baidu-map] 处理npx命令: ['-y', '@baidumap/mcp-server-baidu-map'][0m
+[32m2026-01-04 11:35:49[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36m_create_npx_transport[0m:[36m236[0m - [1m[baidu-map] NPX包名: @baidumap/mcp-server-baidu-map[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36m_create_npx_bridge_script[0m:[36m485[0m - [34m[1m[baidu-map] 创建桥接脚本: /Users/yuye/Library/Application Support/wx公众号工具/npx_bridge/npx_bridge_baidu-map.js[0m
+[32m2026-01-04 11:35:49[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36m_create_npx_bridge_script[0m:[36m523[0m - [1m[baidu-map] ✅ 桥接脚本已创建: /Users/yuye/Library/Application Support/wx公众号工具/npx_bridge/npx_bridge_baidu-map.js[0m
+[32m2026-01-04 11:35:49[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36m_create_npx_transport[0m:[36m245[0m - [34m[1m[baidu-map] 桥接脚本: /Users/yuye/Library/Application Support/wx公众号工具/npx_bridge/npx_bridge_baidu-map.js[0m
+[NPX Bridge] Starting @baidumap/mcp-server-baidu-map...
+[NPX Bridge] Installing @baidumap/mcp-server-baidu-map...
+Baidu Map MCP Server running on stdio
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36m_init_stdio_client[0m:[36m169[0m - [34m[1m[baidu-map] 客户端创建成功，超时时间: 15.0s[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36minit_client[0m:[36m74[0m - [34m[1m[baidu-map] 测试连接...[0m
+[32m2026-01-04 11:35:53[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36minit_client[0m:[36m76[0m - [1m[baidu-map] ✅ 连接测试成功[0m
+[32m2026-01-04 11:35:53[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36minit_client[0m:[36m83[0m - [1m[baidu-map] 🔧 获取到 10 个工具: ['map_geocode', 'map_reverse_geocode', 'map_search_places', 'map_place_details', 'map_distance_matrix', 'map_directions', 'map_weather', 'map_ip_location', 'map_road_traffic', 'map_poi_extract'][0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36mget_tool[0m:[36m360[0m - [34m[1m[baidu-map] ✓ 工具转换成功: map_geocode[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36mget_tool[0m:[36m360[0m - [34m[1m[baidu-map] ✓ 工具转换成功: map_reverse_geocode[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36mget_tool[0m:[36m360[0m - [34m[1m[baidu-map] ✓ 工具转换成功: map_search_places[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36mget_tool[0m:[36m360[0m - [34m[1m[baidu-map] ✓ 工具转换成功: map_place_details[0m
+✅ AI助手初始化完成
+================================================================================
+✅ 应用启动完成
+================================================================================
+
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36mget_tool[0m:[36m360[0m - [34m[1m[baidu-map] ✓ 工具转换成功: map_distance_matrix[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36mget_tool[0m:[36m360[0m - [34m[1m[baidu-map] ✓ 工具转换成功: map_directions[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36mget_tool[0m:[36m360[0m - [34m[1m[baidu-map] ✓ 工具转换成功: map_weather[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36mget_tool[0m:[36m360[0m - [34m[1m[baidu-map] ✓ 工具转换成功: map_ip_location[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36mget_tool[0m:[36m360[0m - [34m[1m[baidu-map] ✓ 工具转换成功: map_road_traffic[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36mget_tool[0m:[36m360[0m - [34m[1m[baidu-map] ✓ 工具转换成功: map_poi_extract[0m
+[32m2026-01-04 11:35:53[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_client.fastmcp_client[0m:[36mget_tool[0m:[36m371[0m - [1m[baidu-map] 共转换 10 个工具[0m
+[32m2026-01-04 11:35:53[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36minit_mcp_clients[0m:[36m168[0m - [1m✅ 服务 baidu-map 初始化成功，获取到 10 个工具[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.utils.register[0m:[36mdecorator[0m:[36m53[0m - [34m[1m函数 'mcp_map_geocode' 已加载，可以注册使用[0m
+[32m2026-01-04 11:35:53[0m | [1mINFO    [0m | [36mapp.ai.utils.register[0m:[36mregister_function[0m:[36m69[0m - [1m函数 'mcp_map_geocode' 注册成功[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36minit_mcp_clients[0m:[36m189[0m - [34m[1m  ✓ 工具已注册: mcp_map_geocode[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.utils.register[0m:[36mdecorator[0m:[36m53[0m - [34m[1m函数 'mcp_map_reverse_geocode' 已加载，可以注册使用[0m
+[32m2026-01-04 11:35:53[0m | [1mINFO    [0m | [36mapp.ai.utils.register[0m:[36mregister_function[0m:[36m69[0m - [1m函数 'mcp_map_reverse_geocode' 注册成功[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36minit_mcp_clients[0m:[36m189[0m - [34m[1m  ✓ 工具已注册: mcp_map_reverse_geocode[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.utils.register[0m:[36mdecorator[0m:[36m53[0m - [34m[1m函数 'mcp_map_search_places' 已加载，可以注册使用[0m
+[32m2026-01-04 11:35:53[0m | [1mINFO    [0m | [36mapp.ai.utils.register[0m:[36mregister_function[0m:[36m69[0m - [1m函数 'mcp_map_search_places' 注册成功[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36minit_mcp_clients[0m:[36m189[0m - [34m[1m  ✓ 工具已注册: mcp_map_search_places[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.utils.register[0m:[36mdecorator[0m:[36m53[0m - [34m[1m函数 'mcp_map_place_details' 已加载，可以注册使用[0m
+[32m2026-01-04 11:35:53[0m | [1mINFO    [0m | [36mapp.ai.utils.register[0m:[36mregister_function[0m:[36m69[0m - [1m函数 'mcp_map_place_details' 注册成功[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36minit_mcp_clients[0m:[36m189[0m - [34m[1m  ✓ 工具已注册: mcp_map_place_details[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.utils.register[0m:[36mdecorator[0m:[36m53[0m - [34m[1m函数 'mcp_map_distance_matrix' 已加载，可以注册使用[0m
+[32m2026-01-04 11:35:53[0m | [1mINFO    [0m | [36mapp.ai.utils.register[0m:[36mregister_function[0m:[36m69[0m - [1m函数 'mcp_map_distance_matrix' 注册成功[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36minit_mcp_clients[0m:[36m189[0m - [34m[1m  ✓ 工具已注册: mcp_map_distance_matrix[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.utils.register[0m:[36mdecorator[0m:[36m53[0m - [34m[1m函数 'mcp_map_directions' 已加载，可以注册使用[0m
+[32m2026-01-04 11:35:53[0m | [1mINFO    [0m | [36mapp.ai.utils.register[0m:[36mregister_function[0m:[36m69[0m - [1m函数 'mcp_map_directions' 注册成功[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36minit_mcp_clients[0m:[36m189[0m - [34m[1m  ✓ 工具已注册: mcp_map_directions[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.utils.register[0m:[36mdecorator[0m:[36m53[0m - [34m[1m函数 'mcp_map_weather' 已加载，可以注册使用[0m
+[32m2026-01-04 11:35:53[0m | [1mINFO    [0m | [36mapp.ai.utils.register[0m:[36mregister_function[0m:[36m69[0m - [1m函数 'mcp_map_weather' 注册成功[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36minit_mcp_clients[0m:[36m189[0m - [34m[1m  ✓ 工具已注册: mcp_map_weather[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.utils.register[0m:[36mdecorator[0m:[36m53[0m - [34m[1m函数 'mcp_map_ip_location' 已加载，可以注册使用[0m
+[32m2026-01-04 11:35:53[0m | [1mINFO    [0m | [36mapp.ai.utils.register[0m:[36mregister_function[0m:[36m69[0m - [1m函数 'mcp_map_ip_location' 注册成功[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36minit_mcp_clients[0m:[36m189[0m - [34m[1m  ✓ 工具已注册: mcp_map_ip_location[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.utils.register[0m:[36mdecorator[0m:[36m53[0m - [34m[1m函数 'mcp_map_road_traffic' 已加载，可以注册使用[0m
+[32m2026-01-04 11:35:53[0m | [1mINFO    [0m | [36mapp.ai.utils.register[0m:[36mregister_function[0m:[36m69[0m - [1m函数 'mcp_map_road_traffic' 注册成功[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36minit_mcp_clients[0m:[36m189[0m - [34m[1m  ✓ 工具已注册: mcp_map_road_traffic[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.utils.register[0m:[36mdecorator[0m:[36m53[0m - [34m[1m函数 'mcp_map_poi_extract' 已加载，可以注册使用[0m
+[32m2026-01-04 11:35:53[0m | [1mINFO    [0m | [36mapp.ai.utils.register[0m:[36mregister_function[0m:[36m69[0m - [1m函数 'mcp_map_poi_extract' 注册成功[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36minit_mcp_clients[0m:[36m189[0m - [34m[1m  ✓ 工具已注册: mcp_map_poi_extract[0m
+[32m2026-01-04 11:35:53[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36minit_mcp_clients[0m:[36m212[0m - [1m✅ LLM函数描述已更新[0m
+[32m2026-01-04 11:35:53[0m | [1mINFO    [0m | [36mapp.ai.mcp.mcp_client.client_manager[0m:[36minit_mcp_clients[0m:[36m217[0m - [1m
+============================================================
+MCP客户端初始化完成
+  成功: 2/3
+  失败: 1/3
+  工具总数: 19
+============================================================[0m
+[32m2026-01-04 11:35:53[0m | [1mINFO    [0m | [36mapp.ai.llm.mcp_llm_connect[0m:[36masync_init[0m:[36m115[0m - [1m✅ MCP客户端管理器初始化成功[0m
+[32m2026-01-04 11:35:53[0m | [1mINFO    [0m | [36mapp.ai.llm.mcp_llm_connect[0m:[36masync_init[0m:[36m119[0m - [1m📦 已加载工具列表:
+   - MCP工具数量: 19
+   - MCP客户端数量: 2[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.llm.mcp_llm_connect[0m:[36masync_init[0m:[36m127[0m - [34m[1m可用MCP工具:[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.llm.mcp_llm_connect[0m:[36masync_init[0m:[36m130[0m - [34m[1m   • execute_command: Execute a command in the specified shell (powershell, cmd, or gitbash)
+
+Example usage (PowerShell):
+```json
+{
+  "shell": "powershell",
+  "command": "Get-Process | Select-Object -First 5",
+  "workingDir": "C:\Users\username"
+}
+```
+
+Example usage (CMD):
+```json
+{
+  "shell": "cmd",
+  "command": "dir /b",
+  "workingDir": "C:\Projects"
+}
+```
+
+Example usage (Git Bash):
+```json
+{
+  "shell": "gitbash",
+  "command": "ls -la",
+  "workingDir": "/c/Users/username"
+}
+```[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.llm.mcp_llm_connect[0m:[36masync_init[0m:[36m130[0m - [34m[1m   • get_command_history: Get the history of executed commands
+
+Example usage:
+```json
+{
+  "limit": 5
+}
+```
+
+Example response:
+```json
+[
+  {
+    "command": "Get-Process",
+    "output": "...",
+    "timestamp": "2024-03-20T10:30:00Z",
+    "exitCode": 0
+  }
+]
+```[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.llm.mcp_llm_connect[0m:[36masync_init[0m:[36m130[0m - [34m[1m   • ssh_execute: Execute a command on a remote host via SSH
+
+Example usage:
+```json
+{
+  "connectionId": "raspberry-pi",
+  "command": "uname -a"
+}
+```
+
+Configuration required in config.json:
+```json
+{
+  "ssh": {
+    "enabled": true,
+    "connections": {
+      "raspberry-pi": {
+        "host": "raspberrypi.local",
+        "port": 22,
+        "username": "pi",
+        "password": "raspberry"
+      }
+    }
+  }
+}
+```[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.llm.mcp_llm_connect[0m:[36masync_init[0m:[36m130[0m - [34m[1m   • ssh_disconnect: Disconnect from an SSH server
+
+Example usage:
+```json
+{
+  "connectionId": "raspberry-pi"
+}
+```
+
+Use this to cleanly close SSH connections when they're no longer needed.[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.llm.mcp_llm_connect[0m:[36masync_init[0m:[36m130[0m - [34m[1m   • create_ssh_connection: Create a new SSH connection[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.llm.mcp_llm_connect[0m:[36masync_init[0m:[36m130[0m - [34m[1m   • read_ssh_connections: Read all SSH connections[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.llm.mcp_llm_connect[0m:[36masync_init[0m:[36m130[0m - [34m[1m   • update_ssh_connection: Update an existing SSH connection[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.llm.mcp_llm_connect[0m:[36masync_init[0m:[36m130[0m - [34m[1m   • delete_ssh_connection: Delete an existing SSH connection[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.llm.mcp_llm_connect[0m:[36masync_init[0m:[36m130[0m - [34m[1m   • get_current_directory: Get the current working directory[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.llm.mcp_llm_connect[0m:[36masync_init[0m:[36m130[0m - [34m[1m   • map_geocode: 地理编码服务[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.llm.mcp_llm_connect[0m:[36masync_init[0m:[36m130[0m - [34m[1m   • map_reverse_geocode: 全球逆地理编码[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.llm.mcp_llm_connect[0m:[36masync_init[0m:[36m130[0m - [34m[1m   • map_search_places: 地点检索服务（包括城市检索、圆形区域检索、多边形区域检索）[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.llm.mcp_llm_connect[0m:[36masync_init[0m:[36m130[0m - [34m[1m   • map_place_details: 地点详情检索服务[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.llm.mcp_llm_connect[0m:[36masync_init[0m:[36m130[0m - [34m[1m   • map_distance_matrix: 计算多个出发地和目的地的距离和路线用时[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.llm.mcp_llm_connect[0m:[36masync_init[0m:[36m130[0m - [34m[1m   • map_directions: 路线规划服务， 计算出发地到目的地的距离、路线用时、路线方案[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.llm.mcp_llm_connect[0m:[36masync_init[0m:[36m130[0m - [34m[1m   • map_weather: 通过行政区划代码或者经纬度坐标获取实时天气信息和未来5天天气预报[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.llm.mcp_llm_connect[0m:[36masync_init[0m:[36m130[0m - [34m[1m   • map_ip_location: 通过IP地址获取位置信息[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.llm.mcp_llm_connect[0m:[36masync_init[0m:[36m130[0m - [34m[1m   • map_road_traffic: 根据城市和道路名称查询具体道路的实时拥堵评价和拥堵路段、拥堵距离、拥堵趋势等信息[0m
+[32m2026-01-04 11:35:53[0m | [34m[1mDEBUG   [0m | [36mapp.ai.llm.mcp_llm_connect[0m:[36masync_init[0m:[36m130[0m - [34m[1m   • map_poi_extract: POI智能标注[0m
+[32m2026-01-04 11:35:53[0m | [1mINFO    [0m | [36mapp.ai.llm.mcp_llm_connect[0m:[36masync_init[0m:[36m136[0m - [1m📦 本地注册函数数量: 19[0m
+[32m2026-01-04 11:35:53[0m | [1mINFO    [0m | [36mapp.ai.llm.mcp_llm_connect[0m:[36masync_init[0m:[36m138[0m - [1m✅ MCP-LLM连接器初始化完成！
+   - AI模型: GLM-4.7
+   - MCP工具: 19个
+   - 本地函数: 19个
+   - 总可用功能: 38个[0m
+[32m2026-01-04 11:35:53[0m | [1mINFO    [0m | [36mapp.services.ai_assistant[0m:[36minit_ai_assistant_service[0m:[36m59[0m - [1m================================================================================[0m
+[32m2026-01-04 11:35:53[0m | [1mINFO    [0m | [36mapp.services.ai_assistant[0m:[36minit_ai_assistant_service[0m:[36m60[0m - [1m✅ AI助手服务初始化成功！[0m
+[32m2026-01-04 11:35:53[0m | [1mINFO    [0m | [36mapp.services.ai_assistant[0m:[36minit_ai_assistant_service[0m:[36m61[0m - [1m================================================================================[0m
+[32m2026-01-04 11:35:53[0m | [1mINFO    [0m | [36mlogging[0m:[36mcallHandlers[0m:[36m1736[0m - [1mAI助手初始化完成[0m
+[32m2026-01-04 11:35:53[0m | [1mINFO    [0m | [36mlogging[0m:[36mcallHandlers[0m:[36m1736[0m - [1m应用启动完成[0m
+[32m2026-01-04 11:35:53[0m | [1mINFO    [0m | [36mlogging[0m:[36mcallHandlers[0m:[36m1736[0m - [1mApplication startup complete.[0m
+[32m2026-01-04 11:35:53[0m | [1mINFO    [0m | [36mlogging[0m:[36mcallHandlers[0m:[36m1736[0m - [1mUvicorn running on http://127.0.0.1:18000 (Press CTRL+C to quit)[0m
+✓  服务器启动成功 (http://127.0.0.1:18000)
+
+[4/4] 启动应用窗口...
+✓  应用窗口已创建
+
+============================================================
+应用已启动,欢迎使用!
+============================================================
+
+[32m2026-01-04 11:35:53[0m | [31m[1mERROR   [0m | [36mlogging[0m:[36mcallHandlers[0m:[36m1736[0m - [31m[1mTask exception was never retrieved
+future: <Task finished name='Task-3' coro=<Client._session_runner() done, defined at fastmcp/client/client.py:309> exception=ConnectError('All connection attempts failed')>[0m
+[33m[1mTraceback (most recent call last):[0m
+
+  File "[32m[0m[32m[1mthreading.py[0m", line [33m1012[0m, in [35m_bootstrap[0m
+
+  File "[32m[0m[32m[1mthreading.py[0m", line [33m1041[0m, in [35m_bootstrap_inner[0m
+
+  File "[32m[0m[32m[1mthreading.py[0m", line [33m992[0m, in [35mrun[0m
+
+  File "[32m[0m[32m[1mrun_desktop.py[0m", line [33m347[0m, in [35mstart_server[0m
+
+  File "[32muvicorn/[0m[32m[1mmain.py[0m", line [33m580[0m, in [35mrun[0m
+
+  File "[32muvicorn/[0m[32m[1mserver.py[0m", line [33m66[0m, in [35mrun[0m
+
+  File "[32masyncio/[0m[32m[1mrunners.py[0m", line [33m195[0m, in [35mrun[0m
+
+  File "[32masyncio/[0m[32m[1mrunners.py[0m", line [33m118[0m, in [35mrun[0m
+
+  File "[32masyncio/[0m[32m[1mbase_events.py[0m", line [33m706[0m, in [35mrun_until_complete[0m
+
+  File "[32masyncio/[0m[32m[1mbase_events.py[0m", line [33m677[0m, in [35mrun_forever[0m
+
+  File "[32masyncio/[0m[32m[1mbase_events.py[0m", line [33m2035[0m, in [35m_run_once[0m
+
+  File "[32masyncio/[0m[32m[1mevents.py[0m", line [33m105[0m, in [35m_run[0m
+
+> File "[32mfastmcp/client/[0m[32m[1mclient.py[0m", line [33m312[0m, in [35m_session_runner[0m
+
+  File "[32m[0m[32m[1mcontextlib.py[0m", line [33m668[0m, in [35menter_async_context[0m
+
+  File "[32m[0m[32m[1mcontextlib.py[0m", line [33m214[0m, in [35m__aenter__[0m
+
+  File "[32mfastmcp/client/[0m[32m[1mclient.py[0m", line [33m240[0m, in [35m_context_manager[0m
+
+  File "[32mexceptiongroup/[0m[32m[1m_catch.py[0m", line [33m39[0m, in [35m__exit__[0m
+
+  File "[32mexceptiongroup/[0m[32m[1m_catch.py[0m", line [33m65[0m, in [35mhandle_exception[0m
+
+  File "[32mfastmcp/utilities/[0m[32m[1mexceptions.py[0m", line [33m29[0m, in [35m_exception_handler[0m
+
+  File "[32mmcp/client/[0m[32m[1mstreamable_http.py[0m", line [33m409[0m, in [35mhandle_request_async[0m
+
+  File "[32mmcp/client/[0m[32m[1mstreamable_http.py[0m", line [33m260[0m, in [35m_handle_post_request[0m
+
+  File "[32m[0m[32m[1mcontextlib.py[0m", line [33m214[0m, in [35m__aenter__[0m
+
+  File "[32mhttpx/[0m[32m[1m_client.py[0m", line [33m1583[0m, in [35mstream[0m
+
+  File "[32mhttpx/[0m[32m[1m_client.py[0m", line [33m1629[0m, in [35msend[0m
+
+  File "[32mhttpx/[0m[32m[1m_client.py[0m", line [33m1657[0m, in [35m_send_handling_auth[0m
+
+  File "[32mhttpx/[0m[32m[1m_client.py[0m", line [33m1694[0m, in [35m_send_handling_redirects[0m
+
+  File "[32mhttpx/[0m[32m[1m_client.py[0m", line [33m1730[0m, in [35m_send_single_request[0m
+
+  File "[32mhttpx/_transports/[0m[32m[1mdefault.py[0m", line [33m393[0m, in [35mhandle_async_request[0m
+
+  File "[32m[0m[32m[1mcontextlib.py[0m", line [33m162[0m, in [35m__exit__[0m
+
+  File "[32mhttpx/_transports/[0m[32m[1mdefault.py[0m", line [33m118[0m, in [35mmap_httpcore_exceptions[0m
+
+[31m[1mhttpx.ConnectError[0m:[1m All connection attempts failed[0m
+[32m2026-01-04 11:35:54[0m | [1mINFO    [0m | [36mlogging[0m:[36mcallHandlers[0m:[36m1736[0m - [1m127.0.0.1:57648 - "GET /crawl-desktop/ HTTP/1.1" 200[0m
+[32m2026-01-04 11:35:54[0m | [1mINFO    [0m | [36mlogging[0m:[36mcallHandlers[0m:[36m1736[0m - [1m127.0.0.1:57648 - "GET /crawl-desktop/assets/index-CPsG-1Sz.css HTTP/1.1" 200[0m
+[32m2026-01-04 11:35:54[0m | [1mINFO    [0m | [36mlogging[0m:[36mcallHandlers[0m:[36m1736[0m - [1m127.0.0.1:57666 - "GET /crawl-desktop/assets/index-D1VnGRJM.js HTTP/1.1" 200[0m
+ResponseValidatorMiddleware
+send_wrapper
+✓ 会话加载成功
+[32m2026-01-04 11:35:54[0m | [1mINFO    [0m | [36mlogging[0m:[36mcallHandlers[0m:[36m1736[0m - [1m127.0.0.1:57648 - "GET /api/v1/wx/public/system/session/load HTTP/1.1" 200[0m
+应用窗口已关闭,正在清理...
+
+锁文件已清理
+正在退出...
+[NPX Bridge] Failed to run @simonb97/server-win-cli: Error: Cannot find module '@simonb97/server-win-cli'
+Require stack:
+- /Users/yuye/Library/Application Support/wx公众号工具/npx_bridge/npx_bridge_windows-cli.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1047:15)
+    at Module._load (node:internal/modules/cjs/loader:893:27)
+    at Module.require (node:internal/modules/cjs/loader:1113:19)
+    at require (node:internal/modules/cjs/helpers:103:18)
+    at Object.<anonymous> (/Users/yuye/Library/Application Support/wx公众号工具/npx_bridge/npx_bridge_windows-cli.js:24:1)
+    at Module._compile (node:internal/modules/cjs/loader:1226:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1280:10)
+    at Module.load (node:internal/modules/cjs/loader:1089:32)
+    at Module._load (node:internal/modules/cjs/loader:930:12)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:81:12) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/Users/yuye/Library/Application Support/wx公众号工具/npx_bridge/npx_bridge_windows-cli.js'
+  ]
+}
+[NPX Bridge] Failed to run @baidumap/mcp-server-baidu-map: Error: Cannot find module '@baidumap/mcp-server-baidu-map'
+Require stack:
+- /Users/yuye/Library/Application Support/wx公众号工具/npx_bridge/npx_bridge_baidu-map.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1047:15)
+    at Module._load (node:internal/modules/cjs/loader:893:27)
+    at Module.require (node:internal/modules/cjs/loader:1113:19)
+    at require (node:internal/modules/cjs/helpers:103:18)
+    at Object.<anonymous> (/Users/yuye/Library/Application Support/wx公众号工具/npx_bridge/npx_bridge_baidu-map.js:24:1)
+    at Module._compile (node:internal/modules/cjs/loader:1226:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1280:10)
+    at Module.load (node:internal/modules/cjs/loader:1089:32)
+    at Module._load (node:internal/modules/cjs/loader:930:12)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:81:12) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    '/Users/yuye/Library/Application Support/wx公众号工具/npx_bridge/npx_bridge_baidu-map.js'
+  ]
+}

@@ -130,6 +130,8 @@ from typing import AsyncIterator
 from app.core.logging_uru import setup_logging
 # 导入AI助手初始化函数
 from app.api.endpoints.ai_assistant import init_ai_assistant
+# 导入 MCP Server 管理器
+from app.ai.mcp.mcp_server.server_manager import start_local_mcp_server, stop_local_mcp_server
 
 
 # 创建 lifespan 上下文管理器
@@ -155,8 +157,19 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         print("🗄️  初始化数据库连接...")
         database.connect()
         print("✅ 数据库连接完成")
+
+        # 1. 启动本地 MCP Server
+        print("🔌 启动本地 MCP Server...")
+        try:
+            await start_local_mcp_server()
+            print("✅ MCP Server 启动完成 - 地址: http://localhost:8008/mcp")
+            logging.info("MCP Server 启动完成")
+        except Exception as e:
+            print(f"⚠️  MCP Server 启动失败: {e}")
+            logging.warning(f"MCP Server 启动失败: {e}")
+            logging.warning("应用将继续运行，但本地 MCP Server 功能不可用")
         
-        # 初始化AI助手
+        # 2. 初始化AI助手
         print("🤖 初始化AI助手...")
         try:
             await init_ai_assistant(llm_conn=None)
@@ -187,6 +200,16 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     # 关闭事件 - yield 之后的代码在应用关闭时执行
     print("\n🛑 应用正在关闭...")
     logging.info("应用正在关闭...")
+    
+    # 停止本地 MCP Server
+    try:
+        print("🔌 停止本地 MCP Server...")
+        await stop_local_mcp_server()
+        print("✅ MCP Server 已停止")
+        logging.info("MCP Server 已停止")
+    except Exception as e:
+        print(f"⚠️  停止 MCP Server 失败: {e}")
+        logging.warning(f"停止 MCP Server 失败: {e}")
     
     # 这里可以添加清理逻辑，比如关闭数据库连接
     # if database.is_connected:

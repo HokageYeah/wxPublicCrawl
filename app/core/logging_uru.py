@@ -101,8 +101,14 @@ def setup_logging() -> None:
                 frame = frame.f_back
                 depth += 1
             
+            # 过滤掉 SSE 心跳包的 DEBUG 日志
+            # 例如：2025-12-31 12:06:22 | DEBUG    | app.ai.llm.mcp_llm_connect:async_init:129 -    • N/A: N/A
+            message = record.getMessage()
+            if "ping: b': ping -" in message and record.levelno <= logging.DEBUG:
+                return
+
             logger.opt(depth=depth, exception=record.exc_info).log(
-                level, record.getMessage()
+                level, message
             )
     
     # 配置标准库日志处理器
