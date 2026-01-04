@@ -48,7 +48,15 @@ a = Analysis(
     datas=[
         ('web/dist', 'web/dist'),  # Vue3 前端构建产物（HTML/CSS/JS）
         ('app/ai/prompt', 'app/ai/prompt'),  # AI 提示词文件
+        
+        # MCP 相关文件（完整打包）
         ('app/ai/mcp/mcp_client/mcp_settings.json', 'app/ai/mcp/mcp_client'),  # MCP 设置文件
+        ('app/ai/mcp/mcp_client/client_manager.py', 'app/ai/mcp/mcp_client'),  # MCP 客户端管理器
+        ('app/ai/mcp/mcp_client/fastmcp_client.py', 'app/ai/mcp/mcp_client'),  # MCP 客户端实现
+        ('app/ai/mcp/mcp_server/run_server.py', 'app/ai/mcp/mcp_server'),  # MCP Server 启动脚本
+        ('app/ai/mcp/mcp_server/fastmcp_server.py', 'app/ai/mcp/mcp_server'),  # MCP Server 实现
+        ('app/ai/mcp/mcp_server/server_manager.py', 'app/ai/mcp/mcp_server'),  # MCP Server 管理器
+        
         ('.env', '.'),  # 打包 .env 文件到根目录
         ('.env.desktop', '.'),  # 打包 .env.desktop 文件到根目录
         # 如果有其他资源文件，在此添加：
@@ -77,10 +85,37 @@ a = Analysis(
         'sqlalchemy.sql.default_comparator',
         'pysqlite3',  # SQLite 数据库驱动
         
+        # MCP 相关模块（Model-Control-Protocol）
+        'fastmcp',
+        'fastmcp.server',
+        'fastmcp.client',
+        'fastmcp.client.client',
+        'fastmcp.utilities',
+        'fastmcp.utilities.exceptions',
+        'mcp',
+        'mcp.server',
+        'mcp.server.fastmcp',
+        'mcp.client',
+        'mcp.client.streamable_http',
+        'mcp.client.stdio',
+        'mcp.types',
+        'app.ai.mcp.mcp_server.fastmcp_server',
+        'app.ai.mcp.mcp_server.server_manager',
+        'app.ai.mcp.mcp_client.client_manager',
+        'app.ai.mcp.mcp_client.fastmcp_client',
+        
+        # AI 相关模块
+        'app.ai.llm.ai_client',
+        'app.ai.llm.mcp_llm_connect',
+        'app.ai.utils.functionHandler',
+        'app.ai.utils.prompt_manager',
+        'app.ai.utils.register',
+        
         # 项目业务模块（动态导入的服务和接口）
         'app.services.wx_public',       # 微信公众号服务
         'app.services.sogou_wx_public',  # 搜狗搜索服务
         'app.services.system',           # 系统服务
+        'app.services.ai_assistant',     # AI 助手服务
         'app.api.endpoints.wx_public',   # 微信公众号 API
         'app.api.endpoints.sogou_wx_public',  # 搜狗搜索 API
         'app.api.endpoints.system',      # 系统 API

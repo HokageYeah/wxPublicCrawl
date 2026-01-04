@@ -19,6 +19,7 @@ class MCPServerManager:
     def __init__(self):
         """初始化管理器"""
         self.server_process: Optional[subprocess.Popen] = None
+        self.server_thread = None  # 用于打包环境的线程
         self.is_running = False
         self.host = "127.0.0.1"
         self.port = 8008
@@ -123,7 +124,7 @@ class MCPServerManager:
         
     def start_server(self, host: str = "127.0.0.1", port: int = 8008, transport: str = "streamable-http"):
         """
-        启动 MCP Server（在独立进程中）
+        启动 MCP Server（在独立线程中）
         
         Args:
             host: 服务器主机地址（默认使用 127.0.0.1 避免 IPv6 问题）
@@ -160,49 +161,80 @@ class MCPServerManager:
         try:
             # 检测是否在打包环境中
             if getattr(sys, '_MEIPASS', None):
-                # 打包环境
-                base_path = Path(sys._MEIPASS)
-                server_script = base_path / "app" / "ai" / "mcp" / "mcp_server" / "run_server.py"
-                python_exe = sys.executable
-                logger.debug(f"打包环境 - Python: {python_exe}")
-                logger.debug(f"打包环境 - Script: {server_script}")
-                logger.debug(f"打包环境 - Script exists: {server_script.exists()}")
+                # 打包环境：使用线程方式启动（不依赖外部脚本文件）
+                logger.info("🎁 打包环境 - 使用线程方式启动 MCP Server")
+                import threading
+                
+                def run_mcp_server_in_thread():
+                    """在线程中运行 MCP Server"""
+                    try:
+                        # 直接导入并运行 MCP Server
+                        from app.ai.mcp.mcp_server.fastmcp_server import FastmcpServer
+                        server = FastmcpServer()
+                        server.run(host=host, port=port, transport=transport)
+                    except Exception as e:
+                        logger.error(f"MCP Server 线程异常: {e}", exc_info=True)
+                
+                # 创建并启动线程
+                server_thread = threading.Thread(
+                    target=run_mcp_server_in_thread,
+                    daemon=True,  # 设置为守护线程，主程序退出时自动退出
+                    name="MCP-Server-Thread"
+                )
+                server_thread.start()
+                self.server_thread = server_thread
+                self.is_running = True
+                
+                # 等待服务器启动
+                time.sleep(3)
+                
+                # 检查线程是否还在运行
+                if not server_thread.is_alive():
+                    logger.error(f"❌ MCP Server 线程已退出")
+                    self.is_running = False
+                    return
+                
+                logger.info(f"✅ MCP Server 启动成功 - 地址: http://{host}:{port}/mcp")
+                logger.info(f"   运行在线程: {server_thread.name}")
+                
             else:
-                # 开发环境
+                # 开发环境：使用子进程方式启动
+                logger.info("💻 开发环境 - 使用子进程方式启动 MCP Server")
                 server_script = Path(__file__).parent / "run_server.py"
                 python_exe = sys.executable
-                logger.debug(f"开发环境 - Python: {python_exe}")
-                logger.debug(f"开发环境 - Script: {server_script}")
-                logger.debug(f"开发环境 - Script exists: {server_script.exists()}")
-            
-            # 启动子进程
-            self.server_process = subprocess.Popen(
-                [python_exe, str(server_script)],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                env=os.environ.copy(),
-                # 在 macOS 打包环境中需要设置
-                start_new_session=True
-            )
-            
-            self.is_running = True
-            
-            # 等待服务器启动
-            import time
-            time.sleep(3)  # 等待3秒让服务器完全启动
-            
-            # 检查进程是否还在运行
-            if self.server_process.poll() is not None:
-                # 进程已退出
-                stdout, stderr = self.server_process.communicate()
-                logger.error(f"❌ MCP Server 启动失败")
-                logger.error(f"STDOUT: {stdout.decode('utf-8', errors='ignore')}")
-                logger.error(f"STDERR: {stderr.decode('utf-8', errors='ignore')}")
-                self.is_running = False
-                return
-            
-            logger.info(f"✅ MCP Server 启动成功 - 地址: http://{host}:{port}/mcp")
-            logger.info(f"   进程 PID: {self.server_process.pid}")
+                logger.debug(f"Python: {python_exe}")
+                logger.debug(f"Script: {server_script}")
+                logger.debug(f"Script exists: {server_script.exists()}")
+                
+                if not server_script.exists():
+                    logger.error(f"❌ 找不到启动脚本: {server_script}")
+                    return
+                
+                # 启动子进程
+                self.server_process = subprocess.Popen(
+                    [python_exe, str(server_script)],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    env=os.environ.copy(),
+                    start_new_session=True
+                )
+                
+                self.is_running = True
+                
+                # 等待服务器启动
+                time.sleep(3)
+                
+                # 检查进程是否还在运行
+                if self.server_process.poll() is not None:
+                    stdout, stderr = self.server_process.communicate()
+                    logger.error(f"❌ MCP Server 启动失败")
+                    logger.error(f"STDOUT: {stdout.decode('utf-8', errors='ignore')}")
+                    logger.error(f"STDERR: {stderr.decode('utf-8', errors='ignore')}")
+                    self.is_running = False
+                    return
+                
+                logger.info(f"✅ MCP Server 启动成功 - 地址: http://{host}:{port}/mcp")
+                logger.info(f"   进程 PID: {self.server_process.pid}")
             
         except Exception as e:
             logger.error(f"❌ 启动 MCP Server 失败: {e}", exc_info=True)
@@ -219,8 +251,15 @@ class MCPServerManager:
         try:
             import time
             
-            # 步骤1：终止进程
-            if self.server_process and self.server_process.poll() is None:
+            # 步骤1：根据运行模式停止服务
+            if self.server_thread:
+                # 线程模式（打包环境）
+                logger.info("停止线程模式的 MCP Server...")
+                # 守护线程会随主程序退出而退出，这里主要是清理端口
+                logger.info("线程将随主程序退出")
+                
+            elif self.server_process and self.server_process.poll() is None:
+                # 进程模式（开发环境）
                 pid = self.server_process.pid
                 logger.info(f"正在终止进程: {pid}")
                 
@@ -257,7 +296,7 @@ class MCPServerManager:
                     except subprocess.TimeoutExpired:
                         logger.error(f"❌ 无法终止进程 {pid}")
             else:
-                logger.info("进程已经退出")
+                logger.info("服务已经停止")
             
             # 步骤2：等待端口释放（给操作系统一些时间）
             logger.info(f"等待端口 {self.port} 释放...")
@@ -287,6 +326,7 @@ class MCPServerManager:
             # 重置状态
             self.is_running = False
             self.server_process = None
+            self.server_thread = None
             
             logger.info("✅ MCP Server 已停止")
             
@@ -295,6 +335,7 @@ class MCPServerManager:
             # 即使出错也要重置状态
             self.is_running = False
             self.server_process = None
+            self.server_thread = None
     
     def get_server_status(self) -> dict:
         """

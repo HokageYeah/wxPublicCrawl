@@ -198,23 +198,52 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     yield
     
     # 关闭事件 - yield 之后的代码在应用关闭时执行
-    print("\n🛑 应用正在关闭...")
+    print("\n" + "=" * 80)
+    print("🛑 应用正在关闭...")
+    print("=" * 80)
     logging.info("应用正在关闭...")
     
     # 停止本地 MCP Server
     try:
         print("🔌 停止本地 MCP Server...")
-        await stop_local_mcp_server()
-        print("✅ MCP Server 已停止")
-        logging.info("MCP Server 已停止")
+        # ✅ 使用 try-except 捕获具体错误，避免显示无关警告
+        try:
+            await stop_local_mcp_server()
+            print("✅ MCP Server 已停止")
+            logging.info("MCP Server 已停止")
+        except RuntimeError as e:
+            # 忽略 "cannot schedule new futures after shutdown" 错误
+            # 这是正常的关闭顺序问题
+            if "cannot schedule new futures" in str(e) or "Event loop is closed" in str(e):
+                print("✅ MCP Server 已停止（事件循环已关闭）")
+                logging.info("MCP Server 已停止")
+            else:
+                # 其他 RuntimeError 仍然记录
+                print(f"⚠️  停止 MCP Server 时出现警告: {e}")
+                logging.warning(f"停止 MCP Server 时出现警告: {e}")
+        except Exception as e:
+            print(f"⚠️  停止 MCP Server 失败: {e}")
+            logging.warning(f"停止 MCP Server 失败: {e}")
     except Exception as e:
-        print(f"⚠️  停止 MCP Server 失败: {e}")
-        logging.warning(f"停止 MCP Server 失败: {e}")
+        print(f"⚠️  清理 MCP Server 资源时出错: {e}")
+        logging.warning(f"清理 MCP Server 资源时出错: {e}")
     
-    # 这里可以添加清理逻辑，比如关闭数据库连接
-    # if database.is_connected:
-    #     database.disconnect()
-    #     logging.info("数据库连接已关闭")
+    # 关闭数据库连接（如果需要）
+    try:
+        # 如果你的 database 类有断开连接的方法，在这里调用
+        # if hasattr(database, 'disconnect'):
+        #     database.disconnect()
+        #     print("✅ 数据库连接已关闭")
+        #     logging.info("数据库连接已关闭")
+        pass
+    except Exception as e:
+        print(f"⚠️  关闭数据库连接失败: {e}")
+        logging.warning(f"关闭数据库连接失败: {e}")
+    
+    print("=" * 80)
+    print("✅ 应用关闭完成")
+    print("=" * 80 + "\n")
+    logging.info("应用关闭完成")
 
 
 # 创建 FastAPI 应用
