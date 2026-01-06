@@ -2,6 +2,9 @@ import fastmcp
 from fastapi import APIRouter, HTTPException, Body
 from pydantic import BaseModel
 from typing import Dict, Any, Optional, List
+import httpx
+import json
+from loguru import logger
 
 # 创建路由
 router = APIRouter()
@@ -104,6 +107,154 @@ class FastmcpServer:
                 
             # 如果topic不匹配，则返回默认信息
             return f"抱歉，我没有关于'{topic}'的信息。"
+        
+        # 注册公众号文章获取工具
+        @self.server.tool("get_wx_articles")
+        def get_wx_articles(wx_public_id: str) -> str:
+            """获取微信公众号所有文章列表工具。
+            
+            根据公众号ID自动翻页获取该公众号的所有文章，并返回完整的文章列表。
+            此工具会自动从系统加载用户认证信息，无需手动设置。
+            
+            参数:
+                wx_public_id (str): 微信公众号ID（fakeid）
+            
+            返回:
+                str: JSON格式的文章列表字符串，包含所有文章信息
+            
+            示例:
+                - 输入公众号ID，返回该公众号所有已发布的文章列表
+            
+            注意:
+                - 工具会自动加载已保存的用户会话信息
+                - 返回的数据包含文章标题、发布时间、链接等详细信息
+            """
+            print(f"开始获取公众号文章: wx_public_id={wx_public_id}")
+            
+            # 配置参数
+            session_url = "http://localhost:8002/api/v1/wx/public/system/session/load"
+            article_list_url = "http://localhost:8002/api/v1/wx/public/get-wx-article-list"
+            begin = 0
+            count = 20  # 每页获取20篇文章
+            all_articles = []
+            
+            try:
+                # 第一步：加载用户会话信息
+                print("正在加载用户会话信息...")
+                # 1. 发起 HTTP GET 请求
+                session_response = httpx.get(session_url, timeout=10.0)
+                # 2. 检查 HTTP 状态码，如果是 4xx 或 5xx 则抛出异常
+                session_response.raise_for_status()
+                # 3. 将响应体解析为 JSON
+                session_result = session_response.json().get("data", {})
+                
+                # 检查是否成功获取会话
+                if not session_result.get("cookies") or not session_result.get("token"):
+                    error_msg = "用户未登录，请先登录微信公众号平台"
+                    print(f"✗ {error_msg}")
+                    return json.dumps({
+                        "success": False,
+                        "error": error_msg,
+                        "articles": []
+                    }, ensure_ascii=False)
+                
+                # 提取 cookies 和 token
+                cookies = session_result.get("cookies", {})
+                token = session_result.get("token", "")
+                logger.info(f"🔧mcp工具调用cookies: {cookies}")
+                logger.info(f"🔧mcp工具调用token: {token}")
+                if not cookies or not token:
+                    error_msg = "会话信息不完整，缺少认证数据"
+                    print(f"✗ {error_msg}")
+                    return json.dumps({
+                        "success": False,
+                        "error": error_msg,
+                        "articles": []
+                    }, ensure_ascii=False)
+                
+                print(f"✓ 会话加载成功，准备获取文章列表")
+                
+                # 准备请求头
+                headers = {
+                    "X-WX-Cookies": json.dumps(cookies),
+                    "X-WX-Token": token
+                }
+                # return headers
+                
+                # 第二步：循环获取所有文章
+                while True:
+                    print(f"正在获取第 {begin // count + 1} 页，当前已获取 {len(all_articles)} 篇文章...")
+                    
+                    # 构造请求参数
+                    payload = {
+                        "wx_public_id": wx_public_id,
+                        "begin": begin,
+                        "count": count,
+                        "query": ""
+                    }
+                    
+                    # 发送请求，添加认证请求头
+                    response = httpx.post(article_list_url, json=payload, headers=headers, timeout=30.0)
+                    response.raise_for_status()
+                    
+                    # 解析响应
+                    result = response.json().get("data", {})
+                    
+                    # 检查返回状态
+                    if result.get("code") != 0:
+                        error_msg = result.get("msg", "未知错误")
+                        print(f"接口返回错误: {error_msg}")
+                        return json.dumps({
+                            "success": False,
+                            "error": f"获取文章失败: {error_msg}",
+                            "articles": all_articles
+                        }, ensure_ascii=False)
+                    
+                    # 获取文章列表
+                    data = result.get("data", {})
+                    publish_list = data.get("publish_list", [])
+                    
+                    # 如果没有更多文章，结束循环
+                    if not publish_list or len(publish_list) == 0:
+                        print(f"没有更多文章，共获取 {len(all_articles)} 篇")
+                        break
+                    
+                    # 将文章添加到列表
+                    all_articles.extend(publish_list)
+                    
+                    # 如果返回的文章数少于请求数，说明已经是最后一页
+                    if len(publish_list) < count:
+                        print(f"已获取所有文章，总计 {len(all_articles)} 篇")
+                        break
+                    
+                    # 更新起始位置，继续下一页
+                    begin += count
+                
+                # 返回结果
+                print(f"✓ 成功获取公众号 {wx_public_id} 的所有文章，共 {len(all_articles)} 篇")
+                return json.dumps({
+                    "success": True,
+                    "wx_public_id": wx_public_id,
+                    "total_count": len(all_articles),
+                    "articles": all_articles
+                }, ensure_ascii=False)
+                
+            except httpx.HTTPError as e:
+                error_msg = f"网络请求失败: {str(e)}"
+                print(f"✗ {error_msg}")
+                return json.dumps({
+                    "success": False,
+                    "error": error_msg,
+                    "articles": all_articles
+                }, ensure_ascii=False)
+            except Exception as e:
+                error_msg = f"获取文章时发生错误: {str(e)}"
+                print(f"✗ {error_msg}")
+                return json.dumps({
+                    "success": False,
+                    "error": error_msg,
+                    "articles": all_articles
+                }, ensure_ascii=False)
     
     # def process_query(self, query: str) -> str:
     #     """处理用户查询"""
@@ -177,7 +328,7 @@ if __name__ == "__main__":
     print("="*60)
     print(f"项目根目录: {project_root}")
     print(f"服务器地址: http://localhost:8008/mcp")
-    print(f"可用工具: weather, calculator, knowledge_base")
+    print(f"可用工具: weather, calculator, knowledge_base, get_wx_articles")
     print("="*60)
     
     try:
