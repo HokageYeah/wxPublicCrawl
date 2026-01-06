@@ -7,3 +7,4 @@ dist/
 logs/*
 /web/logs/*
 /web/dist/*
+/web/node_modules/*

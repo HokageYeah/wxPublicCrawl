@@ -11,9 +11,9 @@ if not exist "venv" (
 REM 激活虚拟环境
 call venv\Scripts\activate.bat
 
-REM 安装依赖
+REM 安装依赖（使用 Windows 版本的依赖文件）
 echo 安装依赖...
-pip install -r requirements.txt
+pip install -r requirements-windows.txt
 
 REM 运行应用
 echo 启动应用...
