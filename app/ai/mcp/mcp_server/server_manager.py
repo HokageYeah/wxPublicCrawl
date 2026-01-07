@@ -8,6 +8,7 @@ import sys
 import os
 import socket
 import signal
+import threading
 from typing import Optional
 from loguru import logger
 from pathlib import Path
@@ -20,6 +21,7 @@ class MCPServerManager:
         """初始化管理器"""
         self.server_process: Optional[subprocess.Popen] = None
         self.server_thread = None  # 用于打包环境的线程
+        self.log_threads = []  # 用于读取子进程日志的线程
         self.is_running = False
         self.host = "127.0.0.1"
         self.port = 8008
@@ -121,6 +123,29 @@ class MCPServerManager:
         except Exception as e:
             logger.warning(f"清理端口 {port} 失败: {e}")
             return False
+    
+    def _read_process_output(self, pipe, pipe_name: str):
+        """
+        读取子进程输出的线程函数
+        
+        Args:
+            pipe: 子进程的 stdout 或 stderr 管道
+            pipe_name: 管道名称（"stdout" 或 "stderr"）
+        """
+        try:
+            for line in iter(pipe.readline, b''):
+                if line:
+                    decoded_line = line.decode('utf-8', errors='ignore').rstrip()
+                    if decoded_line:
+                        # 根据管道类型使用不同的日志级别
+                        if pipe_name == "stderr":
+                            logger.warning(f"[MCP-Server-{pipe_name}] {decoded_line}")
+                        else:
+                            logger.info(f"[MCP-Server-{pipe_name}] {decoded_line}")
+        except Exception as e:
+            logger.debug(f"读取 {pipe_name} 时出错: {e}")
+        finally:
+            pipe.close()
         
     def start_server(self, host: str = "127.0.0.1", port: int = 8008, transport: str = "streamable-http"):
         """
@@ -163,7 +188,6 @@ class MCPServerManager:
             if getattr(sys, '_MEIPASS', None):
                 # 打包环境：使用线程方式启动（不依赖外部脚本文件）
                 logger.info("🎁 打包环境 - 使用线程方式启动 MCP Server")
-                import threading
                 
                 def run_mcp_server_in_thread():
                     """在线程中运行 MCP Server"""
@@ -216,10 +240,33 @@ class MCPServerManager:
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                     env=os.environ.copy(),
-                    start_new_session=True
+                    start_new_session=True,
+                    bufsize=1  # 行缓冲
                 )
                 
+                # 启动线程读取 stdout 和 stderr
+                stdout_thread = threading.Thread(
+                    target=self._read_process_output,
+                    args=(self.server_process.stdout, "stdout"),
+                    daemon=True,
+                    name="MCP-Server-stdout-reader"
+                )
+                stderr_thread = threading.Thread(
+                    target=self._read_process_output,
+                    args=(self.server_process.stderr, "stderr"),
+                    daemon=True,
+                    name="MCP-Server-stderr-reader"
+                )
+                
+                stdout_thread.start()
+                stderr_thread.start()
+                
+                # 保存日志线程引用
+                self.log_threads = [stdout_thread, stderr_thread]
+                
                 self.is_running = True
+                
+                logger.info(f"   日志读取线程已启动: stdout, stderr")
                 
                 # 等待服务器启动
                 time.sleep(3)
@@ -327,6 +374,7 @@ class MCPServerManager:
             self.is_running = False
             self.server_process = None
             self.server_thread = None
+            self.log_threads = []
             
             logger.info("✅ MCP Server 已停止")
             
@@ -336,6 +384,7 @@ class MCPServerManager:
             self.is_running = False
             self.server_process = None
             self.server_thread = None
+            self.log_threads = []
     
     def get_server_status(self) -> dict:
         """

@@ -54,7 +54,7 @@ class FastmcpServer:
             返回:
                 str: 包含城市名和天气信息的字符串
             """
-            print(f"天气查询: {location}")
+            logger.info(f"[MCP工具] 天气查询: {location}")
             
             # 简化处理
             if "北京" in location:
@@ -89,7 +89,7 @@ class FastmcpServer:
                 - "10-5" 返回 "计算结果: 5"
                 - "3*4" 返回 "计算结果: 12"
             """
-            print('calculator----expression', expression)
+            logger.info(f"[MCP工具] 计算器: {expression}")
             try:
                 # 安全地计算表达式
                 result = eval(expression, {"__builtins__": {}}, {"abs": abs, "round": round})
@@ -129,7 +129,7 @@ class FastmcpServer:
                 - 工具会自动加载已保存的用户会话信息
                 - 返回的数据包含文章标题、发布时间、链接等详细信息
             """
-            print(f"开始获取公众号文章: wx_public_id={wx_public_id}")
+            logger.info(f"[MCP工具] 开始获取公众号文章: wx_public_id={wx_public_id}")
             
             # 配置参数
             session_url = "http://localhost:8002/api/v1/wx/public/system/session/load"
@@ -140,7 +140,7 @@ class FastmcpServer:
             
             try:
                 # 第一步：加载用户会话信息
-                print("正在加载用户会话信息...")
+                logger.info("[MCP工具] 正在加载用户会话信息...")
                 # 1. 发起 HTTP GET 请求
                 session_response = httpx.get(session_url, timeout=10.0)
                 # 2. 检查 HTTP 状态码，如果是 4xx 或 5xx 则抛出异常
@@ -149,9 +149,9 @@ class FastmcpServer:
                 session_result = session_response.json().get("data", {})
                 
                 # 检查是否成功获取会话
-                if not session_result.get("cookies") or not session_result.get("token"):
+                if not session_result.get("logged_in", False):
                     error_msg = "用户未登录，请先登录微信公众号平台"
-                    print(f"✗ {error_msg}")
+                    logger.warning(f"[MCP工具] ✗ {error_msg}")
                     return json.dumps({
                         "success": False,
                         "error": error_msg,
@@ -161,29 +161,31 @@ class FastmcpServer:
                 # 提取 cookies 和 token
                 cookies = session_result.get("cookies", {})
                 token = session_result.get("token", "")
-                logger.info(f"🔧mcp工具调用cookies: {cookies}")
-                logger.info(f"🔧mcp工具调用token: {token}")
+                logger.info(f"🔧mcp工具调用cookies: {cookies}， 类型: {type(cookies)}")
+                logger.info(f"🔧mcp工具调用token: {token}， 类型: {type(token)}")
                 if not cookies or not token:
                     error_msg = "会话信息不完整，缺少认证数据"
-                    print(f"✗ {error_msg}")
+                    logger.warning(f"[MCP工具] ✗ {error_msg}")
                     return json.dumps({
                         "success": False,
                         "error": error_msg,
                         "articles": []
                     }, ensure_ascii=False)
                 
-                print(f"✓ 会话加载成功，准备获取文章列表")
-                
+                logger.info(f"[MCP工具] ✓ 会话加载成功，准备获取文章列表")
+                # 将 cookies 对象转换为 Cookie 字符串使用;分割
+                cookie_str = ";".join([f"{key}={value}" for key, value in cookies.items()])
+                logger.info(f"[MCP工具] 转换后的cookie_str: {cookie_str}")
                 # 准备请求头
                 headers = {
-                    "X-WX-Cookies": json.dumps(cookies),
+                    "X-WX-Cookies": cookie_str,
                     "X-WX-Token": token
                 }
                 # return headers
                 
                 # 第二步：循环获取所有文章
                 while True:
-                    print(f"正在获取第 {begin // count + 1} 页，当前已获取 {len(all_articles)} 篇文章...")
+                    logger.info(f"[MCP工具] 正在获取第 {begin // count + 1} 页，当前已获取 {len(all_articles)} 篇文章...")
                     
                     # 构造请求参数
                     payload = {
@@ -192,31 +194,37 @@ class FastmcpServer:
                         "count": count,
                         "query": ""
                     }
-                    
+                    logger.info(f"[MCP工具] 调用公众号文章接口请求payload: {payload}")
                     # 发送请求，添加认证请求头
                     response = httpx.post(article_list_url, json=payload, headers=headers, timeout=30.0)
                     response.raise_for_status()
-                    
                     # 解析响应
-                    result = response.json().get("data", {})
-                    
+                    result = response.json()
+                    # ret = ["SUCCESS::请求成功"], 成功
+                    # ret = ["ERROR::请求失败"], 失败
+                    ret = result.get("ret", [])
+                    ret_code = ret[0].split("::")[0] if ret else ""
+                    ret_msg = ret[0].split("::")[1] if ret else ""
+
+                    logger.info(f"[MCP工具] 调用公众号文章接口返回result: {result}")
+                    logger.info(f"[MCP工具] 调用公众号文章接口返回ret_code: {ret_code}")
+                    logger.info(f"[MCP工具] 调用公众号文章接口返回ret_msg: {ret_msg}")
                     # 检查返回状态
-                    if result.get("code") != 0:
-                        error_msg = result.get("msg", "未知错误")
-                        print(f"接口返回错误: {error_msg}")
+                    if ret_code != "SUCCESS":
+                        error_msg = ret_msg
+                        logger.error(f"[MCP工具] 接口返回错误: {error_msg}")
                         return json.dumps({
-                            "success": False,
+                            "success": False,  
                             "error": f"获取文章失败: {error_msg}",
                             "articles": all_articles
                         }, ensure_ascii=False)
-                    
                     # 获取文章列表
                     data = result.get("data", {})
                     publish_list = data.get("publish_list", [])
                     
                     # 如果没有更多文章，结束循环
                     if not publish_list or len(publish_list) == 0:
-                        print(f"没有更多文章，共获取 {len(all_articles)} 篇")
+                        logger.info(f"[MCP工具] 没有更多文章，共获取 {len(all_articles)} 篇")
                         break
                     
                     # 将文章添加到列表
@@ -224,14 +232,14 @@ class FastmcpServer:
                     
                     # 如果返回的文章数少于请求数，说明已经是最后一页
                     if len(publish_list) < count:
-                        print(f"已获取所有文章，总计 {len(all_articles)} 篇")
+                        logger.info(f"[MCP工具] 已获取所有文章，总计 {len(all_articles)} 篇")
                         break
                     
                     # 更新起始位置，继续下一页
                     begin += count
                 
                 # 返回结果
-                print(f"✓ 成功获取公众号 {wx_public_id} 的所有文章，共 {len(all_articles)} 篇")
+                logger.info(f"[MCP工具] ✓ 成功获取公众号 {wx_public_id} 的所有文章，共 {len(all_articles)} 篇")
                 return json.dumps({
                     "success": True,
                     "wx_public_id": wx_public_id,
@@ -241,7 +249,7 @@ class FastmcpServer:
                 
             except httpx.HTTPError as e:
                 error_msg = f"网络请求失败: {str(e)}"
-                print(f"✗ {error_msg}")
+                logger.error(f"[MCP工具] ✗ {error_msg}")
                 return json.dumps({
                     "success": False,
                     "error": error_msg,
@@ -249,7 +257,7 @@ class FastmcpServer:
                 }, ensure_ascii=False)
             except Exception as e:
                 error_msg = f"获取文章时发生错误: {str(e)}"
-                print(f"✗ {error_msg}")
+                logger.error(f"[MCP工具] ✗ {error_msg}")
                 return json.dumps({
                     "success": False,
                     "error": error_msg,
@@ -323,21 +331,19 @@ if __name__ == "__main__":
     if str(project_root) not in sys.path:
         sys.path.insert(0, str(project_root))
     
-    print("="*60)
-    print("启动FastMCP服务器")
-    print("="*60)
-    print(f"项目根目录: {project_root}")
-    print(f"服务器地址: http://localhost:8008/mcp")
-    print(f"可用工具: weather, calculator, knowledge_base, get_wx_articles")
-    print("="*60)
+    logger.info("="*60)
+    logger.info("启动FastMCP服务器")
+    logger.info("="*60)
+    logger.info(f"项目根目录: {project_root}")
+    logger.info(f"服务器地址: http://localhost:8008/mcp")
+    logger.info(f"可用工具: weather, calculator, knowledge_base, get_wx_articles")
+    logger.info("="*60)
     
     try:
         server = FastmcpServer()
         server.run(transport="streamable-http", host="localhost", port=8008)
     except KeyboardInterrupt:
-        print("\n服务器已停止")
+        logger.info("\n服务器已停止")
     except Exception as e:
-        print(f"服务器启动失败: {e}")
-        import traceback
-        traceback.print_exc()
+        logger.error(f"服务器启动失败: {e}", exc_info=True)
         sys.exit(1)

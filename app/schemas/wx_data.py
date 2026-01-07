@@ -74,3 +74,7 @@ class ArticleSimple(BaseModel):
 
 class EducationAnalyzeRequest(BaseModel):
     articles: list[ArticleSimple]
+
+
+class EducationAnalyzeByIdRequest(BaseModel):
+    wx_public_id: str = Field(..., description="公众号ID")

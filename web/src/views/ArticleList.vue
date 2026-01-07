@@ -285,6 +285,11 @@ const currentPage = ref(1);
 const pageSize = 15;
 const totalCount = ref(0);
 
+// 获取ai返回的所有教育文章aid
+const educationAids = ref<string[]>([]);
+// 是否点击了AI分析教育相关文章
+const isClickedAnalyzeEducation = ref(false);
+
 const totalPages = computed(() => {
     return Math.ceil(totalCount.value / pageSize);
 });
@@ -329,6 +334,19 @@ const checkDownloadStatus = async () => {
         console.error('Failed to check download status:', error);
     }
 };
+const checkEducationListStatus = async () => {
+    if (!isClickedAnalyzeEducation.value) return;
+    let educationCount = 0;
+    articles.value.forEach(article => {
+        if (educationAids.value.includes(article.aid)) {
+            article.is_education = true;
+            educationCount++;
+        } else {
+            article.is_education = false; 
+        }
+    });
+    alert(`分析完成！\n本页共有 ${educationCount} 条教育相关文章。`);
+}
 
 const formatDate = (timestamp: number) => {
   return new Date(timestamp * 1000).toLocaleString();
@@ -386,7 +404,6 @@ const fetchArticles = async (page = 1) => {
                 };
             }).filter((item: any) => item !== null);
             articles.value = list;
-            
             // 获取列表后检查下载状态
             if (isSaveToLocal.value && downloadPath.value) {
                 checkDownloadStatus();
@@ -394,6 +411,7 @@ const fetchArticles = async (page = 1) => {
         } else {
             articles.value = [];
         }
+        checkEducationListStatus();
     }
   } catch (error) {
     console.error('Fetch articles failed:', error);
@@ -458,22 +476,23 @@ const analyzeEducation = async () => {
     try {
         const articleList = articles.value.map(a => ({ aid: a.aid, title: a.title }));
         // API response format: { code: 0, msg: "success", data: ["aid1", "aid2"] }
-        const res = await request.post<{code: number, msg: string, data: string[]}>('/analyze-education-content', {
-            articles: articleList
+        // # AI分析教育相关文章
+        // const res = await request.post<{code: number, msg: string, data: string[]}>('/analyze-education-content', {
+        //     articles: articleList
+        // });
+      
+
+        // # AI通过ID分析教育相关文章
+        const res = await request.post<{code: number, msg: string, data: string[]}>('/analyze-education-content-by-id', {
+            wx_public_id: fakeid
         });
-        
+
         let educationCount = 0;
         if (res && res.data) {
-            const educationAids = res.data;
-            articles.value.forEach(article => {
-                if (educationAids.includes(article.aid)) {
-                    article.is_education = true;
-                    educationCount++;
-                } else {
-                    article.is_education = false; 
-                }
-            });
-            alert(`分析完成！\n本页共有 ${educationCount} 条教育相关文章。`);
+            isClickedAnalyzeEducation.value = true;
+            // const educationAids = res.data;
+            educationAids.value = res.data;
+            checkEducationListStatus();
         } else {
             alert('分析完成，未发现教育相关文章或返回数据异常。');
         }
