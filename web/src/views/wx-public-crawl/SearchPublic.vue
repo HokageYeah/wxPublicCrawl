@@ -363,13 +363,13 @@ const selectAccount = (account: PublicAccount) => {
   // 通过 query 传递数据或使用 store。
   // Query 对于重载时的持久化更简单（如果支持），fakeid 敏感吗？不敏感。
   // 我们需要 fakeid 和 nickname（用于文件夹命名）
-  
+
   // 注意：nickname 可能包含像 <em>...</em> 这样的搜索高亮 HTML 标签。
   // 我们应该去除它们。
   const rawNickname = account.nickname.replace(/<[^>]*>?/gm, '');
-  
+
   router.push({
-    name: 'articles',
+    name: 'wx-public-crawl-articles',
     query: {
       fakeid: account.fakeid,
       nickname: rawNickname

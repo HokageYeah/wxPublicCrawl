@@ -54,6 +54,7 @@ onMounted(() => {
 
 const handleLogout = async () => {
   await wechatStore.logout()
-  router.push('/')
+  // 退出后跳转到登录页
+  router.push({ name: 'wx-public-crawl-login' })
 }
 </script>

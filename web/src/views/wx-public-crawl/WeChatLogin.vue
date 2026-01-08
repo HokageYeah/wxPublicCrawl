@@ -194,7 +194,7 @@ const onContinue = () => {
   // Handle the continue action after successful login
   // This could redirect to another page or trigger a callback
   console.log('Login complete, redirecting to search...');
-  router.push('/search');
+  router.push({ name: 'wx-public-crawl-search' });
 };
 
 const onLogout = () => {
