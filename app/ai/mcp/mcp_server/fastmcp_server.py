@@ -5,9 +5,21 @@ from typing import Dict, Any, Optional, List
 import httpx
 import json
 from loguru import logger
+import os
 
 # 创建路由
 router = APIRouter()
+
+
+def get_backend_url():
+    """根据环境获取后端服务器URL"""
+    env = os.environ.get('ENV', '')
+    if env == 'desktop':
+        # 桌面应用环境: 后端运行在 18000 端口
+        return "http://127.0.0.1:18000"
+    else:
+        # 开发环境: 后端运行在 8002 端口
+        return "http://localhost:8002"
 
 # 定义请求模型
 class QueryRequest(BaseModel):
@@ -130,10 +142,14 @@ class FastmcpServer:
                 - 返回的数据包含文章标题、发布时间、链接等详细信息
             """
             logger.info(f"[MCP工具] 开始获取公众号文章: wx_public_id={wx_public_id}")
-            
+
+            # 根据环境获取后端服务器URL
+            backend_url = get_backend_url()
+            logger.info(f"[MCP工具] 使用后端服务器: {backend_url} (ENV={os.environ.get('ENV', 'default')})")
+
             # 配置参数
-            session_url = "http://localhost:8002/api/v1/wx/public/system/session/load"
-            article_list_url = "http://localhost:8002/api/v1/wx/public/get-wx-article-list"
+            session_url = f"{backend_url}/api/v1/wx/public/system/session/load"
+            article_list_url = f"{backend_url}/api/v1/wx/public/get-wx-article-list"
             begin = 0
             count = 20  # 每页获取20篇文章
             all_articles = []

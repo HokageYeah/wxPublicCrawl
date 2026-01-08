@@ -132,6 +132,7 @@ from app.core.logging_uru import setup_logging
 from app.api.endpoints.ai_assistant import init_ai_assistant
 # 导入 MCP Server 管理器
 from app.ai.mcp.mcp_server.server_manager import start_local_mcp_server, stop_local_mcp_server
+from app.core.logging_uru import logger
 
 
 # 创建 lifespan 上下文管理器
@@ -368,18 +369,22 @@ if os.path.exists(web_dist_path):
     @app.get("/crawl-desktop", include_in_schema=False)
     @app.get("/crawl-desktop/{full_path:path}", include_in_schema=False)
     async def serve_spa(full_path: str = ""):
+        logger.info(f"处理 SPA 路由: {full_path}")
         try:
             # 尝试直接服务文件
             if full_path:
                 file_path = os.path.join(web_dist_path, full_path)
                 if os.path.isfile(file_path):
+                    logger.info(f"服务文件: {file_path}")
                     return FileResponse(file_path)
             
             # 返回 index.html
             index_path = os.path.join(web_dist_path, "index.html")
             if os.path.exists(index_path):
+                logger.info(f"服务 index.html: {index_path}")
                 return FileResponse(index_path)
             else:
+                logger.error(f"index.html 不存在: {index_path}")
                 return JSONResponse(
                     status_code=500,
                     content={"error": "index.html not found", "path": index_path}
