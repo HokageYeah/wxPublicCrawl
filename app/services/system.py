@@ -6,6 +6,7 @@ import json
 from typing import Dict, Any, Optional
 from app.utils.src_path import get_writable_dir
 from app.models.search_tag import SearchTag
+from app.models.user_behavior import UserBehavior, BehaviorType
 from app.db.sqlalchemy_db import database
 from sqlalchemy.exc import IntegrityError
 
@@ -262,6 +263,234 @@ class SystemManager:
             return {"success": False, "message": f"删除失败: {str(e)}"}
         finally:
             session.close()
+
+    # ------------------------------------------------------------
+    # 用户行为管理相关方法
+    # ------------------------------------------------------------
+
+    def set_user_behavior(self, user_id: str, behavior_type: str, behavior_value: str):
+        """
+        设置用户行为（自动更新或创建）
+
+        Args:
+            user_id: 用户ID（uin 或 nick_name）
+            behavior_type: 行为类型（使用 BehaviorType 常量）
+            behavior_value: 行为值
+
+        Returns:
+            dict: 操作结果
+        """
+        session_gen = database.get_session()
+        session = next(session_gen)
+        try:
+            # 查找是否已存在该用户的行为记录
+            behavior = session.query(UserBehavior).filter(
+                UserBehavior.user_id == user_id,
+                UserBehavior.behavior_type == behavior_type
+            ).first()
+
+            if behavior:
+                # 更新现有记录
+                behavior.behavior_value = behavior_value
+                behavior.updated_at = datetime.now()
+                print(f"更新用户行为: user_id={user_id}, type={behavior_type}, value={behavior_value}")
+            else:
+                # 创建新记录
+                behavior = UserBehavior(
+                    user_id=user_id,
+                    behavior_type=behavior_type,
+                    behavior_value=behavior_value
+                )
+                session.add(behavior)
+                print(f"新增用户行为: user_id={user_id}, type={behavior_type}, value={behavior_value}")
+
+            session.commit()
+            return {"success": True, "message": "保存成功"}
+        except Exception as e:
+            session.rollback()
+            print(f"保存用户行为失败: {e}")
+            return {"success": False, "message": f"保存失败: {str(e)}"}
+        finally:
+            session.close()
+
+    def get_user_behavior(self, user_id: str, behavior_type: str) -> Optional[str]:
+        """
+        获取用户行为值
+
+        Args:
+            user_id: 用户ID（uin 或 nick_name）
+            behavior_type: 行为类型（使用 BehaviorType 常量）
+
+        Returns:
+            Optional[str]: 行为值，如果不存在则返回 None
+        """
+        session_gen = database.get_session()
+        session = next(session_gen)
+        try:
+            behavior = session.query(UserBehavior).filter(
+                UserBehavior.user_id == user_id,
+                UserBehavior.behavior_type == behavior_type
+            ).first()
+
+            if behavior:
+                print(f"获取用户行为: user_id={user_id}, type={behavior_type}, value={behavior.behavior_value}")
+                return behavior.behavior_value
+            else:
+                print(f"用户行为不存在: user_id={user_id}, type={behavior_type}")
+                return None
+        except Exception as e:
+            print(f"获取用户行为失败: {e}")
+            return None
+        finally:
+            session.close()
+
+    def delete_user_behavior(self, user_id: str, behavior_type: str) -> bool:
+        """
+        删除用户行为
+
+        Args:
+            user_id: 用户ID（uin 或 nick_name）
+            behavior_type: 行为类型（使用 BehaviorType 常量）
+
+        Returns:
+            bool: 是否删除成功
+        """
+        session_gen = database.get_session()
+        session = next(session_gen)
+        try:
+            behavior = session.query(UserBehavior).filter(
+                UserBehavior.user_id == user_id,
+                UserBehavior.behavior_type == behavior_type
+            ).first()
+
+            if behavior:
+                session.delete(behavior)
+                session.commit()
+                print(f"删除用户行为: user_id={user_id}, type={behavior_type}")
+                return True
+            else:
+                print(f"用户行为不存在，无需删除: user_id={user_id}, type={behavior_type}")
+                return False
+        except Exception as e:
+            session.rollback()
+            print(f"删除用户行为失败: {e}")
+            return False
+        finally:
+            session.close()
+
+    def get_all_user_behaviors(self, user_id: str) -> list:
+        """
+        获取用户的所有行为记录
+
+        Args:
+            user_id: 用户ID（uin 或 nick_name）
+
+        Returns:
+            list: 用户行为列表，格式 [{"type": "...", "value": "..."}, ...]
+        """
+        session_gen = database.get_session()
+        session = next(session_gen)
+        try:
+            behaviors = session.query(UserBehavior).filter(
+                UserBehavior.user_id == user_id
+            ).all()
+
+            result = [
+                {
+                    "id": b.id,
+                    "type": b.behavior_type,
+                    "value": b.behavior_value,
+                    "created_at": b.created_at.isoformat() if b.created_at else None,
+                    "updated_at": b.updated_at.isoformat() if b.updated_at else None
+                }
+                for b in behaviors
+            ]
+            print(f"获取用户所有行为: user_id={user_id}, count={len(result)}")
+            return result
+        except Exception as e:
+            print(f"获取用户所有行为失败: {e}")
+            return []
+        finally:
+            session.close()
+
+    # ------------------------------------------------------------
+    # 便捷方法：常用用户行为操作
+    # ------------------------------------------------------------
+
+    def set_download_path(self, user_id: str, download_path: str) -> dict:
+        """
+        设置下载路径（便捷方法）
+
+        Args:
+            user_id: 用户ID
+            download_path: 下载路径
+
+        Returns:
+            dict: 操作结果
+        """
+        return self.set_user_behavior(user_id, BehaviorType.SAVE_DOWNLOAD_PATH, download_path)
+
+    def get_download_path(self, user_id: str) -> Optional[str]:
+        """
+        获取下载路径（便捷方法）
+
+        Args:
+            user_id: 用户ID
+
+        Returns:
+            Optional[str]: 下载路径，如果不存在则返回 None
+        """
+        return self.get_user_behavior(user_id, BehaviorType.SAVE_DOWNLOAD_PATH)
+
+    def set_save_to_local(self, user_id: str, save_to_local: str) -> dict:
+        """
+        设置是否保存到本地（便捷方法）
+
+        Args:
+            user_id: 用户ID
+            save_to_local: "1" 或 "2"
+
+        Returns:
+            dict: 操作结果
+        """
+        return self.set_user_behavior(user_id, BehaviorType.SAVE_TO_LOCAL, save_to_local)
+
+    def get_save_to_local(self, user_id: str) -> Optional[str]:
+        """
+        获取是否保存到本地（便捷方法）
+
+        Args:
+            user_id: 用户ID
+
+        Returns:
+            Optional[str]: "1" 或 "2"，如果不存在则返回 None
+        """
+        return self.get_user_behavior(user_id, BehaviorType.SAVE_TO_LOCAL)
+
+    def set_upload_to_aliyun(self, user_id: str, upload_to_aliyun: str) -> dict:
+        """
+        设置是否上传到阿里云（便捷方法）
+
+        Args:
+            user_id: 用户ID
+            upload_to_aliyun: "1" 或 "2"
+
+        Returns:
+            dict: 操作结果
+        """
+        return self.set_user_behavior(user_id, BehaviorType.UPLOAD_TO_ALIYUN, upload_to_aliyun)
+
+    def get_upload_to_aliyun(self, user_id: str) -> Optional[str]:
+        """
+        获取是否上传到阿里云（便捷方法）
+
+        Args:
+            user_id: 用户ID
+
+        Returns:
+            Optional[str]: "1" 或 "2"，如果不存在则返回 None
+        """
+        return self.get_user_behavior(user_id, BehaviorType.UPLOAD_TO_ALIYUN)
 
 
 # 全局单例

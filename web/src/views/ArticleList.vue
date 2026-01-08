@@ -294,18 +294,65 @@ const totalPages = computed(() => {
     return Math.ceil(totalCount.value / pageSize);
 });
 
-// 监听 downloadPath 变化并保存到本地 (绑定用户身份)
-watch(downloadPath, (newPath) => {
+// 监听 downloadPath 变化并保存到数据库
+watch(downloadPath, async (newPath) => {
     if (isSaveToLocal.value && wechatStore.userInfo) {
         // 优先使用 uin (唯一ID), 降级使用 nick_name
         const userId = wechatStore.userInfo.uin || wechatStore.userInfo.nick_name;
-        if (userId) {
-            localStorage.setItem(`downloadPath_${userId}`, newPath);
+        if (userId && newPath) {
+            try {
+                // 调用 API 保存到数据库
+                await request.post('/system/download-path', {
+                    user_id: userId,
+                    download_path: newPath
+                });
+                console.log('下载路径已保存到数据库:', newPath);
+            } catch (error) {
+                console.error('保存下载路径失败:', error);
+            }
         }
     }
     // 路径变化时重新检查下载状态
     if (newPath && articles.value.length > 0) {
         checkDownloadStatus();
+    }
+});
+
+// 监听 isSaveToLocal 变化并保存到数据库
+watch(isSaveToLocal, async (newValue) => {
+    if (wechatStore.userInfo) {
+        const userId = wechatStore.userInfo.uin || wechatStore.userInfo.nick_name;
+        if (userId) {
+            try {
+                // 调用 API 保存到数据库（"1" 表示是，"2" 表示否）
+                await request.post('/system/save-to-local', {
+                    user_id: userId,
+                    save_to_local: newValue ? "1" : "2"
+                });
+                console.log('保存到本地设置已保存到数据库:', newValue ? "1" : "2");
+            } catch (error) {
+                console.error('保存保存到本地设置失败:', error);
+            }
+        }
+    }
+});
+
+// 监听 isUploadToAliyun 变化并保存到数据库
+watch(isUploadToAliyun, async (newValue) => {
+    if (wechatStore.userInfo) {
+        const userId = wechatStore.userInfo.uin || wechatStore.userInfo.nick_name;
+        if (userId) {
+            try {
+                // 调用 API 保存到数据库（"1" 表示是，"2" 表示否）
+                await request.post('/system/upload-to-aliyun', {
+                    user_id: userId,
+                    upload_to_aliyun: newValue ? "1" : "2"
+                });
+                console.log('上传到阿里云设置已保存到数据库:', newValue ? "1" : "2");
+            } catch (error) {
+                console.error('保存上传到阿里云设置失败:', error);
+            }
+        }
     }
 });
 
@@ -325,7 +372,7 @@ const checkDownloadStatus = async () => {
         if (Array.isArray(downloadedAids)) {
             articles.value.forEach(article => {
                 article.downloaded = false;
-                if (downloadedAids.some(d => d.aid === article.aid)) {
+                if (downloadedAids.some(d => d === article.aid)) {
                     article.downloaded = true;
                 }
             });
@@ -345,7 +392,6 @@ const checkEducationListStatus = async () => {
             article.is_education = false; 
         }
     });
-    alert(`分析完成！\n本页共有 ${educationCount} 条教育相关文章。`);
 }
 
 const formatDate = (timestamp: number) => {
@@ -493,6 +539,7 @@ const analyzeEducation = async () => {
             // const educationAids = res.data;
             educationAids.value = res.data;
             checkEducationListStatus();
+            alert(`分析完成！\n 公众号 ${nickname} 共有 ${educationAids.value.length} 条教育相关文章。`);
         } else {
             alert('分析完成，未发现教育相关文章或返回数据异常。');
         }
@@ -510,14 +557,40 @@ const handlePageChange = (newPage: number) => {
     }
 };
 
-onMounted(() => {
-    // 恢复保存的路径
+onMounted(async () => {
+    // 从数据库恢复保存的路径和设置
     if (wechatStore.userInfo) {
         const userId = wechatStore.userInfo.uin || wechatStore.userInfo.nick_name;
         if (userId) {
-            const savedPath = localStorage.getItem(`downloadPath_${userId}`);
-            if (savedPath) {
-                downloadPath.value = savedPath;
+            try {
+                // 加载下载路径
+                const pathRes = await request.get<{success: boolean, path?: string}>('/system/download-path', {
+                    params: { user_id: userId }
+                });
+                if (pathRes.success && pathRes.path) {
+                    downloadPath.value = pathRes.path;
+                    console.log('从数据库加载下载路径:', pathRes.path);
+                }
+
+                // 加载是否保存到本地设置
+                const saveRes = await request.get<{success: boolean, value?: string}>('/system/save-to-local', {
+                    params: { user_id: userId }
+                });
+                if (saveRes.success && saveRes.value) {
+                    isSaveToLocal.value = saveRes.value === "1";
+                    console.log('从数据库加载保存到本地设置:', isSaveToLocal.value);
+                }
+
+                // 加载是否上传到阿里云设置
+                const uploadRes = await request.get<{success: boolean, value?: string}>('/system/upload-to-aliyun', {
+                    params: { user_id: userId }
+                });
+                if (uploadRes.success && uploadRes.value) {
+                    isUploadToAliyun.value = uploadRes.value === "1";
+                    console.log('从数据库加载上传到阿里云设置:', isUploadToAliyun.value);
+                }
+            } catch (error) {
+                console.error('加载用户设置失败:', error);
             }
         }
     }

@@ -1,8 +1,10 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 import subprocess
 import platform
 import os
+from typing import Optional
 from app.services.system import system_manager
+from app.models.user_behavior import BehaviorType
 from app.schemas.common_data import ApiResponseData
 
 # 9. 检查文章是否已下载
@@ -118,18 +120,141 @@ async def add_tag(data: dict):
     return system_manager.add_tag(name)
 
 @router.delete("/tags", response_model=ApiResponseData)
-async def delete_tag(tag_id: int = None, name: str = None):
+async def delete_tag(tag_id: int = Query(None, description="标签ID"), name: str = Query(None, description="标签名称")):
     """删除标签 (通过ID或名称)"""
-    # FastAPI Query parameters for DELETE
     # 使用 query params: DELETE /system/tags?tag_id=1 或 DELETE /system/tags?name=郑州
-    from fastapi import Query
-    
-    # 注意：这里我们重新获取参数，因为上面的定义方式可能不被FastAPI完全捕获为Query
-    # 实际上，上面的定义在FastAPI中就是Query参数
-    
+
     if tag_id:
         return system_manager.delete_tag(tag_id)
     elif name:
         return system_manager.delete_tag_by_name(name)
     else:
         return {"success": False, "message": "必须提供 tag_id 或 name"}
+
+
+# ------------------------------------------------------------
+# 用户行为管理 API
+# ------------------------------------------------------------
+
+@router.get("/user-behavior", response_model=ApiResponseData)
+async def get_user_behavior(
+    user_id: str = Query(..., description="用户ID（uin 或 nick_name）"),
+    behavior_type: str = Query(..., description="行为类型")
+):
+    """获取用户行为值"""
+    value = system_manager.get_user_behavior(user_id, behavior_type)
+    if value is not None:
+        return {"success": True, "value": value}
+    else:
+        return {"success": False, "message": "用户行为不存在"}
+
+
+@router.post("/user-behavior", response_model=ApiResponseData)
+async def set_user_behavior(data: dict):
+    """设置用户行为（自动更新或创建）"""
+    user_id = data.get("user_id")
+    behavior_type = data.get("behavior_type")
+    behavior_value = data.get("behavior_value")
+
+    if not user_id or not behavior_type or not behavior_value:
+        return {"success": False, "message": "参数不完整"}
+
+    return system_manager.set_user_behavior(user_id, behavior_type, behavior_value)
+
+
+@router.delete("/user-behavior", response_model=ApiResponseData)
+async def delete_user_behavior(
+    user_id: str = Query(..., description="用户ID（uin 或 nick_name）"),
+    behavior_type: str = Query(..., description="行为类型")
+):
+    """删除用户行为"""
+    success = system_manager.delete_user_behavior(user_id, behavior_type)
+    if success:
+        return {"success": True, "message": "删除成功"}
+    else:
+        return {"success": False, "message": "删除失败或记录不存在"}
+
+
+@router.get("/user-behaviors", response_model=ApiResponseData)
+async def get_all_user_behaviors(
+    user_id: str = Query(..., description="用户ID（uin 或 nick_name）")
+):
+    """获取用户的所有行为记录"""
+    behaviors = system_manager.get_all_user_behaviors(user_id)
+    return {"success": True, "data": behaviors}
+
+
+# ------------------------------------------------------------
+# 便捷方法：常用用户行为 API
+# ------------------------------------------------------------
+
+@router.get("/download-path", response_model=ApiResponseData)
+async def get_download_path(
+    user_id: str = Query(..., description="用户ID（uin 或 nick_name）")
+):
+    """获取下载路径（便捷方法）"""
+    path = system_manager.get_download_path(user_id)
+    if path is not None:
+        return {"success": True, "path": path}
+    else:
+        return {"success": False, "message": "下载路径未设置", "path": ""}
+
+
+@router.post("/download-path", response_model=ApiResponseData)
+async def set_download_path(data: dict):
+    """设置下载路径（便捷方法）"""
+    user_id = data.get("user_id")
+    download_path = data.get("download_path")
+
+    if not user_id or not download_path:
+        return {"success": False, "message": "参数不完整"}
+
+    return system_manager.set_download_path(user_id, download_path)
+
+
+@router.get("/save-to-local", response_model=ApiResponseData)
+async def get_save_to_local(
+    user_id: str = Query(..., description="用户ID（uin 或 nick_name）")
+):
+    """获取是否保存到本地（便捷方法）"""
+    value = system_manager.get_save_to_local(user_id)
+    if value is not None:
+        return {"success": True, "value": value}
+    else:
+        return {"success": False, "message": "设置未初始化", "value": ""}
+
+
+@router.post("/save-to-local", response_model=ApiResponseData)
+async def set_save_to_local(data: dict):
+    """设置是否保存到本地（便捷方法）"""
+    user_id = data.get("user_id")
+    save_to_local = data.get("save_to_local")
+
+    if not user_id or not save_to_local:
+        return {"success": False, "message": "参数不完整"}
+
+    return system_manager.set_save_to_local(user_id, save_to_local)
+
+
+@router.get("/upload-to-aliyun", response_model=ApiResponseData)
+async def get_upload_to_aliyun(
+    user_id: str = Query(..., description="用户ID（uin 或 nick_name）")
+):
+    """获取是否上传到阿里云（便捷方法）"""
+    value = system_manager.get_upload_to_aliyun(user_id)
+    if value is not None:
+        return {"success": True, "value": value}
+    else:
+        return {"success": False, "message": "设置未初始化", "value": ""}
+
+
+@router.post("/upload-to-aliyun", response_model=ApiResponseData)
+async def set_upload_to_aliyun(data: dict):
+    """设置是否上传到阿里云（便捷方法）"""
+    user_id = data.get("user_id")
+    upload_to_aliyun = data.get("upload_to_aliyun")
+
+    if not user_id or not upload_to_aliyun:
+        return {"success": False, "message": "参数不完整"}
+
+    return system_manager.set_upload_to_aliyun(user_id, upload_to_aliyun)

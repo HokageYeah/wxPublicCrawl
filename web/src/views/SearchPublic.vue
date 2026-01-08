@@ -160,19 +160,19 @@
 
     <!-- Results -->
     <div v-if="results.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div 
-        v-for="item in results" 
-        :key="item.fakeid" 
-        class="card hover:shadow-lg transition-all cursor-pointer p-0 overflow-hidden flex flex-col"
+      <div
+        v-for="item in results"
+        :key="item.fakeid"
+        class="group card hover:shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer p-0 overflow-hidden flex flex-col border border-white hover:border-gray-300 hover:border-primary-200"
         @click="selectAccount(item)"
       >
         <div class="p-6 flex flex-col items-center flex-1">
-          <img :src="item.round_head_img" class="w-20 h-20 rounded-full mb-4 object-cover" alt="" referrerpolicy="no-referrer" />
-          <h3 class="font-bold text-lg mb-2 text-center" v-html="item.nickname"></h3>
+          <img :src="item.round_head_img" class="w-20 h-20 rounded-full mb-4 object-cover transition-transform duration-300 group-hover:scale-110" alt="" referrerpolicy="no-referrer" />
+          <h3 class="font-bold text-lg mb-2 text-center group-hover:text-primary transition-colors duration-300" v-html="item.nickname"></h3>
           <p class="text-sm text-gray-500 mb-2">{{ item.alias }}</p>
           <p class="text-xs text-gray-400 line-clamp-2 text-center self-stretch">{{ item.signature }}</p>
         </div>
-        <div class="bg-gray-50 px-6 py-3 border-t text-center text-sm text-primary font-medium hover:bg-gray-100 transition-colors">
+        <div class="bg-gray-50 px-6 py-3 border-t text-center text-sm text-primary font-medium group-hover:bg-primary-100 group-hover:text-primary-700 transition-all duration-300">
           查看文章
         </div>
       </div>
