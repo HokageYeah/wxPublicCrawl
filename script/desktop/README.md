@@ -1,345 +1,297 @@
-# 桌面应用构建脚本
+# 跨平台桌面脚本使用说明
 
-本目录包含构建和管理桌面应用的所有脚本。
+本目录包含跨平台的桌面应用管理脚本，支持 Windows、macOS 和 Linux。
 
 ## 📁 脚本列表
 
-| 脚本 | 平台 | 功能说明 |
-|------|------|---------|
-| **build_mac.sh** | macOS | 构建 macOS 桌面应用 (.app) |
-| **build_windows.bat** | Windows | 构建 Windows 桌面应用 (.exe) |
-| **kill_app.sh** | macOS | 终止运行中的应用实例并清理锁文件 |
-| **test_app.sh** | macOS | 快速测试打包后的应用 |
-| **view_logs.sh** | macOS | 实时查看应用日志 |
-
-## 🚀 使用方法
-
-### 方式1：从项目根目录运行（推荐）
-
-所有脚本都会**自动切换到项目根目录**，所以可以从任何位置运行：
-
-```bash
-# 从项目根目录
-cd /path/to/wxPublicCrawl
-script/desktop/build_mac.sh          # macOS 打包
-script/desktop/build_windows.bat     # Windows 打包
-script/desktop/test_app.sh           # 测试应用
-script/desktop/view_logs.sh          # 查看日志
-script/desktop/kill_app.sh           # 清理应用
-
-# 或从脚本目录
-cd script/desktop
-./build_mac.sh
-./test_app.sh
-./view_logs.sh
-./kill_app.sh
-```
-
-### 方式2：创建项目根目录的快捷方式（可选）
-
-如果你希望在项目根目录也能快速访问这些脚本，可以创建符号链接：
-
-```bash
-# 在项目根目录创建符号链接
-cd /path/to/wxPublicCrawl
-ln -s script/desktop/build_mac.sh build_mac.sh
-ln -s script/desktop/kill_app.sh kill_app.sh
-ln -s script/desktop/test_app.sh test_app.sh
-ln -s script/desktop/view_logs.sh view_logs.sh
-
-# 然后就可以直接运行
-./build_mac.sh
-./test_app.sh
-```
-
-## 📋 详细说明
-
-### 1. build_mac.sh - macOS 打包脚本
-
-**功能**：构建 macOS 桌面应用
-
-**步骤**：
-1. 检查 Python 和 Node.js 环境
-2. 创建/检查虚拟环境
-3. 安装 Python 依赖
-4. 构建前端项目
-5. 清理旧的打包文件
-6. 使用 PyInstaller 打包
-7. 处理 macOS 安全属性
-
-**使用**：
-
-```bash
-# 从任何位置运行
-script/desktop/build_mac.sh
-
-# 或进入脚本目录
-cd script/desktop
-./build_mac.sh
-```
-
-**输出**：
-- `dist/wx公众号工具.app ` - macOS 应用包
-- `dist/wx公众号工具/wx公众号工具` - 可执行文件
-
-**时间**：首次约 5-10 分钟，后续约 2-3 分钟
-
-### 2. build_windows.bat - Windows 打包脚本
-
-**功能**：构建 Windows 桌面应用
-
-**步骤**：与 macOS 类似，但输出为 Windows 可执行文件
-
-**使用**：
-
-```batch
-REM 从任何位置运行
-script\desktop\build_windows.bat
-
-REM 或进入脚本目录
-cd script\desktop
-build_windows.bat
-```
-
-**输出**：
-- `dist\wx公众号工具\wx公众号工具.exe` - Windows 可执行文件
-
-### 3. kill_app.sh - 清理应用
-
-**功能**：
-- 终止占用端口 18000 的进程
-- 清理应用锁文件
-
-**使用**：
-
-```bash
-script/desktop/kill_app.sh
-```
-
-**适用场景**：
-- 应用无法启动（端口被占用）
-- 应用异常退出后清理
-- 重新打包前清理环境
-
-### 4. test_app.sh - 快速测试
-
-**功能**：
-- 自动清理旧实例
-- 启动应用并后台运行
-- 显示启动日志
-- 提供访问链接和管理命令
-
-**使用**：
-
-```bash
-script/desktop/test_app.sh
-```
-
-**输出示例**：
-
-```
-============================================================
-  测试打包后的桌面应用
-============================================================
-项目目录: /Users/yuye/YeahWork/Python项目/wxPublicCrawl
-
-✓ 找到打包文件
-
-[1/3] 清理旧实例...
-✓ 完成
-
-[2/3] 启动应用...
-✓ 应用已启动 (PID: 12345)
-
-[3/3] 等待应用启动...
-✓ 应用正在运行
-
-============================================================
-  应用信息
-============================================================
-进程 ID: 12345
-访问地址: http://127.0.0.1:18000
-日志文件: /tmp/wx_test.log
-
-📊 查看完整日志：
-   tail -f /tmp/wx_test.log
-
-📊 查看标准日志：
-   script/desktop/view_logs.sh
-
-🌐 在浏览器打开：
-   open http://127.0.0.1:18000/crawl-desktop/
-
-🛑 停止应用：
-   script/desktop/kill_app.sh
-   或
-   kill 12345
-```
-
-### 5. view_logs.sh - 查看日志
-
-**功能**：
-- 定位 macOS 标准日志目录
-- 查找最新的日志文件
-- 实时监控日志内容
-
-**使用**：
-
-```bash
-# 启动实时日志查看
-script/desktop/view_logs.sh
-
-# 按 Ctrl+C 退出
-```
-
-**工作原理**：
-
-```bash
-# 1. 日志目录
-~/Library/Logs/wx公众号工具/
-
-# 2. 查找最新日志
-ls -t app_*.log | head -1
-
-# 3. 实时监控
-tail -f latest.log
-```
-
-**日志位置**：
-- macOS: `~/Library/Logs/wx公众号工具/app_YYYYMMDD_HHMMSS.log`
-- Windows: `%LOCALAPPDATA%\wx公众号工具\Logs\`
-
-## 🔧 技术细节
-
-### 自动路径处理
-
-所有脚本都包含自动路径切换逻辑：
-
-**macOS/Linux (bash)**:
-
-```bash
-# 获取脚本所在目录
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-# 切换到项目根目录（上两级）
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-cd "$PROJECT_ROOT"
-```
-
-**Windows (bat)**:
-
-```batch
-REM 获取脚本所在目录
-set "SCRIPT_DIR=%~dp0"
-
-REM 切换到项目根目录（上两级）
-cd /d "%SCRIPT_DIR%..\.."
-set "PROJECT_ROOT=%CD%"
-```
-
-### 为什么需要路径处理？
-
-脚本需要访问项目文件：
-- `web/` - 前端源码目录
-- `requirements.txt` - Python 依赖
-- `wx_crawler.spec` - PyInstaller 配置
-- `venv/` - 虚拟环境
-- `dist/` - 输出目录
-
-通过自动切换到项目根目录，确保无论从哪里运行脚本，路径引用都是正确的。
-
-## 📂 目录结构
-
-```
-wxPublicCrawl/                          # 项目根目录
-├── script/
-│   └── desktop/                        # 桌面脚本目录
-│       ├── build_mac.sh               # macOS 打包
-│       ├── build_windows.bat          # Windows 打包
-│       ├── kill_app.sh                # 清理应用
-│       ├── test_app.sh                # 测试应用
-│       ├── view_logs.sh               # 查看日志
-│       └── README.md                  # 本文件
-├── web/                                # 前端代码
-├── app/                                # 后端代码
-├── dist/                               # 打包输出
-├── requirements.txt                    # Python 依赖
-└── wx_crawler.spec                     # PyInstaller 配置
-```
-
-## 🔄 工作流程
-
-### 完整开发流程
-
-```bash
-# 1. 修改代码
-vim app/...
-
-# 2. 本地测试
-python run_desktop.py
-
-# 3. 打包应用
-script/desktop/build_mac.sh
-
-# 4. 测试打包
-script/desktop/test_app.sh
-
-# 5. 查看日志（在另一个终端）
-script/desktop/view_logs.sh
-
-# 6. 发现问题，清理重来
-script/desktop/kill_app.sh
-script/desktop/build_mac.sh
-```
-
-### 问题排查流程
-
-```bash
-# 1. 应用无法启动
-script/desktop/kill_app.sh             # 清理
-script/desktop/view_logs.sh            # 查看日志
-
-# 2. 重新打包
-rm -rf dist build
-script/desktop/build_mac.sh
-
-# 3. 测试
-script/desktop/test_app.sh
-```
-
-## 🎯 常见问题
-
-### Q: 脚本提示找不到文件？
-A: 脚本会自动切换到项目根目录，确保文件结构完整。检查是否在正确的项目中运行。
-
-### Q: 可以从任何位置运行这些脚本吗？
-A: 可以！脚本包含自动路径处理，会自动切换到项目根目录。
-
-### Q: Windows 脚本在 macOS 上能用吗？
-A: 不能。`build_windows.bat` 只能在 Windows 上运行，`build_mac.sh` 只能在 macOS 上运行。
-
-### Q: 如何在项目根目录快速访问这些脚本？
-A: 创建符号链接（见上文"方式2"），或直接使用相对路径 `script/desktop/xxx.sh`。
-
-### Q: 脚本修改后需要重新打包吗？
-A: 不需要。这些脚本是开发工具，不会被打包到应用中。
-
-## 📚 相关文档
-
-- [DESKTOP_APP_GUIDE.md](../../DESKTOP_APP_GUIDE.md) - 桌面应用完整使用指南
-- [QUICK_REFERENCE.md](../../QUICK_REFERENCE.md) - 快速参考卡片
-- [PACKAGING_QUICKSTART.md](../../PACKAGING_QUICKSTART.md) - 打包快速入门
-
-## 💡 提示
-
-1. **首次打包**：需要下载依赖，时间较长，请耐心等待
-2. **虚拟环境**：脚本会自动创建和激活虚拟环境
-3. **权限问题**：macOS 需要执行权限 `chmod +x *.sh`
-4. **实时日志**：使用 `view_logs.sh` 在另一个终端窗口查看日志
-5. **端口冲突**：遇到端口占用，运行 `kill_app.sh`
+| 脚本名称 | 功能 | 平台支持 |
+|---------|------|----------|
+| `general_build.py` | 跨平台打包脚本 | ✅ Windows<br>✅ macOS<br>✅ Linux |
+| `general_view_logs.py` | 实时查看日志工具 | ✅ Windows<br>✅ macOS<br>✅ Linux |
+| `build_mac.sh` | macOS 专用打包脚本（传统） | macOS |
+| `view_logs.sh` | macOS 专用日志查看（传统） | macOS |
 
 ---
 
-**最后更新**: 2025-12-22  
-**脚本位置**: `script/desktop/`
+## 🚀 快速开始
 
+### 方式一：使用跨平台脚本（推荐）
+
+#### 1. 打包应用
+
+```bash
+# Windows, macOS, Linux 通用
+python script/desktop/general_build.py
+```
+
+#### 2. 查看实时日志
+
+```bash
+# Windows, macOS, Linux 通用
+python script/desktop/general_view_logs.py
+```
+
+---
+
+### 方式二：使用平台专用脚本（传统）
+
+#### macOS 用户
+
+```bash
+# 打包应用
+./script/desktop/build_mac.sh
+
+# 查看日志
+./script/desktop/view_logs.sh
+```
+
+---
+
+## 📦 general_build.py 功能详解
+
+### 主要功能
+
+1. ✅ 检查 Python 环境
+2. ✅ 检查 Node.js 环境
+3. ✅ 创建/检查虚拟环境
+4. ✅ 安装 Python 依赖
+5. ✅ 构建前端资源
+6. ✅ 清理旧打包文件
+7. ✅ PyInstaller 打包
+8. ✅ macOS 安全属性处理
+
+### 平台区分
+
+| 平台 | Python 命令 | pip 路径 | 日志目录 |
+|------|------------|----------|----------|
+| Windows | `python` | `venv/Scripts/pip.exe` | `%APPDATA%/wx公众号工具/logs` |
+| macOS | `python3` | `venv/bin/pip` | `~/Library/Logs/wx公众号工具` |
+| Linux | `python3` | `venv/bin/pip` | `~/.local/share/wx公众号工具/logs` |
+
+### 使用方法
+
+```bash
+# 1. 确保在项目根目录
+cd /Users/yuye/YeahWork/Python项目/wxPublicCrawl
+
+# 2. 运行打包脚本
+python script/desktop/general_build.py
+
+# 3. 等待打包完成（可能需要几分钟）
+# 4. 查看输出文件
+#    - Windows: dist/wx公众号工具.exe
+#    - macOS: dist/wx公众号工具.app
+#    - Linux: dist/wx公众号工具
+```
+
+---
+
+## 📋 general_view_logs.py 功能详解
+
+### 主要功能
+
+1. ✅ 自动定位各平台日志目录
+2. ✅ 查找最新的日志文件
+3. ✅ 实时滚动显示日志内容
+4. ✅ 支持中断退出（Ctrl+C）
+5. ✅ 彩色输出，易于阅读
+
+### 平台日志目录
+
+| 平台 | 日志目录 | 日志格式 |
+|------|---------|---------|
+| macOS | `~/Library/Logs/wx公众号工具` | `app_YYYY-MM-DD_HHMMSS.log` |
+| Windows | `%APPDATA%/wx公众号工具/logs` | `app_YYYY-MM-DD_HHMMSS.log` |
+| Linux | `~/.local/share/wx公众号工具/logs` | `app_YYYY-MM-DD_HHMMSS.log` |
+
+### 使用方法
+
+```bash
+# 1. 先运行一次桌面应用（生成日志）
+# Windows
+dist\wx公众号工具.exe
+
+# macOS
+open dist/wx公众号工具.app
+
+# Linux
+./dist/wx公众号工具
+
+# 2. 查看实时日志
+python script/desktop/general_view_logs.py
+
+# 3. 日志会实时滚动显示，按 Ctrl+C 退出
+```
+
+### 特殊功能
+
+#### 显示最新日志文件信息
+
+脚本会显示：
+- 📄 日志文件路径
+- 🕐 最后修改时间
+- 📊 文件大小
+
+#### 智能提示
+
+如果没有找到日志文件，会提示：
+- ✅ 确保已运行过桌面应用
+- ✅ 检查日志目录路径
+- ✅ 日志文件格式说明
+
+---
+
+## 🎨 彩色输出
+
+所有跨平台脚本都支持彩色输出，提升可读性。
+
+### 颜色含义
+
+| 颜色 | 用途 | 示例 |
+|------|------|------|
+| 🔵 蓝色 | 标题、目录、重要信息 | `==========标题==========` |
+| 🟡 黄色 | 信息提示、步骤说明 | `▶ [1/8] 检查 Python` |
+| 🟢 绿色 | 成功信息、完成状态 | `✓ Python 正常` |
+| 🔴 红色 | 错误信息 | `❌ 命令执行失败` |
+| ⚠️ 黄色+图标 | 警告信息 | `⚠️  这可能需要几分钟` |
+
+### Windows 颜色支持
+
+脚本会自动在 Windows 10+ 上启用 ANSI 颜色支持。
+
+---
+
+## 🔧 跨平台实现细节
+
+### 1. Python 版本检测
+
+```python
+# Windows
+if IS_WINDOWS:
+    python_cmd = "python"
+    pip_exe = "venv/Scripts/pip.exe"
+
+# macOS/Linux
+else:
+    python_cmd = "python3"
+    pip_exe = "venv/bin/pip"
+```
+
+### 2. 日志目录定位
+
+```python
+# macOS: Apple 推荐的标准位置
+log_dir = Path.home() / "Library" / "Logs" / "wx公众号工具"
+
+# Windows: 使用环境变量
+log_dir = Path(os.environ.get('APPDATA')) / "wx公众号工具" / "logs"
+
+# Linux: XDG 标准目录
+log_dir = Path.home() / ".local" / "share" / "wx公众号工具" / "logs"
+```
+
+### 3. 实时日志查看
+
+```python
+# Windows: 使用 PowerShell Get-Content -Wait
+subprocess.Popen(['powershell', '-Command', 'Get-Content -Path file -Wait'])
+
+# macOS/Linux: 使用 tail -f
+subprocess.Popen(['tail', '-f', file])
+```
+
+---
+
+## 📝 注意事项
+
+### Windows 用户
+
+1. **编码问题**：确保使用 UTF-8 编码运行脚本
+2. **PowerShell**：日志查看使用 PowerShell，需要 Windows PowerShell 3.0+
+3. **权限**：可能需要管理员权限安装依赖
+
+### macOS 用户
+
+1. **Python 版本**：建议使用 Python 3.9+
+2. **Node.js**：需要 Node.js 14+ 版本
+3. **安全属性**：脚本会自动处理 macOS 的隔离属性
+
+### Linux 用户
+
+1. **依赖**：确保已安装 `python3-venv` 或使用系统 Python 的 venv 模块
+2. **依赖包**：可能需要安装 `python3-dev` 等开发包
+
+---
+
+## 🐛 常见问题
+
+### Q1: Windows 上显示乱码
+
+**原因**：终端编码问题
+
+**解决**：
+```cmd
+# 设置代码页为 UTF-8
+chcp 65001
+python script/desktop/general_build.py
+```
+
+### Q2: 找不到日志文件
+
+**原因**：应用未运行或日志目录不同
+
+**解决**：
+1. 确保先运行桌面应用
+2. 检查日志目录是否存在
+3. 查看脚本显示的日志目录路径
+
+### Q3: macOS 打包后无法打开
+
+**原因**：macOS 安全限制
+
+**解决**：
+```bash
+# 移除隔离属性（脚本已自动处理）
+xattr -cr dist/wx公众号工具.app
+
+# 右键应用 -> 打开
+```
+
+### Q4: Windows 日志查看失败
+
+**原因**：PowerShell 版本过低或权限问题
+
+**解决**：
+1. 更新 PowerShell 到 5.1+
+2. 使用管理员权限运行
+
+---
+
+## 📚 相关文件
+
+- `wx_crawler.spec` - PyInstaller 打包配置
+- `requirements.txt` - Python 依赖（macOS/Linux）
+- `requirements-windows.txt` - Python 依赖（Windows）
+- `.env` - 环境变量配置
+
+---
+
+## ✨ 更新日志
+
+### 2026-01-07
+
+- ✅ 创建跨平台打包脚本 `general_build.py`
+- ✅ 创建跨平台日志查看工具 `general_view_logs.py`
+- ✅ 添加彩色输出支持（Windows/macOS/Linux）
+- ✅ 统一 Python 虚拟环境中的 pip 使用方式
+- ✅ 自动处理各平台日志目录定位
+
+---
+
+## 🤝 贡献
+
+如有改进建议，欢迎提交 Issue 或 Pull Request。
+
+## 📄 许可
+
+遵循项目主许可证。
