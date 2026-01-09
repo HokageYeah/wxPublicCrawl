@@ -31,6 +31,7 @@ const routes: Array<RouteRecordRaw> = [
         meta: {
           title: "搜索公众号",
           requiresAuth: true,
+          hidden: true,
         },
       },
       {
@@ -40,6 +41,7 @@ const routes: Array<RouteRecordRaw> = [
         meta: {
           title: "文章列表",
           requiresAuth: true,
+          hidden: true,
         },
       },
     ],
