@@ -6,6 +6,7 @@ from typing import Optional, List, Dict, Any, AsyncIterator
 from openai import AsyncOpenAI
 from loguru import logger
 from app.core.config import settings
+from app.services.llm_configuration import get_llm_config_for_client
 
 
 class Message:
@@ -59,6 +60,7 @@ class AIClient:
     - 流式响应支持
     - 可配置的模型参数
     - 错误处理和日志记录
+    - 支持从数据库加载配置
     
     扩展方向：
     - 接入向量数据库（如Pinecone、Weaviate）进行知识检索
@@ -75,20 +77,38 @@ class AIClient:
         temperature: float = 0.7,
         max_tokens: Optional[int] = None,
         enable_history: bool = False,
-        max_history: int = 10
+        max_history: int = 10,
+        use_db_config: bool = False,
+        user_id: Optional[str] = None
     ):
         """
         初始化AI客户端
         
         参数:
-            api_key: OpenAI API密钥，默认从settings获取
+            api_key: OpenAI API密钥，默认从settings获取或数据库
             base_url: API基础URL，用于使用代理或其他兼容服务
-            model: 模型名称，默认从settings获取
+            model: 模型名称，默认从settings获取或数据库
             temperature: 温度参数，控制输出随机性 (0-2)
             max_tokens: 最大生成token数
             enable_history: 是否启用对话历史
             max_history: 最大历史记录数
+            use_db_config: 是否从数据库获取配置（默认False）
+            user_id: 用户ID，用于从数据库获取用户专属配置
         """
+        # 如果启用数据库配置，从数据库获取配置
+        if use_db_config:
+            db_config = self._load_config_from_db(user_id)
+            if db_config:
+                api_key = api_key or db_config.get("api_key")
+                base_url = base_url or db_config.get("base_url")
+                model = model or db_config.get("model")
+                temperature = temperature or db_config.get("temperature", 0.7)
+                max_tokens = max_tokens or db_config.get("max_tokens")
+                enable_history = enable_history or db_config.get("enable_history", False)
+                if enable_history:
+                    max_history = max_history or db_config.get("max_history", 10)
+                logger.info("✅ 已从数据库加载LLM配置")
+        
         self.api_key = api_key or settings.AI_API_KEY
         self.base_url = base_url or settings.AI_BASE_URL
         self.model = model or settings.AI_MODEL
@@ -111,6 +131,30 @@ class AIClient:
         )
         
         logger.info(f"AI客户端已初始化 - 模型: {self.model}, BaseURL: {self.base_url or '默认'}")
+    
+    def _load_config_from_db(self, user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        """
+        从数据库加载LLM配置
+        
+        参数:
+            user_id: 用户ID，用于获取用户专属配置
+            
+        返回:
+            Dict: 配置字典，如果未找到则返回None
+        """
+        try:
+            from app.db.sqlalchemy_db import get_sqlalchemy_db
+            
+            db = get_sqlalchemy_db()
+            try:
+                config = get_llm_config_for_client(db, user_id)
+                return config
+            finally:
+                db.close()
+                
+        except Exception as e:
+            logger.warning(f"从数据库加载配置失败: {e}，将使用配置文件中的默认值")
+            return None
     
     async def chat(
         self,
@@ -315,15 +359,25 @@ class AIClient:
 
 
 # 便捷函数：创建默认AI客户端
-def create_default_client(enable_history: bool = False) -> AIClient:
+def create_default_client(
+    enable_history: bool = False,
+    use_db_config: bool = False,
+    user_id: Optional[str] = None
+) -> AIClient:
     """
     创建使用默认配置的AI客户端
     
     参数:
         enable_history: 是否启用对话历史
+        use_db_config: 是否从数据库获取配置
+        user_id: 用户ID，用于从数据库获取用户专属配置
         
     返回:
         AIClient: 配置好的AI客户端实例
     """
-    return AIClient(enable_history=enable_history)
+    return AIClient(
+        enable_history=enable_history,
+        use_db_config=use_db_config,
+        user_id=user_id
+    )
 
