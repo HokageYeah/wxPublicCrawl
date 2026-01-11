@@ -31,7 +31,6 @@ const routes: Array<RouteRecordRaw> = [
         meta: {
           title: "搜索公众号",
           requiresAuth: true,
-          hidden: true,
         },
       },
       {

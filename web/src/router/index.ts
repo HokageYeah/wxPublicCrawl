@@ -54,27 +54,37 @@ const router = createRouter({
   },
 });
 
+import { useWechatLoginStore } from "@/stores/wechatLoginStore";
+
 /**
  * 全局前置守卫
  * 可以在这里实现权限验证、登录状态检查等
  */
-router.beforeEach((to) => {
+router.beforeEach(async (to, _, next) => {
   // 设置页面标题
   const title = (to.meta?.title as string) || "微信公众号爬虫";
   document.title = `${title} - 微信公众号爬虫工具`;
 
   // 检查路由是否需要认证
   const requiresAuth = to.meta?.requiresAuth as boolean;
+
   if (requiresAuth) {
-    // TODO: 实现登录状态检查逻辑
-    // const isLoggedIn = checkLoginStatus()
-    // if (!isLoggedIn) {
-    //   router.push('/crawl-desktop/wx-public-crawl/login')
-    //   return false
-    // }
+    const wechatStore = useWechatLoginStore();
+
+    // 如果未登录，尝试初始化会话（处理刷新页面的情况）
+    if (!wechatStore.isLoggedIn) {
+      await wechatStore.initialize();
+    }
+
+    // 再次检查登录状态
+    if (!wechatStore.isLoggedIn) {
+      alert("您还未登录，请先登录系统");
+      next({ name: "wx-public-crawl-login" });
+      return;
+    }
   }
 
-  return true;
+  next();
 });
 
 /**
