@@ -46,7 +46,8 @@ async def analyze_education_articles(articles: list[ArticleSimple]) -> list[str]
         
         # 3. 创建AI客户端并调用
         ai_client = AIClient(
-            temperature=0.1  # 低温度以获得一致的结果
+            temperature=0.1,  # 低温度以获得一致的结果
+            use_db_config=True
         )
         
         # 使用chat_with_json_response方法，自动处理JSON解析和清理

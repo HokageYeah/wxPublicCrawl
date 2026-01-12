@@ -61,7 +61,7 @@ class MCPLLMConnect:
             auto_execute_tools: 是否自动执行AI请求的工具调用
         """
         self.mcp_manager = mcp_manager or MCPClientManager(self)
-        self.ai_client = ai_client or AIClient(enable_history=True)
+        self.ai_client = ai_client or AIClient(enable_history=True, use_db_config=True)
         self.max_tool_calls = max_tool_calls
         self.auto_execute_tools = auto_execute_tools
         self.func_handler = FunctionHandler(self) # 函数处理

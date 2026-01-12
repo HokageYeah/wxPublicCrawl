@@ -96,8 +96,10 @@ class AIClient:
             user_id: 用户ID，用于从数据库获取用户专属配置
         """
         # 如果启用数据库配置，从数据库获取配置
+        logger.info(f"拿到数据库配置use_db_config：{use_db_config}")
         if use_db_config:
             db_config = self._load_config_from_db(user_id)
+            logger.info(f"拿到数据库配置：{db_config}")
             if db_config:
                 api_key = api_key or db_config.get("api_key")
                 base_url = base_url or db_config.get("base_url")
@@ -108,10 +110,9 @@ class AIClient:
                 if enable_history:
                     max_history = max_history or db_config.get("max_history", 10)
                 logger.info("✅ 已从数据库加载LLM配置")
-        
-        self.api_key = api_key
-        self.base_url = base_url
-        self.model = model
+        self.api_key = api_key or settings.AI_API_KEY
+        self.base_url = base_url or settings.AI_BASE_URL
+        self.model = model or settings.AI_MODEL
         self.temperature = temperature
         self.max_tokens = max_tokens
         
