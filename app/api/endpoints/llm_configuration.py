@@ -5,6 +5,7 @@ LLM配置API接口
 """
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import inspect
 from typing import Optional, Dict, Any
 from loguru import logger
 from app.db.sqlalchemy_db import get_sqlalchemy_db
@@ -37,6 +38,25 @@ from app.schemas.common_data import ApiResponseData
 TAG = "LLM_CONFIGURATION_API"
 
 router = APIRouter()
+
+
+def _ensure_table_exists(db: Session) -> None:
+    """
+    确保LLM配置表存在，如果不存在则创建
+    """
+    try:
+        # 检查表是否存在
+        inspector = inspect(db.bind)
+        table_exists = inspector.has_table(LLMConfiguration.__tablename__)
+        
+        if not table_exists:
+            logger.bind(tag=TAG).warning(f"表 {LLMConfiguration.__tablename__} 不存在，正在创建...")
+            # 创建表结构
+            LLMConfiguration.__table__.create(db.bind, checkfirst=True)
+            logger.bind(tag=TAG).success(f"表 {LLMConfiguration.__tablename__} 创建成功")
+    except Exception as e:
+        logger.bind(tag=TAG).error(f"创建表失败: {e}")
+        raise
 
 
 def _to_masked_response(config: LLMConfiguration) -> Dict[str, Any]:
@@ -144,6 +164,9 @@ async def create_config(
     ```
     """
     try:
+        # 确保表存在
+        _ensure_table_exists(db)
+        
         logger.bind(tag=TAG).info(f"请求创建LLM配置 - 模型: {params.model_name}")
         
         db_config = create_llm_configuration(db, params)
@@ -180,6 +203,9 @@ async def list_configs(
     ```
     """
     try:
+        # 确保表存在
+        _ensure_table_exists(db)
+        
         logger.bind(tag=TAG).info(
             f"请求获取LLM配置列表 - user_id: {params.user_id}, "
             f"model_type: {params.model_type}, is_active: {params.is_active}"
@@ -338,6 +364,9 @@ async def get_active_config(
     ```
     """
     try:
+        # 确保表存在
+        _ensure_table_exists(db)
+        
         logger.bind(tag=TAG).info(f"请求获取激活配置 - user_id: {params.user_id}")
         
         db_config = get_active_llm_configuration(db, params.user_id)
@@ -428,6 +457,9 @@ async def get_client_config(
     ```
     """
     try:
+        # 确保表存在
+        _ensure_table_exists(db)
+        
         logger.bind(tag=TAG).info(f"请求获取客户端配置 - user_id: {params.user_id}")
         
         config = get_llm_config_for_client(db, params.user_id)

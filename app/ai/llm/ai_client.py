@@ -109,9 +109,9 @@ class AIClient:
                     max_history = max_history or db_config.get("max_history", 10)
                 logger.info("✅ 已从数据库加载LLM配置")
         
-        self.api_key = api_key or settings.AI_API_KEY
-        self.base_url = base_url or settings.AI_BASE_URL
-        self.model = model or settings.AI_MODEL
+        self.api_key = api_key
+        self.base_url = base_url
+        self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens
         
