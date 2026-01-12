@@ -720,13 +720,21 @@ const saveConfig = async () => {
         user_id: null,
         ...formData.value
       });
-      showToast('配置更新成功');
+      if (formData.value.is_active) {
+        showToast('配置已激活，AI助手服务正在重新初始化...');
+      } else {
+        showToast('配置更新成功');
+      }
     } else {
       // 创建配置
       await request.post('/llm-config/llm-config-create', {
         ...formData.value
       });
-      showToast('配置创建成功');
+      if (formData.value.is_active) {
+        showToast('配置已创建并激活，AI助手服务正在重新初始化...');
+      } else {
+        showToast('配置创建成功');
+      }
     }
 
     closeDialog();
@@ -749,7 +757,7 @@ const closeDialog = () => {
 
 // 激活配置
 const activateConfig = async (configId: number) => {
-  if (!confirm('确定要激活此配置吗？这将取消当前激活的配置。')) return;
+  if (!confirm('确定要激活此配置吗？这将取消当前激活的配置，并重新初始化AI助手服务。')) return;
   
   loading.value = true;
   try {
@@ -757,7 +765,7 @@ const activateConfig = async (configId: number) => {
       config_id: configId,
       user_id: null
     });
-    showToast('配置激活成功');
+    showToast('配置已激活，AI助手服务正在重新初始化...');
     await fetchConfigs();
     await fetchActiveConfig();
   } catch (error: any) {

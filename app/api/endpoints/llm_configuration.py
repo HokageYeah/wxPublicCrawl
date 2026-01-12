@@ -10,6 +10,7 @@ from typing import Optional, Dict, Any
 from loguru import logger
 from app.db.sqlalchemy_db import get_sqlalchemy_db
 from app.models.llm_configuration import LLMConfiguration
+from app.services.ai_assistant import init_ai_assistant_service, get_ai_connector
 from app.schemas.llm_configuration import (
     LLMConfigurationCreate,
     LLMConfigurationListRequest,
@@ -173,6 +174,19 @@ async def create_config(
         
         print("llm-config-create---创建新的LLM配置：", _to_full_response(db_config))
 
+        # 如果新配置被激活，重新初始化AI助手服务
+        if params.is_active:
+            logger.bind(tag=TAG).info("新配置已激活，正在重新初始化AI助手服务...")
+            try:
+                init_success = await init_ai_assistant_service()
+                if init_success:
+                    logger.bind(tag=TAG).success("AI助手服务重新初始化成功")
+                else:
+                    logger.bind(tag=TAG).warning("AI助手服务重新初始化部分失败，但配置已创建")
+            except Exception as e:
+                logger.bind(tag=TAG).error(f"AI助手服务重新初始化失败: {e}")
+                # 不抛出异常，配置创建仍然成功
+
         return _to_full_response(db_config)
         
     except Exception as e:
@@ -302,6 +316,19 @@ async def update_config(
         if not db_config:
             raise HTTPException(status_code=404, detail="配置不存在")
         
+        # 如果更新包含激活状态的改变，重新初始化AI助手服务
+        if 'is_active' in update_data and update_data['is_active']:
+            logger.bind(tag=TAG).info("配置已激活，正在重新初始化AI助手服务...")
+            try:
+                init_success = await init_ai_assistant_service()
+                if init_success:
+                    logger.bind(tag=TAG).success("AI助手服务重新初始化成功")
+                else:
+                    logger.bind(tag=TAG).warning("AI助手服务重新初始化部分失败，但配置已更新")
+            except Exception as e:
+                logger.bind(tag=TAG).error(f"AI助手服务重新初始化失败: {e}")
+                # 不抛出异常，配置更新仍然成功
+        
         return _to_full_response(db_config)
         
     except HTTPException:
@@ -393,6 +420,7 @@ async def switch_config(
     
     - 取消当前激活的配置
     - 激活指定的配置
+    - 切换后重新初始化AI助手服务
     
     请求体示例:
     ```json
@@ -413,6 +441,18 @@ async def switch_config(
         
         if not db_config:
             raise HTTPException(status_code=404, detail="配置不存在")
+        
+        # 重新初始化AI助手服务以应用新配置
+        logger.bind(tag=TAG).info("配置切换成功，正在重新初始化AI助手服务...")
+        try:
+            init_success = await init_ai_assistant_service()
+            if init_success:
+                logger.bind(tag=TAG).success("AI助手服务重新初始化成功")
+            else:
+                logger.bind(tag=TAG).warning("AI助手服务重新初始化部分失败，但配置已切换")
+        except Exception as e:
+            logger.bind(tag=TAG).error(f"AI助手服务重新初始化失败: {e}")
+            # 不抛出异常，配置切换仍然成功
         
         return _to_active_response(db_config)
         
