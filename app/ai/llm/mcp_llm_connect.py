@@ -212,9 +212,15 @@ class MCPLLMConnect:
             
             return final_response
             
+        except ValueError as e:
+            # 业务错误（如速率限制等），直接返回错误信息
+            logger.bind(tag=TAG).warning(f"业务错误: {e}")
+            return str(e)
+            
         except Exception as e:
+            # 系统错误，记录详细日志并返回简化信息
             logger.bind(tag=TAG).error(f"查询失败: {e}", exc_info=True)
-            return f"抱歉，处理您的请求时出现错误: {e}"
+            return f"抱歉，处理您的请求时出现系统错误，请稍后再试"
     
     async def _conversation_loop(
         self,
@@ -269,7 +275,15 @@ class MCPLLMConnect:
                 f"(总计: {tool_call_count}/{self.max_tool_calls})"
             )
             
-            # 保存AI的工具调用请求
+            # ✨ 关键修复：先将 assistant 的 tool_calls 消息添加到 messages
+            # DeepSeek 要求严格的消息顺序：user → assistant(tool_calls) → tool
+            messages.append({
+                "role": "assistant",
+                "content": None,
+                "tool_calls": tool_calls
+            })
+            
+            # 保存AI的工具调用请求到历史
             self.conversation_history.append({
                 "role": "assistant",
                 "content": None,
@@ -282,13 +296,14 @@ class MCPLLMConnect:
                 result = await self._execute_tool_call(tool_call)
                 tool_results.append(result)
                 
-                # 添加工具结果到消息列表
+                # 添加工具结果到消息列表（紧跟在 assistant message 之后）
                 messages.append({
                     "role": "tool",
                     "tool_call_id": tool_call.get("id"),
                     "name": tool_call["function"]["name"],
-                    "content": json.dumps(result, ensure_ascii=False)
-                })
+                    # 只传递纯结果，去除元数据包装
+                    "content": result.get("result", str(result)) if isinstance(result, dict) else str(result)
+                })                
             
             # 继续循环，让AI处理工具结果
             logger.bind(tag=TAG).debug("继续对话循环，让AI处理工具结果...")
@@ -330,8 +345,91 @@ class MCPLLMConnect:
             return response
             
         except Exception as e:
+            # 增强错误处理：解析 HTTP 错误
+            import httpx
+            
+            if isinstance(e, httpx.HTTPStatusError):
+                status_code = e.response.status_code
+                
+                # 处理速率限制错误（429）
+                if status_code == 429:
+                    # 提取速率限制信息
+                    headers = e.response.headers
+                    remaining = headers.get('modelscope-ratelimit-model-requests-remaining', '未知')
+                    limit = headers.get('modelscope-ratelimit-model-requests-limit', '未知')
+                    
+                    error_msg = (
+                        f"⚠️ API 速率限制：已达到请求上限\n"
+                        f"   - 模型请求限制: {limit}/分钟\n"
+                        f"   - 剩余请求数: {remaining}\n"
+                        f"   - 请稍后再试或升级 API 计划"
+                    )
+                    logger.bind(tag=TAG).warning(error_msg)
+                    raise ValueError(error_msg)
+                
+                # 处理其他 HTTP 错误（400, 401, 403, 500等）
+                else:
+                    error_detail = self._extract_error_message(e.response, status_code)
+                    error_msg = f"API 请求失败 (HTTP {status_code}): {error_detail}"
+                    logger.bind(tag=TAG).error(error_msg)
+                    raise ValueError(error_msg)
+            
+            # 其他异常直接抛出
             logger.bind(tag=TAG).error(f"调用AI模型失败: {e}", exc_info=True)
             raise
+    
+    def _extract_error_message(self, response, status_code: int) -> str:
+        """
+        从错误响应中提取错误信息（兼容多种格式）
+        
+        Args:
+            response: HTTP 响应对象
+            status_code: HTTP 状态码
+            
+        Returns:
+            提取的错误信息
+        """
+        try:
+            error_body = response.json()
+            logger.bind(tag=TAG).debug(f"错误响应体: {error_body}")
+            
+            # 尝试多种错误格式
+            # 格式1: {"error": {"message": "..."}}
+            if isinstance(error_body, dict):
+                if "error" in error_body:
+                    error_obj = error_body["error"]
+                    if isinstance(error_obj, dict) and "message" in error_obj:
+                        return error_obj["message"]
+                    elif isinstance(error_obj, str):
+                        return error_obj
+                
+                # 格式2: {"message": "..."}
+                if "message" in error_body:
+                    return error_body["message"]
+                
+                # 格式3: {"errors": [...]}
+                if "errors" in error_body:
+                    errors = error_body["errors"]
+                    if isinstance(errors, list) and errors:
+                        return str(errors[0])
+                    elif isinstance(errors, str):
+                        return errors
+                
+                # 格式4: {"detail": "..."}
+                if "detail" in error_body:
+                    return error_body["detail"]
+            
+            # 如果都没匹配，返回整个JSON
+            return json.dumps(error_body, ensure_ascii=False)
+            
+        except Exception as parse_error:
+            # JSON 解析失败，尝试获取文本
+            try:
+                text = response.text
+                logger.bind(tag=TAG).debug(f"错误响应文本: {text}")
+                return text[:200] if len(text) > 200 else text
+            except:
+                return f"HTTP {status_code} 错误（无法解析响应内容）"
     
     def _extract_tool_calls(self, response: Any) -> List[Dict[str, Any]]:
         """

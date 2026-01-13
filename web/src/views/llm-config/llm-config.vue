@@ -126,7 +126,12 @@
         <div
           v-for="config in configs"
           :key="config.id"
-          class="group bg-gray-900 border border-gray-800 rounded-xl overflow-hidden hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 hover:-translate-y-1"
+          class="group bg-gray-900 border rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-1"
+          :class="[
+            config.is_active
+              ? 'border-green-500 shadow-lg shadow-green-500/20'
+              : 'border-gray-800 hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/10',
+          ]"
         >
           <!-- 卡片头部 -->
           <div class="relative p-5 bg-gray-800 border-b border-gray-700">
@@ -680,6 +685,15 @@ const fetchConfigs = async () => {
       }
     );
     configs.value = result.items || [];
+
+    // 如果筛选条件是全部，则将激活的卡片排在前面
+    if (filters.value.is_active === null) {
+      configs.value.sort((a, b) => {
+        if (a.is_active === b.is_active) return 0;
+        return a.is_active ? -1 : 1;
+      });
+    }
+
     total.value = result.total || 0;
   } catch (error: any) {
     console.error("获取配置列表失败:", error);
