@@ -188,8 +188,16 @@
               <span class="text-gray-300 font-medium ml-2">Max Tokens:</span>
               <span class="text-gray-500">{{ config.max_tokens }}</span>
             </div>
-            <div v-if="config.description" class="text-sm text-gray-500 italic">
-              {{ config.description }}
+            <div
+              v-if="config.description"
+              class="text-sm font-medium  py-1.5 rounded-lg relative overflow-hidden group/desc"
+            >
+              <!-- 动态背景层 -->
+              <div class="absolute inset-0 bg-gradient-to-r from-blue-500/0  to-blue-500/0 opacity-30 group-hover/desc:opacity-60 transition-opacity duration-500"></div>
+              <!-- 流动光效动画 -->
+              <div class="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/10 to-transparent -translate-x-full group-hover/desc:animate-shimmer transition-all"></div>
+              <!-- 渐变文字 -->
+              <span class="relative z-10 bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 bg-clip-text text-transparent bg-size-200 animate-gradient">{{ config.description }}</span>
             </div>
           </div>
 
@@ -982,5 +990,34 @@ input[type="range"]::-moz-range-thumb {
 
 input[type="range"]::-moz-range-thumb:hover {
   transform: scale(1.1);
+}
+
+/* 文字渐变动画 */
+@keyframes gradient {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient 3s ease infinite;
+}
+
+/* 光效扫描动画 */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s ease-in-out infinite;
 }
 </style>
