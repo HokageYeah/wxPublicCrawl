@@ -80,90 +80,211 @@ class SystemManager:
             print(f"Error selecting folder: {e}")
             return {"path": "", "error": str(e)}
     
-    def save_session(self, user_info: Dict[str, Any], cookies: Optional[Dict[str, Any]] = None, token: Optional[str] = None) -> bool:
-        """
-        保存用户会话 (包括cookies和token)
+    # def save_session(self, user_info: Dict[str, Any], cookies: Optional[Dict[str, Any]] = None, token: Optional[str] = None) -> bool:
+    #     """
+    #     保存用户会话 (包括cookies和token)
         
+    #     Args:
+    #         user_info: 用户信息字典
+    #         cookies: 用户cookies字典 (可选)
+    #         token: 用户token字符串 (可选)
+            
+    #     Returns:
+    #         bool: 是否保存成功
+    #     """
+    #     try:
+    #         session_data = {
+    #             'user_info': user_info,
+    #             'cookies': cookies or {},
+    #             'token': token or '',
+    #             'created_at': datetime.now().isoformat(),
+    #             'expires_at': (datetime.now() + timedelta(days=7)).isoformat()
+    #         }
+            
+    #         with open(self._session_file, 'w', encoding='utf-8') as f:
+    #             json.dump(session_data, f, ensure_ascii=False, indent=2)
+            
+    #         print(f"✓ 会话已保存到: {self._session_file}")
+    #         return True
+            
+    #     except Exception as e:
+    #         print(f"✗ 保存会话失败: {e}")
+    #         return False
+    
+    # def load_session(self) -> Optional[Dict[str, Any]]:
+    #     """
+    #     加载用户会话 (包括cookies和token)
+        
+    #     Returns:
+    #         Optional[Dict]: 包含 user_info, cookies 和 token，如果会话不存在或已过期则返回 None
+    #     """
+    #     try:
+    #         if not os.path.exists(self._session_file):
+    #             print("会话文件不存在")
+    #             return None
+            
+    #         with open(self._session_file, 'r', encoding='utf-8') as f:
+    #             session_data = json.load(f)
+            
+    #         # 检查会话是否过期
+    #         expires_at = datetime.fromisoformat(session_data['expires_at'])
+    #         if datetime.now() > expires_at:
+    #             print("会话已过期")
+    #             self.clear_session()
+    #             return None
+            
+    #         print(f"✓ 会话加载成功")
+    #         return {
+    #             'user_info': session_data['user_info'],
+    #             'cookies': session_data.get('cookies', {}),
+    #             'token': session_data.get('token', '')
+    #         }
+            
+    #     except Exception as e:
+    #         print(f"✗ 加载会话失败: {e}")
+    #         return None
+    
+    # def clear_session(self) -> bool:
+    #     """
+    #     清除用户会话
+        
+    #     Returns:
+    #         bool: 是否清除成功
+    #     """
+    #     try:
+    #         if os.path.exists(self._session_file):
+    #             os.remove(self._session_file)
+    #             print("✓ 会话已清除")
+    #         return True
+            
+    #     except Exception as e:
+    #         print(f"✗ 清除会话失败: {e}")
+    #         return False
+    
+    # def is_logged_in(self) -> bool:
+    #     """检查用户是否已登录"""
+    #     return self.load_session() is not None
+
+    # ------------------------------------------------------------
+    # 多平台会话管理扩展方法
+    # ------------------------------------------------------------
+
+    def save_platform_session(
+        self,
+        platform: str,
+        user_info: Dict[str, Any],
+        cookies: Optional[Dict[str, Any]] = None,
+        token: Optional[str] = None,
+        expires_days: int = 7
+    ) -> bool:
+        """
+        保存指定平台的用户会话
+
         Args:
+            platform: 平台标识（如 'xmly', 'wx' 等）
             user_info: 用户信息字典
             cookies: 用户cookies字典 (可选)
             token: 用户token字符串 (可选)
-            
+            expires_days: 过期天数，默认7天
+
         Returns:
             bool: 是否保存成功
         """
         try:
+            session_dir = get_writable_dir('sessions')
+            session_file = os.path.join(session_dir, f'{platform}_session.json')
+
             session_data = {
                 'user_info': user_info,
                 'cookies': cookies or {},
                 'token': token or '',
                 'created_at': datetime.now().isoformat(),
-                'expires_at': (datetime.now() + timedelta(days=7)).isoformat()
+                'expires_at': (datetime.now() + timedelta(days=expires_days)).isoformat()
             }
-            
-            with open(self._session_file, 'w', encoding='utf-8') as f:
+
+            with open(session_file, 'w', encoding='utf-8') as f:
                 json.dump(session_data, f, ensure_ascii=False, indent=2)
-            
-            print(f"✓ 会话已保存到: {self._session_file}")
+
+            print(f"✓ {platform} 会话已保存到: {session_file}")
             return True
-            
+
         except Exception as e:
-            print(f"✗ 保存会话失败: {e}")
+            print(f"✗ 保存{platform}会话失败: {e}")
             return False
-    
-    def load_session(self) -> Optional[Dict[str, Any]]:
+
+    def load_platform_session(self, platform: str) -> Optional[Dict[str, Any]]:
         """
-        加载用户会话 (包括cookies和token)
-        
+        加载指定平台的用户会话
+
+        Args:
+            platform: 平台标识（如 'xmly', 'wx' 等）
+
         Returns:
             Optional[Dict]: 包含 user_info, cookies 和 token，如果会话不存在或已过期则返回 None
         """
         try:
-            if not os.path.exists(self._session_file):
-                print("会话文件不存在")
+            session_dir = get_writable_dir('sessions')
+            session_file = os.path.join(session_dir, f'{platform}_session.json')
+
+            if not os.path.exists(session_file):
+                print(f"{platform} 会话文件不存在")
                 return None
-            
-            with open(self._session_file, 'r', encoding='utf-8') as f:
+
+            with open(session_file, 'r', encoding='utf-8') as f:
                 session_data = json.load(f)
-            
+
             # 检查会话是否过期
             expires_at = datetime.fromisoformat(session_data['expires_at'])
             if datetime.now() > expires_at:
-                print("会话已过期")
-                self.clear_session()
+                print(f"{platform} 会话已过期")
+                self.clear_platform_session(platform)
                 return None
-            
-            print(f"✓ 会话加载成功")
+
+            print(f"✓ {platform} 会话加载成功")
             return {
                 'user_info': session_data['user_info'],
                 'cookies': session_data.get('cookies', {}),
                 'token': session_data.get('token', '')
             }
-            
+
         except Exception as e:
-            print(f"✗ 加载会话失败: {e}")
+            print(f"✗ 加载{platform}会话失败: {e}")
             return None
-    
-    def clear_session(self) -> bool:
+
+    def clear_platform_session(self, platform: str) -> bool:
         """
-        清除用户会话
-        
+        清除指定平台的用户会话
+
+        Args:
+            platform: 平台标识（如 'xmly', 'wx' 等）
+
         Returns:
             bool: 是否清除成功
         """
         try:
-            if os.path.exists(self._session_file):
-                os.remove(self._session_file)
-                print("✓ 会话已清除")
+            session_dir = get_writable_dir('sessions')
+            session_file = os.path.join(session_dir, f'{platform}_session.json')
+
+            if os.path.exists(session_file):
+                os.remove(session_file)
+                print(f"✓ {platform} 会话已清除")
             return True
-            
+
         except Exception as e:
-            print(f"✗ 清除会话失败: {e}")
+            print(f"✗ 清除{platform}会话失败: {e}")
             return False
-    
-    def is_logged_in(self) -> bool:
-        """检查用户是否已登录"""
-        return self.load_session() is not None
+
+    def is_platform_logged_in(self, platform: str) -> bool:
+        """
+        检查指定平台是否已登录
+
+        Args:
+            platform: 平台标识（如 'xmly', 'wx' 等）
+
+        Returns:
+            bool: 是否已登录
+        """
+        return self.load_platform_session(platform) is not None
 
     # ------------------------------------------------------------
     # 标签管理相关方法

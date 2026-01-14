@@ -1,0 +1,193 @@
+from fastapi import APIRouter, Depends, HTTPException, Response
+from loguru import logger
+
+from app.services.xmly import (
+    fetch_xmly_generate_qrcode,
+    fetch_xmly_check_qrcode_status_with_cookies,
+    save_xmly_session,
+    get_xmly_login_status,
+    clear_xmly_session,
+    decode_qrcode_image
+)
+from app.schemas.xmly_data import XmlyQrcodeResponse, XmlyQrcodeStatusResponse, XmlyLoginStatusResponse
+from app.schemas.common_data import ApiResponseData
+from app.schemas.xmly_data import CheckQrcodeStatusRequest
+
+router = APIRouter()
+
+
+# 喜马拉雅登录流程
+@router.post("/login/generate-qrcode", response_model=ApiResponseData)
+async def generate_qrcode():
+    """
+    喜马拉雅登录流程 - 第一步：生成二维码
+
+    返回二维码的base64编码图片和qrId
+    qrId用于后续轮询二维码状态
+    """
+    try:
+        # 生成二维码
+        qrcode_response = await fetch_xmly_generate_qrcode()
+
+        return {
+            "qrId": qrcode_response.qrId,
+            "img": qrcode_response.img
+        }
+    except HTTPException as e:
+        logger.error(f"生成二维码失败: {e.detail}")
+        raise e
+    except Exception as e:
+        logger.error(f"生成二维码异常: {e}")
+        raise HTTPException(status_code=500, detail=f"生成二维码失败: {str(e)}")
+
+
+@router.post("/login/check-qrcode-status", response_model=ApiResponseData)
+async def check_qrcode_status(params: CheckQrcodeStatusRequest):
+    """
+    喜马拉雅登录流程 - 第二步：检查二维码状态
+
+    Args:
+        qrId: 二维码ID
+
+    Returns:
+        如果未扫码，返回状态码32000
+        如果扫码成功，返回用户信息并保存会话
+    """
+    try:
+        # 检查二维码状态
+        result = await fetch_xmly_check_qrcode_status_with_cookies(params.qrId)
+
+        status_data = result['status_data']
+        cookies = result['cookies']
+
+        # 检查返回码
+        ret = status_data.get('ret', 0)
+
+        # 未扫码
+        if ret == 32000:
+            return {
+                "code": 32000,
+                "msg": "等待扫码",
+                "scanned": False,
+                "user_info": None
+            }
+
+        # 扫码成功
+        if ret == 0:
+            logger.info("用户扫码成功，开始保存会话信息")
+
+            # 保存会话
+            save_success = save_xmly_session(status_data, cookies)
+
+            if not save_success:
+                logger.error("保存会话失败")
+                raise HTTPException(status_code=500, detail="保存会话失败")
+
+            # 构造用户信息
+            user_info = {
+                "uid": status_data.get('uid'),
+                "mobileMask": status_data.get('mobileMask'),
+                "token": status_data.get('token'),
+                "avatar": status_data.get('avatar'),
+                "loginType": status_data.get('loginType')
+            }
+            logger.info(f"用户扫码成功，开始保存会话信息: {user_info}")
+            return {
+                "scanned": True,
+                "user_info": user_info,
+                "code": 0,
+                "msg": "登录成功",
+            }
+
+        # 其他状态
+        return {
+            "scanned": False,
+            "user_info": None,
+            "code": ret,
+            "msg": status_data.get('msg', '未知状态')
+        }
+
+    except HTTPException as e:
+        logger.error(f"检查二维码状态失败: {e.detail}")
+        raise e
+    except Exception as e:
+        logger.error(f"检查二维码状态异常: {e}")
+        raise HTTPException(status_code=500, detail=f"检查二维码状态失败: {str(e)}")
+
+
+@router.get("/login/get-session", response_model=ApiResponseData)
+async def get_session():
+    """
+    获取喜马拉雅当前登录状态
+
+    Returns:
+        返回当前登录状态和用户信息（如果已登录）
+    """
+    try:
+        login_status = get_xmly_login_status()
+
+        if not login_status.is_logged_in:
+            return {
+                "is_logged_in": False,
+                "user_info": None
+            }
+
+        return {
+            "is_logged_in": True,
+            "user_info": login_status.user_info.dict() if login_status.user_info else None
+        }
+
+    except Exception as e:
+        logger.error(f"获取登录状态异常: {e}")
+        raise HTTPException(status_code=500, detail=f"获取登录状态失败: {str(e)}")
+
+
+@router.delete("/login/logout", response_model=ApiResponseData)
+async def logout():
+    """
+    退出喜马拉雅登录
+
+    清除本地保存的会话信息
+    """
+    try:
+        success = clear_xmly_session()
+
+        if success:
+            logger.info("喜马拉雅登出成功")
+            return {
+                "code": 0,
+                "msg": "登出成功"
+            }
+        else:
+            logger.error("喜马拉雅登出失败")
+            raise HTTPException(status_code=500, detail="登出失败")
+
+    except Exception as e:
+        logger.error(f"登出异常: {e}")
+        raise HTTPException(status_code=500, detail=f"登出失败: {str(e)}")
+
+
+# 生成二维码图片接口（用于直接返回图片）
+@router.get("/login/qrcode-image")
+async def get_qrcode_image():
+    """
+    生成二维码并返回图片（直接返回图片格式）
+
+    Content-Type: image/png
+    """
+    try:
+        # 生成二维码
+        qrcode_response = await fetch_xmly_generate_qrcode()
+
+        # 解码图片
+        img_data = decode_qrcode_image(qrcode_response.img)
+
+        # 返回图片
+        return Response(content=img_data, media_type="image/png")
+
+    except HTTPException as e:
+        logger.error(f"获取二维码图片失败: {e.detail}")
+        raise e
+    except Exception as e:
+        logger.error(f"获取二维码图片异常: {e}")
+        raise HTTPException(status_code=500, detail=f"获取二维码图片失败: {str(e)}")

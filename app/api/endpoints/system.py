@@ -63,7 +63,7 @@ async def save_session(data: dict):
     user_info = data.get('user_info', {})
     cookies = data.get('cookies', {})
     token = data.get('token', '')
-    success = system_manager.save_session(user_info, cookies, token)
+    success = system_manager.save_platform_session('wx', user_info, cookies, token, expires_days=7)
     if success:
         return {"success": True, "message": "会话保存成功"}
     else:
@@ -73,7 +73,7 @@ async def save_session(data: dict):
 @router.get("/session/load", response_model=ApiResponseData)
 async def load_session():
     """加载用户会话"""
-    user_info = system_manager.load_session()
+    user_info = system_manager.load_platform_session('wx')
     if user_info:
         return {
             "success": True,
@@ -91,8 +91,8 @@ async def load_session():
 @router.post("/session/clear", response_model=ApiResponseData)
 async def clear_session():
     """清除用户会话"""
-    success = system_manager.clear_session()
-    success = system_manager.clear_session()
+    success = system_manager.clear_platform_session('wx')
+    # success = system_manager.clear_session()
     return {"success": success}
 
 # ------------------------------------------------------------
