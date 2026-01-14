@@ -24,6 +24,15 @@ const routes: Array<RouteRecordRaw> = [
           requiresAuth: false,
         },
       },
+      {
+        path: "search-album",
+        name: "xmly-crawl-search-album",
+        component: () => import("@/views/xmly-crawl/xmlySearchAlbum.vue"),
+        meta: {
+          title: "搜索专辑",
+          requiresAuth: true,
+        },
+      },
     ],
   },
 ];

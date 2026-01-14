@@ -63,3 +63,16 @@ class XmlyLoginStatusResponse(BaseModel):
     """喜马拉雅登录状态响应"""
     is_logged_in: bool = Field(..., description="是否已登录")
     user_info: Optional[XmlyUserInfo] = Field(None, description="用户信息，未登录时为None")
+
+
+# 喜马拉雅订阅专辑请求模型
+class SubscribeAlbumRequest(BaseModel):
+    """订阅专辑请求"""
+    albumId: str = Field(..., description="专辑ID")
+
+
+# 喜马拉雅订阅专辑响应模型
+class SubscribeAlbumResponse(BaseModel):
+    """订阅专辑响应"""
+    ret: int = Field(..., description="返回码，200表示成功")
+    msg: str = Field(..., description="返回消息")

@@ -4,13 +4,24 @@ import functools
 from typing import Dict, Callable
 
 
-def extract_wx_credentials(global_cookies: Dict[str, str], global_token: str):
+def extract_wx_credentials(
+    global_cookies: Dict[str, str], 
+    global_token: str,
+    cookie_header_name: str = 'X-WX-Cookies',
+    token_header_name: str = 'X-WX-Token',
+    state_cookie_key: str = 'wx_cookies',
+    state_token_key: str = 'wx_token'
+):
     """
-    装饰器工厂：从请求头中提取微信的cookies和token，并合并到全局配置中
+    装饰器工厂：从请求头中提取平台的cookies和token，并合并到全局配置中
     
     Args:
         global_cookies: 全局cookies字典
         global_token: 全局token字符串
+        cookie_header_name: Cookie请求头名称（默认：X-WX-Cookies）
+        token_header_name: Token请求头名称（默认：X-WX-Token）
+        state_cookie_key: 存储到 request.state 的 cookie 键名（默认：wx_cookies）
+        state_token_key: 存储到 request.state 的 token 键名（默认：wx_token）
     
     Returns:
         装饰器函数
@@ -20,28 +31,35 @@ def extract_wx_credentials(global_cookies: Dict[str, str], global_token: str):
         from app.decorators.request_decorator import extract_wx_credentials
         from fastapi import Request
         
-        # 定义全局 cookies 和 token
+        # 微信接口示例（使用默认参数，向后兼容）
         cookies = {"mm_lang": "zh_CN"}
         token = "159333899"
         
-        # 使用装饰器
         @extract_wx_credentials(cookies, token)
-        async def fetch_wx_public(request: Request, query: str, begin: int, count: int):
-            # 从 request.state 中获取装饰器处理后的 cookies 和 token
+        async def fetch_wx_public(request: Request, query: str):
             merged_cookies = request.state.wx_cookies
             final_token = request.state.wx_token
-            
-            # 使用 merged_cookies 和 final_token 进行业务逻辑处理
-            url = f"https://example.com/api?token={final_token}"
-            response = await client.get(url, cookies=merged_cookies)
-            return response.json()
+            # ...业务逻辑
+        
+        # 喜马拉雅接口示例（自定义请求头）
+        @extract_wx_credentials(
+            {}, '', 
+            cookie_header_name='X-XMLY-Cookies',
+            token_header_name='X-XMLY-Token',
+            state_cookie_key='xmly_cookies',
+            state_token_key='xmly_token'
+        )
+        async def subscribe_album(request: Request, album_id: str):
+            merged_cookies = request.state.xmly_cookies
+            final_token = request.state.xmly_token
+            # ...业务逻辑
         ```
     
     注意事项:
         1. 被装饰的函数必须包含 Request 参数
-        2. 装饰器会自动从请求头中提取 X-WX-Cookies 和 X-WX-Token
+        2. 装饰器会自动从请求头中提取指定名称的 Cookies 和 Token
         3. 提取的 cookies 会与全局 cookies 合并（请求中的优先级更高）
-        4. 处理后的结果存储在 request.state.wx_cookies 和 request.state.wx_token 中
+        4. 处理后的结果存储在 request.state 中
     """
     def decorator(func: Callable):
         @functools.wraps(func)
@@ -59,20 +77,20 @@ def extract_wx_credentials(global_cookies: Dict[str, str], global_token: str):
             
             if request:
                 # ⚠️ 重要：浏览器不允许 JavaScript 手动设置 Cookie 请求头
-                # 因此前端会通过自定义请求头 X-WX-Cookies 传递 Cookie 信息
+                # 因此前端会通过自定义请求头传递 Cookie 信息
                 # 优先从自定义请求头获取，如果没有则从标准 Cookie 请求头获取
-                request_cookies = request.headers.get('X-WX-Cookies', '') or request.headers.get('Cookie', '')
+                request_cookies = request.headers.get(cookie_header_name, '') or request.headers.get('Cookie', '')
                 
-                # 从自定义请求头 X-WX-Token 获取 token
-                request_token = request.headers.get('X-WX-Token', '')
+                # 从自定义请求头获取 token
+                request_token = request.headers.get(token_header_name, '')
                 
                 print('=' * 80)
                 # 给出请求地址
-                print('🔍 [DEBUG] extract_wx_credentials - 请求地址:', request.url)
-                print('🔍 [DEBUG] extract_wx_credentials - 自定义请求头 X-WX-Cookies:', request.headers.get('X-WX-Cookies', ''))
-                print('🔍 [DEBUG] extract_wx_credentials - 标准请求头 Cookie:', request.headers.get('Cookie', ''))
-                print('🔍 [DEBUG] extract_wx_credentials - 最终使用的 Cookie:', request_cookies)
-                print('🔍 [DEBUG] extract_wx_credentials - 自定义请求头 X-WX-Token:', request_token)
+                print(f'🔍 [DEBUG] extract_credentials - 请求地址: {request.url}')
+                print(f'🔍 [DEBUG] extract_credentials - 自定义请求头 {cookie_header_name}:', request.headers.get(cookie_header_name, ''))
+                print(f'🔍 [DEBUG] extract_credentials - 标准请求头 Cookie:', request.headers.get('Cookie', ''))
+                print(f'🔍 [DEBUG] extract_credentials - 最终使用的 Cookie:', request_cookies)
+                print(f'🔍 [DEBUG] extract_credentials - 自定义请求头 {token_header_name}:', request_token)
                 
                 # 解析 Cookie 字符串为字典
                 parsed_cookies = {}
@@ -98,8 +116,8 @@ def extract_wx_credentials(global_cookies: Dict[str, str], global_token: str):
                 print('=' * 80)
                 
                 # 将处理后的 cookies 和 token 存储到 request.state 中
-                request.state.wx_cookies = merged_cookies
-                request.state.wx_token = final_token
+                setattr(request.state, state_cookie_key, merged_cookies)
+                setattr(request.state, state_token_key, final_token)
             
             # 调用原始函数
             return await func(*args, **kwargs)

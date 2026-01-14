@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, HTTPException, Response, Request
 from loguru import logger
 
 from app.services.xmly import (
@@ -7,11 +7,19 @@ from app.services.xmly import (
     save_xmly_session,
     get_xmly_login_status,
     clear_xmly_session,
-    decode_qrcode_image
+    decode_qrcode_image,
+    subscribe_album,
+    unsubscribe_album
 )
-from app.schemas.xmly_data import XmlyQrcodeResponse, XmlyQrcodeStatusResponse, XmlyLoginStatusResponse
 from app.schemas.common_data import ApiResponseData
-from app.schemas.xmly_data import CheckQrcodeStatusRequest
+from app.schemas.xmly_data import (
+    XmlyQrcodeResponse, 
+    XmlyQrcodeStatusResponse, 
+    XmlyLoginStatusResponse,
+    CheckQrcodeStatusRequest,
+    SubscribeAlbumRequest,
+    SubscribeAlbumResponse
+)
 
 router = APIRouter()
 
@@ -191,3 +199,54 @@ async def get_qrcode_image():
     except Exception as e:
         logger.error(f"获取二维码图片异常: {e}")
         raise HTTPException(status_code=500, detail=f"获取二维码图片失败: {str(e)}")
+
+
+# 喜马拉雅专辑订阅接口
+@router.post("/subscription/subscribe", response_model=ApiResponseData)
+async def xmly_subscribe_album(request: Request, params: SubscribeAlbumRequest):
+    """
+    订阅喜马拉雅专辑
+
+    Args:
+        albumId: 专辑ID
+
+    Returns:
+        {ret: 200, msg: "订阅专辑成功"}
+    """
+    try:
+        # 调用服务层函数，装饰器会自动处理cookie和token
+        result = await subscribe_album(request, params.albumId)
+        return result
+
+    except HTTPException as e:
+        logger.error(f"订阅专辑失败: {e.detail}")
+        raise e
+    except Exception as e:
+        logger.error(f"订阅专辑异常: {e}")
+        raise HTTPException(status_code=500, detail=f"订阅专辑失败: {str(e)}")
+
+
+# 喜马拉雅取消订阅专辑接口
+@router.post("/subscription/unsubscribe", response_model=ApiResponseData)
+async def xmly_unsubscribe_album(request: Request, params: SubscribeAlbumRequest):
+    """
+    取消订阅喜马拉雅专辑
+
+    Args:
+        albumId: 专辑ID
+
+    Returns:
+        {ret: 200, msg: "取消订阅专辑成功"}
+    """
+    try:
+        # 调用服务层函数，装饰器会自动处理cookie和token
+        result = await unsubscribe_album(request, params.albumId)
+        return result
+
+    except HTTPException as e:
+        logger.error(f"取消订阅专辑失败: {e.detail}")
+        raise e
+    except Exception as e:
+        logger.error(f"取消订阅专辑异常: {e}")
+        raise HTTPException(status_code=500, detail=f"取消订阅专辑失败: {str(e)}")
+

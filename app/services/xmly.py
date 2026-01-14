@@ -12,6 +12,7 @@ from app.schemas.xmly_data import (
     XmlyLoginStatusResponse
 )
 from app.services.system import system_manager
+from app.decorators.request_decorator import extract_wx_credentials
 
 
 # 喜马拉雅API基础URL
@@ -333,4 +334,140 @@ def get_xmly_login_status() -> XmlyLoginStatusResponse:
             is_logged_in=False,
             user_info=None
         )
+
+
+# NOTE: 订阅接口使用装饰器处理cookie/token，参考微信接口实现模式
+# 全局cookies用于存储session中的cookies，如果请求头中有自定义cookies则优先使用
+global_xmly_cookies: Dict[str, str] = {}
+global_xmly_token: str = ""
+
+@extract_wx_credentials(
+    global_xmly_cookies, 
+    global_xmly_token,
+    cookie_header_name='X-XMLY-Cookies',
+    token_header_name='X-XMLY-Token',
+    state_cookie_key='xmly_cookies',
+    state_token_key='xmly_token'
+)
+async def subscribe_album(request: Request, album_id: str) -> Dict[str, Any]:
+    """
+    订阅喜马拉雅专辑
+
+    Args:
+        request: FastAPI Request对象
+        album_id: 专辑ID
+
+    Returns:
+        Dict: 订阅结果 {ret: 200, msg: "订阅专辑成功"}
+
+    Raises:
+        HTTPException: 请求失败时抛出
+    """
+    # 从 request.state 中获取装饰器处理后的 cookies 和 token
+    merged_cookies = request.state.xmly_cookies
+    final_token = request.state.xmly_token
+    
+    # 如果cookies为空，尝试从session加载
+    if not merged_cookies or len(merged_cookies) == 0:
+        session = load_xmly_session()
+        if not session:
+            raise HTTPException(status_code=401, detail="未登录，请先登录")
+        merged_cookies = session['cookies']
+        final_token = session['user_info'].get('token', '')
+        logger.info("从session中加载喜马拉雅登录信息")
+
+    url = "https://www.ximalaya.com/revision/subscription/setSubscriptionAlbum"
+
+    try:
+        async with httpx.AsyncClient(verify=False, timeout=10.0) as client:
+            logger.info(f"正在订阅专辑: albumId={album_id}")
+
+            # 构造请求数据
+            data = {"albumId": album_id}
+
+            # 发送POST请求
+            response = await client.post(url, headers=headers, cookies=merged_cookies, json=data)
+            response.raise_for_status()
+
+            # 解析JSON响应
+            json_data = response.json()
+            logger.info(f"订阅专辑响应: {json_data}")
+
+            return json_data
+
+    except httpx.HTTPStatusError as e:
+        logger.error(f"HTTP错误: {e}")
+        raise HTTPException(status_code=e.response.status_code, detail=f"HTTP错误: {e}")
+    except httpx.RequestError as e:
+        logger.error(f"请求错误: {e}")
+        raise HTTPException(status_code=500, detail=f"请求错误: {e}")
+    except Exception as e:
+        logger.error(f"未知错误: {e}")
+        raise HTTPException(status_code=500, detail=f"未知错误: {e}")
+
+
+@extract_wx_credentials(
+    global_xmly_cookies, 
+    global_xmly_token,
+    cookie_header_name='X-XMLY-Cookies',
+    token_header_name='X-XMLY-Token',
+    state_cookie_key='xmly_cookies',
+    state_token_key='xmly_token'
+)
+async def unsubscribe_album(request: Request, album_id: str) -> Dict[str, Any]:
+    """
+    取消订阅喜马拉雅专辑
+
+    Args:
+        request: FastAPI Request对象
+        album_id: 专辑ID
+
+    Returns:
+        Dict: 取消订阅结果 {ret: 200, msg: "取消订阅专辑成功"}
+
+    Raises:
+        HTTPException: 请求失败时抛出
+    """
+    # 从 request.state 中获取装饰器处理后的 cookies 和 token
+    merged_cookies = request.state.xmly_cookies
+    final_token = request.state.xmly_token
+    
+    # 如果cookies为空，尝试从session加载
+    if not merged_cookies or len(merged_cookies) == 0:
+        session = load_xmly_session()
+        if not session:
+            raise HTTPException(status_code=401, detail="未登录，请先登录")
+        merged_cookies = session['cookies']
+        final_token = session['user_info'].get('token', '')
+        logger.info("从session中加载喜马拉雅登录信息")
+
+    url = "https://www.ximalaya.com/revision/subscription/cancelSubscriptionAlbum"
+
+    try:
+        async with httpx.AsyncClient(verify=False, timeout=10.0) as client:
+            logger.info(f"正在取消订阅专辑: albumId={album_id}")
+
+            # 构造请求数据
+            data = {"albumId": album_id}
+
+            # 发送POST请求
+            response = await client.post(url, headers=headers, cookies=merged_cookies, json=data)
+            response.raise_for_status()
+
+            # 解析JSON响应
+            json_data = response.json()
+            logger.info(f"取消订阅专辑响应: {json_data}")
+
+            return json_data
+
+    except httpx.HTTPStatusError as e:
+        logger.error(f"HTTP错误: {e}")
+        raise HTTPException(status_code=e.response.status_code, detail=f"HTTP错误: {e}")
+    except httpx.RequestError as e:
+        logger.error(f"请求错误: {e}")
+        raise HTTPException(status_code=500, detail=f"请求错误: {e}")
+    except Exception as e:
+        logger.error(f"未知错误: {e}")
+        raise HTTPException(status_code=500, detail=f"未知错误: {e}")
+
 
