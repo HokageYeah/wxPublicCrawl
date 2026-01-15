@@ -55,6 +55,7 @@ const router = createRouter({
 });
 
 import { useWechatLoginStore } from "@/stores/wechatLoginStore";
+import { useXmlyLoginStore } from "@/stores/xmlyLoginStore";
 
 /**
  * 全局前置守卫
@@ -70,10 +71,16 @@ router.beforeEach(async (to, _, next) => {
 
   if (requiresAuth) {
     const wechatStore = useWechatLoginStore();
+    const xmlyStore = useXmlyLoginStore();
 
     // 如果未登录，尝试初始化会话（处理刷新页面的情况）
     if (!wechatStore.isLoggedIn) {
       await wechatStore.initialize();
+    }
+    console.log("xmlyStore.isLoggedIn------", xmlyStore.isLoggedIn);
+    // 如果xmly未登录的话，尝试初始化会话
+    if (!xmlyStore.isLoggedIn) {
+      await xmlyStore.initialize();
     }
 
     // 再次检查登录状态

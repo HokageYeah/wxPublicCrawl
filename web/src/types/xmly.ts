@@ -40,6 +40,8 @@ export interface CheckQrcodeStatusResponse {
   msg: string;
   scanned: boolean;
   user_info?: XmlyUserInfo | null;
+  token?: string;
+  cookies?: Record<string, any>;
 }
 
 // 会话响应

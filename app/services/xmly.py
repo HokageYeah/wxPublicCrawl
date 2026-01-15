@@ -396,7 +396,7 @@ async def subscribe_album(request: Request, album_id: str) -> Dict[str, Any]:
             json_data = response.json()
             logger.info(f"订阅专辑响应: {json_data}")
 
-            return json_data
+            return json_data.get('msg', '')
 
     except httpx.HTTPStatusError as e:
         logger.error(f"HTTP错误: {e}")
@@ -461,7 +461,7 @@ async def unsubscribe_album(request: Request, album_id: str) -> Dict[str, Any]:
             json_data = response.json()
             logger.info(f"取消订阅专辑响应: {json_data}")
 
-            return json_data
+            return json_data.get('msg', '')
 
     except httpx.HTTPStatusError as e:
         logger.error(f"HTTP错误: {e}")

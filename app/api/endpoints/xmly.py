@@ -50,7 +50,7 @@ async def generate_qrcode():
 
 
 @router.post("/login/check-qrcode-status", response_model=ApiResponseData)
-async def check_qrcode_status(params: CheckQrcodeStatusRequest):
+async def check_qrcode_status(params: CheckQrcodeStatusRequest, response: Response):
     """
     喜马拉雅登录流程 - 第二步：检查二维码状态
 
@@ -90,7 +90,6 @@ async def check_qrcode_status(params: CheckQrcodeStatusRequest):
             if not save_success:
                 logger.error("保存会话失败")
                 raise HTTPException(status_code=500, detail="保存会话失败")
-
             # 构造用户信息
             user_info = {
                 "uid": status_data.get('uid'),
@@ -105,6 +104,8 @@ async def check_qrcode_status(params: CheckQrcodeStatusRequest):
                 "user_info": user_info,
                 "code": 0,
                 "msg": "登录成功",
+                "cookies": cookies or "",
+                "token": ''
             }
 
         # 其他状态
