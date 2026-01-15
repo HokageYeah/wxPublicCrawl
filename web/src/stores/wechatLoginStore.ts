@@ -68,8 +68,8 @@ export const useWechatLoginStore = defineStore('wechatLogin', {
           console.log('✓ 从后端恢复 cookies', Object.keys(this.cookies).length, '个');
           console.log('✓ 从后端恢复 token', this.token);
           // 在应用设置了cookie和token后调用 getter，让所有请求都能自动携带
-          api.setCookiesGetter(() => this.cookies);
-          api.setTokenGetter(() => this.token);
+          api.setCookiesGetter('X-WX-Cookies', () => this.cookies);
+          api.setTokenGetter('X-WX-Token', () => this.token);
         } else {
           console.log('未找到有效的用户会话');
         }
@@ -240,8 +240,8 @@ export const useWechatLoginStore = defineStore('wechatLogin', {
         this.cookies = redirectResponse.cookies;
         this.token = redirectResponse.token;  // 更新token（可能已更新）
         // 在应用设置了cookie和token后调用 getter，让所有请求都能自动携带
-        api.setCookiesGetter(() => this.cookies);
-        api.setTokenGetter(() => this.token);
+        api.setCookiesGetter('X-WX-Cookies', () => this.cookies);
+        api.setTokenGetter('X-WX-Token', () => this.token);
         this.currentStep = LoginStep.REDIRECT_SUCCESS;
         this.loginComplete = true;
         

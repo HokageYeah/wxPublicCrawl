@@ -46,4 +46,5 @@ export interface CheckQrcodeStatusResponse {
 export interface SessionResponse {
   is_logged_in: boolean;
   user_info?: XmlyUserInfo | null;
+  cookies?: Record<string, any> | null;
 }

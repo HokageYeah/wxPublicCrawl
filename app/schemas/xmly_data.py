@@ -63,6 +63,7 @@ class XmlyLoginStatusResponse(BaseModel):
     """喜马拉雅登录状态响应"""
     is_logged_in: bool = Field(..., description="是否已登录")
     user_info: Optional[XmlyUserInfo] = Field(None, description="用户信息，未登录时为None")
+    cookies: Optional[Dict[str, str]] = Field(None, description="Cookie信息，未登录时为None")
 
 
 # 喜马拉雅订阅专辑请求模型

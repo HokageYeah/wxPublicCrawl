@@ -311,7 +311,8 @@ def get_xmly_login_status() -> XmlyLoginStatusResponse:
         if session is None:
             return XmlyLoginStatusResponse(
                 is_logged_in=False,
-                user_info=None
+                user_info=None,
+                cookies=None
             )
 
         # 构造用户信息对象
@@ -325,14 +326,16 @@ def get_xmly_login_status() -> XmlyLoginStatusResponse:
 
         return XmlyLoginStatusResponse(
             is_logged_in=True,
-            user_info=user_info
+            user_info=user_info,
+            cookies=session.get('cookies')
         )
 
     except Exception as e:
         logger.error(f"获取喜马拉雅登录状态失败: {e}")
         return XmlyLoginStatusResponse(
             is_logged_in=False,
-            user_info=None
+            user_info=None,
+            cookies=None
         )
 
 

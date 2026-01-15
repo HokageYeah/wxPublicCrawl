@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia';
 import { XmlyLoginStep, XmlyQRCodeStatus } from '@/types/xmly';
+import { XmlyUserInfo } from '@/types/xmly';
 import { xmlyService } from '@/services/xmlyService';
+import api from '@/utils/request';
 
 export const useXmlyLoginStore = defineStore('xmlyLogin', {
   state: () => ({
@@ -14,6 +16,8 @@ export const useXmlyLoginStore = defineStore('xmlyLogin', {
     pollingInterval: null as number | null,
     pollingCount: 0,
     maxPollingCount: 60, // 最多轮询60次（约60秒）
+    cookies: {} as Record<string, any>,  // 新增：存储cookies
+    token: '',  // 新增：存储token
   }),
 
   getters: {
@@ -45,7 +49,14 @@ export const useXmlyLoginStore = defineStore('xmlyLogin', {
           this.userInfo = sessionResponse.user_info;
           this.isLoggedIn = true;
           this.currentStep = XmlyLoginStep.LOGIN_SUCCESS;
+          this.token = sessionResponse.user_info.token || '';
+          this.cookies = sessionResponse.cookies || {};
           console.log('✓ 从后端恢复用户登录状态', this.userInfo);
+          console.log('✓ 从后端恢复 cookies', Object.keys(this.cookies).length, '个');
+          console.log('✓ 从后端恢复 token', this.token);
+          // 设置喜马拉雅的cookie和token到请求头
+          api.setCookiesGetter('X-XMLY-Cookies', () => this.cookies);
+          api.setTokenGetter('X-XMLY-Token', () => this.token);
         } else {
           console.log('未找到有效的喜马拉雅会话');
         }
@@ -146,8 +157,14 @@ export const useXmlyLoginStore = defineStore('xmlyLogin', {
             this.userInfo = statusResponse.user_info;
             this.isLoggedIn = true;
             this.currentStep = XmlyLoginStep.LOGIN_SUCCESS;
+            this.token = this.userInfo.token || '';
 
             console.log('✓ 登录成功', this.userInfo);
+            console.log('✓ Token:', this.token);
+
+            // 设置喜马拉雅的cookie和token到请求头
+            api.setCookiesGetter('X-XMLY-Cookies', () => this.cookies);
+            api.setTokenGetter('X-XMLY-Token', () => this.token);
 
             // 自动保存会话到后端
             await this.saveSessionToBackend();
@@ -169,8 +186,11 @@ export const useXmlyLoginStore = defineStore('xmlyLogin', {
 
     async saveSessionToBackend() {
       try {
-        // 注意：喜马拉雅的会话已经在后端保存了，这里主要是为了记录
+        // 注意：喜马拉雅的会话已经在后端保存了（在check-qrcode-status接口中）
+        // 这里主要是为了确保前端也保存了cookies信息
         console.log('✓ 喜马拉雅会话已保存到后端');
+        console.log('✓ Cookies:', Object.keys(this.cookies).length, '个');
+        console.log('✓ Token:', this.token ? '已设置' : '未设置');
       } catch (error) {
         console.error('保存喜马拉雅会话到后端失败:', error);
       }
@@ -203,6 +223,23 @@ export const useXmlyLoginStore = defineStore('xmlyLogin', {
       this.userInfo = null;
       this.isLoggedIn = false;
       this.pollingCount = 0;
+      this.cookies = {};  // 清除cookies
+      this.token = '';   // 清除token
+    },
+
+    // 解析Cookie字符串
+    parseCookieString(cookieStr: string): Record<string, any> {
+      const cookies: Record<string, any> = {};
+      if (!cookieStr) return cookies;
+
+      const pairs = cookieStr.split(';');
+      pairs.forEach(pair => {
+        const [key, value] = pair.trim().split('=');
+        if (key && value) {
+          cookies[key] = value;
+        }
+      });
+      return cookies;
     },
 
     cleanup() {

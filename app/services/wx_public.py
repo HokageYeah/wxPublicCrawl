@@ -55,10 +55,11 @@ async def fetch_wx_public(request: Request, query: str, begin: int, count: int):
     print('🔍 [DEBUG] 查询参数 query:', query)
     
     url = f"https://mp.weixin.qq.com/cgi-bin/searchbiz?action=search_biz&begin={begin}&count={count}&query={query}&token={final_token}&lang=zh_CN&f=json&ajax=1"
-    
+
     try:
         async with httpx.AsyncClient(verify=False) as client:
             logging.info(f"正在请求URL: {url}")
+            logger.info(f"正在请求cookies: {merged_cookies}，token: {final_token}")
             headers = {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
             }

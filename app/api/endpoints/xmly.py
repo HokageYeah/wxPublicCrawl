@@ -137,12 +137,14 @@ async def get_session():
         if not login_status.is_logged_in:
             return {
                 "is_logged_in": False,
-                "user_info": None
+                "user_info": None,
+                "cookies": None
             }
 
         return {
             "is_logged_in": True,
-            "user_info": login_status.user_info.dict() if login_status.user_info else None
+            "user_info": login_status.user_info.dict() if login_status.user_info else None,
+            "cookies": login_status.cookies
         }
 
     except Exception as e:

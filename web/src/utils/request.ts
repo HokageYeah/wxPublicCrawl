@@ -46,11 +46,8 @@ class Request {
     withCredentials: true,
   };
   
-  // 用于获取 cookies 的函数，由外部设置
-  private getCookies: (() => Record<string, any>) | null = null;
-  
-  // 用于获取 token 的函数，由外部设置
-  private getToken: (() => string) | null = null;
+  // 自定义请求头配置
+  private customHeaderGetters: Array<() => { key: string; value: any }> = [];
 
   constructor(config: AxiosRequestConfig) {
     console.log('import.meta.env.VITE_API_BASE_URL------', import.meta.env);
@@ -59,32 +56,19 @@ class Request {
     // 请求拦截器
     this.instance.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
-        // 从注入的 getter 函数获取 cookies
-        if (this.getCookies) {
-          const cookies = this.getCookies();
-          console.log('🍪 获取到的 cookies:', cookies);
-          if (cookies && Object.keys(cookies).length > 0) {
-            // 将 cookies 对象转换为 Cookie 字符串
-            const cookieStr = Object.entries(cookies)
-              .map(([key, value]) => `${key}=${value}`)
-              .join('; ');
-            
-            // ⚠️ 重要：浏览器不允许 JavaScript 手动设置 Cookie 请求头
-            // 因此我们使用自定义请求头 X-WX-Cookies 来传递 Cookie 信息
-            config.headers['X-WX-Cookies'] = cookieStr;
-            console.log('✅ 已通过自定义请求头发送 cookies:', cookieStr);
-          }
-        }
-        
-        // 从注入的 getter 函数获取 token
-        if (this.getToken) {
-          const token = this.getToken();
-          console.log('🔑 获取到的 token:', token);
-          if (token) {
-            // 使用自定义请求头 X-WX-Token 来传递 Token 信息
-            config.headers['X-WX-Token'] = token;
-            console.log('✅ 已通过自定义请求头发送 token:', token);
-          }
+        // 从所有注册的自定义请求头 getter 函数中获取并设置请求头
+        if (this.customHeaderGetters.length > 0) {
+          this.customHeaderGetters.forEach(getter => {
+            try {
+              const header = getter();
+              if (header && header.key && header.value !== undefined) {
+                config.headers[header.key] = header.value;
+                console.log(`✅ 已设置自定义请求头 ${header.key}:`, header.value);
+              }
+            } catch (error) {
+              console.error(`设置自定义请求头时出错:`, error);
+            }
+          });
         }
         
         return config;
@@ -225,19 +209,60 @@ class Request {
   }
 
   /**
-   * 设置获取 cookies 的函数
-   * @param getter 返回 cookies 对象的函数
+   * 添加自定义请求头 getter 函数
+   * @param getter 返回自定义请求头配置的函数，格式为 { key: string; value: any }
    */
-  public setCookiesGetter(getter: () => Record<string, any>): void {
-    this.getCookies = getter;
+  public addCustomHeaderGetter(getter: () => { key: string; value: any }): void {
+    this.customHeaderGetters.push(getter);
   }
 
   /**
-   * 设置获取 token 的函数
+   * 移除自定义请求头 getter 函数
+   * @param getter 要移除的 getter 函数
+   */
+  public removeCustomHeaderGetter(getter: () => { key: string; value: any }): void {
+    const index = this.customHeaderGetters.indexOf(getter);
+    if (index > -1) {
+      this.customHeaderGetters.splice(index, 1);
+    }
+  }
+
+  /**
+   * 清空所有自定义请求头 getter 函数
+   */
+  public clearCustomHeaderGetters(): void {
+    this.customHeaderGetters = [];
+  }
+
+  /**
+   * 设置获取 cookies 的函数（向后兼容方法）
+   * @param headerName 请求头名称，例如 'X-WX-Cookies'
+   * @param getter 返回 cookies 对象的函数
+   */
+  public setCookiesGetter(headerName: string, getter: () => Record<string, any>): void {
+    this.addCustomHeaderGetter(() => {
+      const cookies = getter();
+      if (cookies && Object.keys(cookies).length > 0) {
+        // 将 cookies 对象转换为 Cookie 字符串
+        const cookieStr = Object.entries(cookies)
+          .map(([key, value]) => `${key}=${value}`)
+          .join('; ');
+        return { key: headerName, value: cookieStr };
+      }
+      return { key: headerName, value: '' };
+    });
+  }
+
+  /**
+   * 设置获取 token 的函数（向后兼容方法）
+   * @param headerName 请求头名称，例如 'X-WX-Token'
    * @param getter 返回 token 字符串的函数
    */
-  public setTokenGetter(getter: () => string): void {
-    this.getToken = getter;
+  public setTokenGetter(headerName: string, getter: () => string): void {
+    this.addCustomHeaderGetter(() => {
+      const token = getter();
+      return { key: headerName, value: token };
+    });
   }
 
   public request<T = any>(config: AxiosRequestConfig): Promise<T> {
