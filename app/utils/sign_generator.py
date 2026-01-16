@@ -4,6 +4,7 @@
 """
 
 import subprocess
+import platform
 import json
 import os
 from loguru import logger
@@ -56,15 +57,22 @@ class XimalayaSignNode:
             
             logger.info(f"✅ Node.js 版本: {version_string}")
             
-            # 检查版本是否 >= 20
-            if self.node_version[0] < 20:
-                logger.warning("⚠️ Node.js 版本低于 20.0")
-                logger.warning("⚠️ JIMI.JS 需要 Node.js 20.0 或更高版本")
+            # 检查版本是否满足要求
+            system = platform.system().lower()
+            min_version = 18  # 默认 (Linux/macOS) 需要 18+
+            
+            if system == 'windows':
+                min_version = 14
+            
+            if self.node_version[0] < min_version:
+                logger.warning(f"⚠️ Node.js 版本低于 {min_version}.0")
+                logger.warning(f"⚠️ 当前系统 ({system}) JIMI.JS 需要 Node.js {min_version}.0 或更高版本")
                 logger.warning("⚠️ 签名生成器将被禁用")
                 logger.info("💡 升级 Node.js: https://nodejs.org/")
-                logger.info("💡 或使用 nvm: nvm install 20 && nvm use 20")
+                if min_version == 18:
+                    logger.info(f"💡 或使用 nvm: nvm install {min_version} && nvm use {min_version}")
                 self.is_available = False
-                self.error_message = f"Node.js 版本过低（{version_string}），需要 20.0 或更高版本。请升级 Node.js：https://nodejs.org/"
+                self.error_message = f"Node.js 版本过低（{version_string}），当前系统需要 {min_version}.0 或更高版本。请升级 Node.js：https://nodejs.org/"
             else:
                 logger.info("✅ Node.js 版本满足要求，签名生成器可用")
                 self.is_available = True
