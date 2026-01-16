@@ -9,7 +9,8 @@ from app.services.xmly import (
     clear_xmly_session,
     decode_qrcode_image,
     subscribe_album,
-    unsubscribe_album
+    unsubscribe_album,
+    search_album
 )
 from app.schemas.common_data import ApiResponseData
 from app.schemas.xmly_data import (
@@ -18,7 +19,9 @@ from app.schemas.xmly_data import (
     XmlyLoginStatusResponse,
     CheckQrcodeStatusRequest,
     SubscribeAlbumRequest,
-    SubscribeAlbumResponse
+    SubscribeAlbumResponse,
+    SearchAlbumRequest,
+    SearchAlbumResponse
 )
 
 router = APIRouter()
@@ -252,4 +255,32 @@ async def xmly_unsubscribe_album(request: Request, params: SubscribeAlbumRequest
     except Exception as e:
         logger.error(f"取消订阅专辑异常: {e}")
         raise HTTPException(status_code=500, detail=f"取消订阅专辑失败: {str(e)}")
+
+
+# 喜马拉雅搜索专辑接口
+@router.post("/album/search", response_model=ApiResponseData)
+async def xmly_search_album(request: Request, params: SearchAlbumRequest):
+    """
+    根据关键词搜索喜马拉雅专辑
+
+    Args:
+        kw: 搜索关键词
+
+    Returns:
+        包含专辑列表、分页信息等
+    """
+    try:
+        # 调用服务层函数，装饰器会自动处理cookie和token
+        result = await search_album(request, params.kw)
+        # 将result转换为json
+        result_json = result.model_dump_json()
+        logger.info(f"搜索专辑返回结果: {result_json}")
+        return result_json
+
+    except HTTPException as e:
+        logger.error(f"搜索专辑失败: {e.detail}")
+        raise e
+    except Exception as e:
+        logger.error(f"搜索专辑异常: {e}")
+        raise HTTPException(status_code=500, detail=f"搜索专辑失败: {str(e)}")
 

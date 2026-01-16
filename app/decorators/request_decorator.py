@@ -2,6 +2,7 @@
 from fastapi import Request
 import functools
 from typing import Dict, Callable
+from urllib.parse import quote
 
 
 def extract_wx_credentials(
@@ -121,6 +122,83 @@ def extract_wx_credentials(
             
             # 调用原始函数
             return await func(*args, **kwargs)
-        
+
+        return wrapper
+    return decorator
+
+
+def add_xmly_sign(headers: Dict[str, str], keyword_param: str = 'keyword'):
+    """
+    装饰器：自动为请求头添加喜马拉雅 xm-sign 签名和 Referer
+
+    Args:
+        headers: 全局请求头字典，会被装饰器修改
+        keyword_param: 包含搜索关键词的参数名（默认：keyword）
+
+    Returns:
+        装饰器函数
+
+    使用示例:
+        ```python
+        from app.decorators.request_decorator import add_xmly_sign
+
+        headers = {
+            "User-Agent": "Mozilla/5.0 ...",
+            "Accept": "application/json, text/plain, */*",
+        }
+
+        @add_xmly_sign(headers, keyword_param='keyword')
+        async def search_album(request: Request, keyword: str):
+            # headers 会自动添加 xm-sign 和 Referer
+            # ...
+        ```
+
+    注意事项:
+        1. 装饰器会自动修改传入的 headers 字典
+        2. 装饰器会根据关键词自动生成 Referer 和 xm-sign
+        3. 被装饰的函数必须包含 keyword_param 指定的参数
+    """
+    def decorator(func: Callable):
+        @functools.wraps(func)
+        async def wrapper(*args, **kwargs):
+            # 导入 sign_generator
+            from app.utils.sign_generator import XimalayaSignNode
+            from fastapi import HTTPException
+
+            # 从参数中获取关键词
+            keyword_value = kwargs.get(keyword_param)
+            if keyword_value is None:
+                # 尝试从位置参数中获取
+                import inspect
+                sig = inspect.signature(func)
+                param_names = list(sig.parameters.keys())
+                if keyword_param in param_names:
+                    param_index = param_names.index(keyword_param)
+                    if param_index < len(args):
+                        keyword_value = args[param_index]
+            print(f'🔍 [DEBUG] 关键词: {keyword_value}')
+            if keyword_value is None:
+                raise HTTPException(status_code=400, detail=f"无法找到参数 {keyword_param}")
+
+            # 初始化签名生成器
+            try:
+                sign_generator = XimalayaSignNode()
+            except Exception as e:
+                raise HTTPException(status_code=500, detail=f"签名生成器初始化失败: {e}")
+
+            # 生成 xm-sign 和 Referer
+            encoded_kw = quote(keyword_value)
+            print(f'🔍 [DEBUG] encoded_kw: {encoded_kw}')
+            success, xm_sign, error_msg = sign_generator.get_xm_sign()
+            if not success:
+                raise HTTPException(status_code=400, detail=f"xm-sign 生成失败: {error_msg}")
+
+            # 直接修改全局 headers
+            headers["xm-sign"] = xm_sign
+            headers["Referer"] = f"https://www.ximalaya.com/so/{encoded_kw}"
+
+            # 调用原始函数
+            return await func(*args, **kwargs)
+
         return wrapper
     return decorator

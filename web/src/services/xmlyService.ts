@@ -107,4 +107,14 @@ export const xmlyService = {
     const data = await api.post("/xmly/subscription/unsubscribe", { albumId });
     return data;
   },
+
+  /**
+   * 搜索专辑
+   * @param kw 搜索关键词
+   * @returns Promise<any> 搜索结果
+   */
+  search: async (kw: string): Promise<any> => {
+    const data = await api.post("/xmly/album/search", { kw });
+    return data;
+  },
 };

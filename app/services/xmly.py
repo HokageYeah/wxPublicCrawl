@@ -4,19 +4,42 @@ import base64
 from typing import Dict, Any, Optional
 from fastapi import HTTPException, Request
 from loguru import logger
+from urllib.parse import quote
 
 from app.schemas.xmly_data import (
     XmlyQrcodeResponse,
     XmlyQrcodeStatusResponse,
     XmlyUserInfo,
-    XmlyLoginStatusResponse
+    XmlyLoginStatusResponse,
+    SearchAlbumResponse,
+    SearchAlbumResult,
+    SearchAlbumPagination,
+    AlbumPriceType
 )
 from app.services.system import system_manager
-from app.decorators.request_decorator import extract_wx_credentials
+from app.decorators.request_decorator import extract_wx_credentials, add_xmly_sign
+from app.utils.slider_solver import SliderSolver
+from app.utils.sign_generator import XimalayaSignNode
+from app.utils.xmly_helper import handle_xmly_risk_verification
 
 
 # 喜马拉雅API基础URL
 XMLY_BASE_URL = "https://passport.ximalaya.com"
+
+# 初始化滑块验证器和签名生成器
+try:
+    slider_solver = SliderSolver(headless=True)  # 滑块验证解决器（Docker环境必须使用headless模式）
+    logger.info("✅ 滑块验证器初始化成功")
+except Exception as e:
+    logger.error(f"❌ 滑块验证器初始化失败: {e}")
+    slider_solver = None
+
+try:
+    sign_generator = XimalayaSignNode()
+    logger.info("✅ 签名生成器初始化成功")
+except Exception as e:
+    logger.error(f"❌ 签名生成器初始化失败: {e}")
+    sign_generator = None
 
 # 公共请求头
 headers = {
@@ -25,6 +48,10 @@ headers = {
     "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
     "Referer": "https://www.ximalaya.com/",
     "Origin": "https://www.ximalaya.com",
+    # 注意：xm-sign 不在这里设置，因为：
+    # 1. 每次请求都需要新的签名
+    # 2. get_xm_sign() 可能返回 None
+    # 3. 应该在需要时动态生成
 }
 
 
@@ -473,4 +500,149 @@ async def unsubscribe_album(request: Request, album_id: str) -> Dict[str, Any]:
         logger.error(f"未知错误: {e}")
         raise HTTPException(status_code=500, detail=f"未知错误: {e}")
 
+
+@add_xmly_sign(headers, keyword_param='keyword')
+@extract_wx_credentials(
+    global_xmly_cookies,
+    global_xmly_token,
+    cookie_header_name='X-XMLY-Cookies',
+    token_header_name='X-XMLY-Token',
+    state_cookie_key='xmly_cookies',
+    state_token_key='xmly_token'
+)
+async def search_album(request: Request, keyword: str) -> SearchAlbumResponse:
+    """
+    根据关键词搜索喜马拉雅专辑
+
+    Args:
+        request: FastAPI Request对象
+        keyword: 搜索关键词
+
+    Returns:
+        SearchAlbumResponse: 搜索结果，包含专辑列表和分页信息
+
+    Raises:
+        HTTPException: 请求失败时抛出
+    """
+    # 从 request.state 中获取装饰器处理后的 cookies 和 token
+    merged_cookies = request.state.xmly_cookies
+    final_token = request.state.xmly_token
+    
+    # 如果cookies为空，尝试从session加载
+    if not merged_cookies or len(merged_cookies) == 0:
+        session = load_xmly_session()
+        if not session:
+            raise HTTPException(status_code=401, detail="未登录，请先登录")
+        merged_cookies = session['cookies']
+        final_token = session['user_info'].get('token', '')
+        logger.info("从session中加载喜马拉雅登录信息")
+
+    # 构造搜索URL
+    url = "https://www.ximalaya.com/revision/search/main"
+    params = {
+        "core": "all",
+        "kw": keyword,
+        "spellchecker": "true",
+        "device": "iPhone",
+        "live": "true"
+    }
+    logger.info(f"搜索专辑请求headers: {headers}")
+    try:
+        async with httpx.AsyncClient(verify=False, timeout=10.0) as client:
+            logger.info(f"正在搜索专辑，关键词: {keyword}")
+            # 发送GET请求（headers 已经由装饰器自动添加 xm-sign 和 Referer）
+            response = await client.get(url, headers=headers, cookies=merged_cookies, params=params)
+            response.raise_for_status()
+
+            # 解析JSON响应
+            json_data = response.json()
+            logger.info(f"搜索专辑响应: {json_data}")
+            logger.info(f"搜索专辑响应: ret={json_data.get('ret')}")
+
+            # 处理响应（包括风险验证）
+            json_data = await handle_xmly_risk_verification(
+                client, url, headers, merged_cookies, params,
+                keyword, slider_solver, sign_generator, json_data
+            )
+
+            # 提取专辑数据
+            data = json_data.get('data', {})
+            album_data = data.get('album', {})
+            docs_data = album_data.get('docs', [])
+
+            # 解析专辑数据为SearchAlbumResult对象列表
+            album_results = []
+            for doc in docs_data:
+                # 解析价格类型列表
+                price_types_data = doc.get('priceTypes', [])
+                price_types = []
+                for pt in price_types_data:
+                    price_types.append(AlbumPriceType(
+                        free_track_count=pt.get('free_track_count', 0),
+                        price_unit=pt.get('price_unit', ''),
+                        price_type_id=pt.get('price_type_id', 0),
+                        price=pt.get('price', ''),
+                        total_track_count=pt.get('total_track_count', 0),
+                        id=pt.get('id', 0),
+                        discounted_price=pt.get('discounted_price', '')
+                    ))
+                
+                album_results.append(SearchAlbumResult(
+                    playCount=doc.get('playCount', 0),
+                    coverPath=doc.get('coverPath', ''),
+                    title=doc.get('title', ''),
+                    uid=doc.get('uid', 0),
+                    url=doc.get('url', ''),
+                    categoryPinyin=doc.get('categoryPinyin', ''),
+                    categoryId=doc.get('categoryId', 0),
+                    intro=doc.get('intro', ''),
+                    albumId=doc.get('albumId', 0),
+                    isPaid=doc.get('isPaid', False),
+                    isFinished=doc.get('isFinished', 0),
+                    categoryTitle=doc.get('categoryTitle', ''),
+                    createdAt=doc.get('createdAt', 0),
+                    isV=doc.get('isV', False),
+                    updatedAt=doc.get('updatedAt', 0),
+                    isVipFree=doc.get('isVipFree', False),
+                    nickname=doc.get('nickname', ''),
+                    anchorPic=doc.get('anchorPic', ''),
+                    customTitle=doc.get('customTitle'),
+                    verifyType=doc.get('verifyType', 0),
+                    vipFreeType=doc.get('vipFreeType', 0),
+                    tracksCount=doc.get('tracksCount', 0),
+                    priceTypes=price_types,
+                    anchorUrl=doc.get('anchorUrl', ''),
+                    richTitle=doc.get('richTitle', ''),
+                    vipType=doc.get('vipType', 0),
+                    albumSubscript=doc.get('albumSubscript', 0),
+                    displayPriceWithUnit=doc.get('displayPriceWithUnit'),
+                    discountedPriceWithUnit=doc.get('discountedPriceWithUnit')
+                ))
+
+            # 构造分页信息
+            pagination = SearchAlbumPagination(
+                pageSize=album_data.get('pageSize', 0),
+                currentPage=album_data.get('currentPage', 0),
+                total=album_data.get('total', 0),
+                totalPage=album_data.get('totalPage', 0)
+            )
+
+            logger.info(f"搜索成功，找到 {len(album_results)} 个专辑，总共 {pagination.total} 个")
+            
+            return SearchAlbumResponse(
+                ret=["SUCCESS::搜索专辑成功"],
+                kw=data.get('kw', keyword),
+                docs=album_results,
+                pagination=pagination
+            )
+
+    except httpx.HTTPStatusError as e:
+        logger.error(f"HTTP错误: {e}")
+        raise HTTPException(status_code=e.response.status_code, detail=str(e))
+    except httpx.RequestError as e:
+        logger.error(f"请求错误: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        logger.error(f"未知错误: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 

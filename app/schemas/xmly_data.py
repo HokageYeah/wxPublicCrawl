@@ -77,3 +77,73 @@ class SubscribeAlbumResponse(BaseModel):
     """订阅专辑响应"""
     ret: int = Field(..., description="返回码，200表示成功")
     msg: str = Field(..., description="返回消息")
+
+
+# 专辑价格类型模型
+class AlbumPriceType(BaseModel):
+    """专辑价格类型"""
+    free_track_count: int = Field(..., description="免费音频数量")
+    price_unit: str = Field(..., description="价格单位")
+    price_type_id: int = Field(..., description="价格类型ID")
+    price: str = Field(..., description="价格")
+    total_track_count: int = Field(..., description="总音频数量")
+    id: int = Field(..., description="专辑ID")
+    discounted_price: str = Field(..., description="折扣价格")
+
+
+# 搜索专辑结果模型
+class SearchAlbumResult(BaseModel):
+    """搜索专辑结果"""
+    playCount: int = Field(..., description="播放量")
+    coverPath: str = Field(..., description="封面路径")
+    title: str = Field(..., description="专辑标题")
+    uid: int = Field(..., description="用户ID")
+    url: str = Field(..., description="专辑URL")
+    categoryPinyin: str = Field(..., description="分类拼音")
+    categoryId: int = Field(..., description="分类ID")
+    intro: str = Field(..., description="专辑简介")
+    albumId: int = Field(..., description="专辑ID")
+    isPaid: bool = Field(..., description="是否付费")
+    isFinished: int = Field(..., description="是否完结，0未完结，2已完结")
+    categoryTitle: str = Field(..., description="分类标题")
+    createdAt: int = Field(..., description="创建时间戳")
+    isV: bool = Field(..., description="是否V认证")
+    updatedAt: int = Field(..., description="更新时间戳")
+    isVipFree: bool = Field(..., description="是否VIP免费")
+    nickname: str = Field(..., description="主播昵称")
+    anchorPic: str = Field(..., description="主播头像")
+    customTitle: Optional[str] = Field(None, description="自定义标题")
+    verifyType: int = Field(..., description="认证类型")
+    vipFreeType: int = Field(..., description="VIP免费类型")
+    tracksCount: int = Field(..., description="音频数量")
+    priceTypes: list[AlbumPriceType] = Field(default_factory=list, description="价格类型列表")
+    anchorUrl: str = Field(..., description="主播URL")
+    richTitle: str = Field(..., description="富文本标题")
+    vipType: int = Field(..., description="VIP类型")
+    albumSubscript: int = Field(..., description="专辑订阅数")
+    displayPriceWithUnit: Optional[str] = Field(None, description="带单位的价格显示")
+    discountedPriceWithUnit: Optional[str] = Field(None, description="带单位的折扣价格显示")
+
+
+# 搜索专辑分页信息模型
+class SearchAlbumPagination(BaseModel):
+    """搜索专辑分页信息"""
+    pageSize: int = Field(..., description="每页数量")
+    currentPage: int = Field(..., description="当前页码")
+    total: int = Field(..., description="总数量")
+    totalPage: int = Field(..., description="总页数")
+
+
+# 搜索专辑响应模型
+class SearchAlbumResponse(BaseModel):
+    """搜索专辑响应"""
+    ret: list[str] = Field(..., description="返回码列表，如 ['SUCCESS::搜索专辑成功'] 或 ['ERROR::搜索失败']")
+    kw: Optional[str] = Field(None, description="搜索关键词")
+    docs: list[SearchAlbumResult] = Field(default_factory=list, description="专辑列表")
+    pagination: Optional[SearchAlbumPagination] = Field(None, description="分页信息")
+
+
+# 搜索专辑请求模型
+class SearchAlbumRequest(BaseModel):
+    """搜索专辑请求"""
+    kw: str = Field(..., description="搜索关键词")
