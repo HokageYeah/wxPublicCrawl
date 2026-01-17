@@ -56,7 +56,7 @@
         <div
           class="absolute inset-0 overflow-y-auto scroll-smooth custom-scrollbar px-4 py-2"
         >
-          <!-- Loading State -->
+          <!-- 加载状态 -->
           <div
             v-if="loading && !results.length"
             class="h-full flex flex-col items-center justify-center min-h-[400px]"
@@ -67,7 +67,7 @@
             <p class="text-gray-400 animate-pulse">正在搜索相关专辑...</p>
           </div>
 
-          <!-- Empty State: Initial -->
+          <!-- 初始状态：未搜索 -->
           <div
             v-else-if="!hasSearched"
             class="h-full flex flex-col items-center justify-center min-h-[400px] text-center opacity-40"
@@ -79,7 +79,7 @@
             </p>
           </div>
 
-          <!-- Empty State: No Results -->
+          <!-- 空状态：无结果 -->
           <div
             v-else-if="results.length === 0"
             class="h-full flex flex-col items-center justify-center min-h-[400px] text-center opacity-60"
@@ -91,123 +91,84 @@
             <p class="text-gray-500">换个关键词试试看吧</p>
           </div>
 
-          <!-- Results Grid -->
+          <!-- 搜索结果列表 -->
           <div v-else class="pb-8">
             <div
               class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
             >
-              <div
+                <div
                 v-for="album in results"
                 :key="album.albumId"
-                class="group bg-[#141414] border border-white/5 rounded-xl overflow-hidden hover:border-orange-500/30 hover:shadow-2xl hover:shadow-orange-500/10 transition-all duration-300 flex flex-col h-full"
+                class="group relative flex flex-col gap-3 rounded-2xl p-3 bg-[#181818] border border-white/5 transition-all duration-300 hover:border-orange-500/50 hover:shadow-[0_8px_24px_-4px_rgba(249,115,22,0.15)] hover:-translate-y-1 hover:bg-[#1f1f1f]"
               >
-                <!-- Cover Image -->
-                <div class="aspect-square relative overflow-hidden bg-gray-900">
+                <!-- 封面图 -->
+                <div class="aspect-square relative rounded-xl overflow-hidden bg-gray-900 shadow-inner group-hover:shadow-lg transition-all">
                   <img
                     :src="album.coverPath"
                     :alt="album.title"
-                    class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                    class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700 ease-out"
                     loading="lazy"
                   />
-
-                  <!-- Badges -->
-                  <div
-                    class="absolute top-2 right-2 flex flex-col gap-1.5 items-end z-10"
-                  >
-                    <span
-                      v-if="album.isPaid"
-                      class="px-2 py-0.5 bg-yellow-600/90 backdrop-blur-sm text-white text-[10px] font-bold rounded shadow-sm"
-                      >付费</span
-                    >
-                    <span
-                      v-if="album.isFinished === 2"
-                      class="px-2 py-0.5 bg-green-600/90 backdrop-blur-sm text-white text-[10px] font-bold rounded shadow-sm"
-                      >完结</span
-                    >
-                    <span
-                      v-if="album.isVipFree"
-                      class="px-2 py-0.5 bg-red-600/90 backdrop-blur-sm text-white text-[10px] font-bold rounded shadow-sm"
-                      >VIP</span
-                    >
-                  </div>
-
-                  <!-- Overlay Info -->
-                  <div
-                    class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-black/60 to-transparent p-3 pt-10"
-                  >
-                    <div
-                      class="flex items-center text-xs text-gray-300 gap-3 font-mono"
-                    >
-                      <span class="flex items-center gap-1"
-                        ><span
-                          class="i-carbon-play-filled text-orange-500"
-                        ></span
-                        >{{ formatNumber(album.playCount) }}</span
-                      >
-                      <span class="flex items-center gap-1"
-                        ><span class="i-carbon-playlist text-orange-500"></span
-                        >{{ album.tracksCount }}集</span
-                      >
-                    </div>
+                  <!-- 渐变遮罩 -->
+                  <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  
+                  <!-- 播放量显示 (右下角) -->
+                  <div class="absolute bottom-1.5 right-1.5 bg-black/40 backdrop-blur-md border border-white/10 px-2 py-1 rounded-lg text-[11px] text-white/90 flex items-center gap-1.5 font-medium tracking-wide shadow-sm">
+                     <span class="i-carbon-headset text-orange-400 text-xs"></span>
+                     {{ formatNumber(album.playCount) }}
                   </div>
                 </div>
 
-                <!-- Content -->
-                <div class="p-4 flex flex-col flex-1">
-                  <h3
-                    class="text-base font-bold text-gray-100 mb-2 line-clamp-2 leading-snug group-hover:text-orange-400 transition-colors"
-                    :title="album.title"
-                    v-html="highlightKeyword(album.title)"
-                  ></h3>
-
-                  <p
-                    class="text-xs text-gray-400 mb-4 line-clamp-2 leading-relaxed min-h-[2.5em]"
-                  >
-                    {{ album.intro || "暂无简介" }}
-                  </p>
-
-                  <!-- Anchor -->
-                  <div
-                    class="flex items-center gap-2 mb-4 mt-auto border-t border-white/5 pt-3"
-                  >
-                    <img
-                      :src="album.anchorPic"
-                      class="w-6 h-6 rounded-full object-cover bg-gray-800"
-                    />
-                    <span
-                      class="text-xs text-gray-400 truncate flex-1 hover:text-gray-200"
-                      >{{ album.nickname }}</span
-                    >
+                <!-- 内容信息 -->
+                <div class="flex flex-col gap-2 px-1 flex-1">
+                  <!-- 标题 -->
+                  <div class="space-y-1">
+                     <h3 class="text-[17px] leading-snug font-bold text-gray-100 line-clamp-2 group-hover:text-orange-400 transition-colors" :title="album.title">
+                       <span v-html="highlightKeyword(album.title)"></span>
+                     </h3>
+                     
+                     <!-- 标签行 (放在标题下方更清晰) -->
+                     <div class="flex flex-wrap gap-1.5 items-center pt-1">
+                        <span 
+                          v-if="album.isFinished === 2" 
+                          class="px-1.5 py-0.5 text-[10px] font-bold bg-emerald-500/10 text-emerald-400 rounded border border-emerald-500/20"
+                        >完本</span>
+                        <span 
+                          v-if="album.isPaid" 
+                          class="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500/10 text-amber-400 rounded border border-amber-500/20"
+                        >付费</span>
+                        <span 
+                          v-if="album.isVipFree" 
+                          class="px-1.5 py-0.5 text-[10px] font-bold bg-red-500/10 text-red-400 rounded border border-red-500/20"
+                        >VIP</span>
+                     </div>
                   </div>
 
-                  <!-- Action Button -->
-                  <button
-                    @click="toggleSubscribe(album)"
-                    :disabled="actionLoading === album.albumId"
-                    :class="[
-                      'w-full py-2 rounded text-xs font-medium transition-all duration-200 flex items-center justify-center gap-1.5',
-                      isSubscribed(album.albumId)
-                        ? 'bg-red-500/10 text-red-500 border border-red-500/20 hover:bg-red-500/20'
-                        : 'bg-white text-black hover:bg-gray-200 shadow-sm',
-                    ]"
-                  >
-                    <span
-                      v-if="actionLoading === album.albumId"
-                      class="i-carbon-circle-dash animate-spin text-sm"
-                    ></span>
-                    <template v-else>
-                      <span
-                        :class="
-                          isSubscribed(album.albumId)
-                            ? 'i-carbon-checkmark-filled'
-                            : 'i-carbon-add-alt'
-                        "
-                      ></span>
-                      <span>{{
-                        isSubscribed(album.albumId) ? "已订阅" : "订阅监控"
-                      }}</span>
-                    </template>
-                  </button>
+                  <!-- 底部栏：作者 + 按钮 -->
+                  <div class="flex items-center justify-between mt-auto pt-2 border-t border-white/5">
+                     <div class="flex items-center gap-1.5 text-xs text-gray-400 max-w-[60%]">
+                        <span class="i-carbon-user text-gray-500"></span>
+                        <span class="truncate hover:text-gray-200 transition-colors cursor-pointer" :title="album.nickname">{{ album.nickname }}</span>
+                     </div>
+
+                     <!-- 订阅按钮 (Soft UI 风格) -->
+                     <button
+                       @click.stop="toggleSubscribe(album)"
+                       :disabled="actionLoading === album.albumId"
+                       class="h-8 px-3 rounded-full text-xs font-bold transition-all duration-300 flex items-center gap-1.5"
+                       :class="[
+                         isSubscribed(album.albumId)
+                           ? 'bg-gray-700/50 text-gray-400 hover:bg-gray-700 hover:text-gray-200'
+                           : 'bg-orange-500/10 text-orange-500 hover:bg-orange-500 hover:text-white hover:shadow-lg hover:shadow-orange-500/30'
+                       ]"
+                     >
+                        <span v-if="actionLoading === album.albumId" class="i-carbon-circle-dash animate-spin text-sm"></span>
+                        <template v-else>
+                          <span :class="isSubscribed(album.albumId) ? 'i-carbon-checkmark' : 'i-carbon-add'"></span>
+                          <span>{{ isSubscribed(album.albumId) ? '已订阅' : '订阅' }}</span>
+                        </template>
+                     </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -229,13 +190,13 @@
                 条结果
               </div>
 
-              <!-- Pagination Controls -->
+              <!-- 分页控制器 -->
               <div
                 v-if="pagination.totalPage > 1"
                 class="flex items-center gap-2"
               >
                 <button
-                  @click="changePage(pagination!.currentPage - 1)"
+                  @click="changePage(pagination.currentPage - 1)"
                   :disabled="pagination.currentPage <= 1 || loading"
                   class="w-9 h-9 flex items-center justify-center rounded-md bg-[#252525] border border-gray-700 text-gray-400 hover:text-white hover:border-gray-500 hover:bg-[#333] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                 >
@@ -253,7 +214,7 @@
                 </div>
 
                 <button
-                  @click="changePage(pagination!.currentPage + 1)"
+                  @click="changePage(pagination.currentPage + 1)"
                   :disabled="
                     pagination.currentPage >= pagination.totalPage || loading
                   "

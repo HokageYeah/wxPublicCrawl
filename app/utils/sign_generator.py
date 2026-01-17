@@ -59,7 +59,7 @@ class XimalayaSignNode:
             
             # 检查版本是否满足要求
             system = platform.system().lower()
-            min_version = 18  # 默认 (Linux/macOS) 需要 18+
+            min_version = 20  # 默认 (Linux/macOS) 需要 20+
             
             if system == 'windows':
                 min_version = 14
