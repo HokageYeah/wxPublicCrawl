@@ -10,7 +10,8 @@ from app.services.xmly import (
     decode_qrcode_image,
     subscribe_album,
     unsubscribe_album,
-    search_album
+    search_album,
+    get_album_detail
 )
 from app.schemas.common_data import ApiResponseData
 from app.schemas.xmly_data import (
@@ -21,7 +22,8 @@ from app.schemas.xmly_data import (
     SubscribeAlbumRequest,
     SubscribeAlbumResponse,
     SearchAlbumRequest,
-    SearchAlbumResponse
+    SearchAlbumResponse,
+    GetAlbumDetailRequest
 )
 
 router = APIRouter()
@@ -283,4 +285,32 @@ async def xmly_search_album(request: Request, params: SearchAlbumRequest):
     except Exception as e:
         logger.error(f"搜索专辑异常: {e}")
         raise HTTPException(status_code=500, detail=f"搜索专辑失败: {str(e)}")
+
+
+# 喜马拉雅专辑详情查询接口
+@router.post("/album/detail", response_model=ApiResponseData)
+async def xmly_get_album_detail(request: Request, params: GetAlbumDetailRequest):
+    """
+    根据专辑ID查询喜马拉雅专辑详情
+
+    Args:
+        albumId: 专辑ID
+
+    Returns:
+        专辑详情信息
+    """
+    try:
+        # 调用服务层函数，装饰器会自动处理cookie和token
+        result = await get_album_detail(request, params.albumId)
+        # 将result转换为json
+        result_json = result.model_dump_json()
+        logger.info(f"专辑详情返回结果: {result_json}")
+        return result_json
+
+    except HTTPException as e:
+        logger.error(f"查询专辑详情失败: {e.detail}")
+        raise e
+    except Exception as e:
+        logger.error(f"查询专辑详情异常: {e}")
+        raise HTTPException(status_code=500, detail=f"查询专辑详情失败: {str(e)}")
 

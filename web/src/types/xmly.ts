@@ -113,3 +113,60 @@ export interface SearchAlbumResponse {
   msg?: string; // 兼容可能得错误返回消息
   code?: number; // 状态码
 }
+
+// -- 专辑详情页相关类型 --
+
+export interface SubscriptInfo {
+  albumSubscriptValue: number;
+  url: string;
+}
+
+export interface AlbumPageMainInfo {
+  anchorUid: number;
+  albumStatus: number;
+  showApplyFinishBtn: boolean;
+  showEditBtn: boolean;
+  showTrackManagerBtn: boolean;
+  showInformBtn: boolean;
+  cover: string;
+  albumTitle: string;
+  updateDate: string;
+  createDate: string;
+  playCount: number;
+  isPaid: boolean;
+  isFinished: number; // 0: 未完结, 2: 完结
+  isSubscribe: boolean;
+  richIntro: string;
+  shortIntro: string;
+  detailRichIntro: string;
+  isPublic: boolean;
+  hasBuy: boolean;
+  vipType: number;
+  canCopyText: boolean;
+  subscribeCount: number;
+  sellingPoint: any; // 具体结构待定
+  subscriptInfo: SubscriptInfo;
+  albumSubscript: number;
+  tags: string[];
+  categoryId: number;
+  ximiVipFreeType: number;
+  joinXimi: boolean;
+  freeExpiredTime: number;
+  categoryTitle: string;
+  anchorName: string;
+  visibleStatus: number;
+}
+
+export interface AlbumDetailData {
+  albumId: number;
+  isSelfAlbum: boolean;
+  currentUid: number;
+  albumPageMainInfo: AlbumPageMainInfo;
+  isTemporaryVIP: boolean;
+}
+
+export interface AlbumDetailResponse {
+  ret: number; // 200
+  msg: string;
+  data: AlbumDetailData;
+}

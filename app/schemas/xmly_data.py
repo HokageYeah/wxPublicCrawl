@@ -147,3 +147,79 @@ class SearchAlbumResponse(BaseModel):
 class SearchAlbumRequest(BaseModel):
     """搜索专辑请求"""
     kw: str = Field(..., description="搜索关键词")
+
+
+# 订阅信息模型
+class SubscriptInfo(BaseModel):
+    """订阅信息"""
+    albumSubscriptValue: int = Field(..., description="专辑订阅值")
+    url: str = Field(..., description="URL")
+
+
+# 专辑页面主要信息模型
+class AlbumPageMainInfo(BaseModel):
+    """专辑页面主要信息"""
+    anchorUid: int = Field(..., description="主播用户ID")
+    albumStatus: int = Field(..., description="专辑状态")
+    showApplyFinishBtn: bool = Field(..., description="是否显示申请完结按钮")
+    showEditBtn: bool = Field(..., description="是否显示编辑按钮")
+    showTrackManagerBtn: bool = Field(..., description="是否显示音频管理按钮")
+    showInformBtn: bool = Field(..., description="是否显示举报按钮")
+    cover: str = Field(..., description="专辑封面URL")
+    albumTitle: str = Field(..., description="专辑标题")
+    updateDate: str = Field(..., description="更新日期")
+    createDate: str = Field(..., description="创建日期")
+    playCount: int = Field(..., description="播放量")
+    isPaid: bool = Field(..., description="是否付费")
+    isFinished: int = Field(..., description="是否完结，0未完结，1已完结")
+    isSubscribe: bool = Field(..., description="是否已订阅")
+    richIntro: str = Field(..., description="富文本简介")
+    shortIntro: str = Field(..., description="简短简介")
+    detailRichIntro: str = Field(..., description="详细富文本简介")
+    isPublic: bool = Field(..., description="是否公开")
+    hasBuy: bool = Field(..., description="是否已购买")
+    vipType: int = Field(..., description="VIP类型")
+    canCopyText: bool = Field(..., description="是否可复制文本")
+    subscribeCount: int = Field(..., description="订阅数")
+    sellingPoint: Dict[str, Any] = Field(default_factory=dict, description="卖点信息")
+    subscriptInfo: SubscriptInfo = Field(..., description="订阅信息")
+    albumSubscript: int = Field(..., description="专辑订阅状态")
+    tags: list[str] = Field(default_factory=list, description="标签列表")
+    categoryId: int = Field(..., description="分类ID")
+    ximiVipFreeType: int = Field(..., description="喜米VIP免费类型")
+    joinXimi: bool = Field(..., description="是否加入喜米")
+    freeExpiredTime: int = Field(..., description="免费过期时间")
+    categoryTitle: str = Field(..., description="分类标题")
+    anchorName: str = Field(..., description="主播昵称")
+    visibleStatus: int = Field(..., description="可见状态")
+    personalDescription: str = Field(default="", description="个人描述")
+    bigshotRecommend: str = Field(default="", description="大咖推荐")
+    outline: str = Field(default="", description="大纲")
+    customTitle: Optional[str] = Field(None, description="自定义标题")
+    produceTeam: str = Field(default="", description="制作团队")
+    recommendReason: str = Field(default="", description="推荐理由")
+    albumSeoTitle: Optional[str] = Field(None, description="专辑SEO标题")
+
+
+# 专辑详情数据模型
+class AlbumDetailData(BaseModel):
+    """专辑详情数据"""
+    albumId: int = Field(..., description="专辑ID")
+    isSelfAlbum: bool = Field(..., description="是否自己的专辑")
+    currentUid: int = Field(..., description="当前用户ID")
+    albumPageMainInfo: AlbumPageMainInfo = Field(..., description="专辑主要信息")
+    isTemporaryVIP: bool = Field(..., description="是否临时VIP")
+
+
+# 专辑详情响应模型
+class AlbumDetailResponse(BaseModel):
+    """专辑详情响应"""
+    ret: int = Field(..., description="返回码，200表示成功")
+    msg: str = Field(..., description="返回消息")
+    data: AlbumDetailData = Field(..., description="专辑详情数据")
+
+
+# 获取专辑详情请求模型
+class GetAlbumDetailRequest(BaseModel):
+    """获取专辑详情请求"""
+    albumId: str = Field(..., description="专辑ID")

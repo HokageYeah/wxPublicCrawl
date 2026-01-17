@@ -16,7 +16,8 @@ async def handle_xmly_risk_verification(
     keyword: str,
     slider_solver,
     sign_generator,
-    json_data: Dict[str, Any]
+    json_data: Dict[str, Any],
+    verify_url: str = None
 ) -> Dict[str, Any]:
     """
     处理喜马拉雅响应和风险验证逻辑
@@ -27,10 +28,11 @@ async def handle_xmly_risk_verification(
         headers: 请求头字典（会被修改）
         merged_cookies: 合并后的cookies
         params: 请求参数
-        keyword: 搜索关键词
+        keyword: 搜索关键词（用于构建验证URL，可选）
         slider_solver: 滑块验证器实例
         sign_generator: 签名生成器实例
         json_data: 请求返回的JSON数据
+        verify_url: 验证URL（可选，如果不提供则根据keyword自动构建）
 
     Returns:
         Dict[str, Any]: 处理后的JSON响应数据
@@ -67,7 +69,7 @@ async def handle_xmly_risk_verification(
     if reason == "risk invalid":
         return await _perform_slider_verification(
             client, url, headers, merged_cookies, params,
-            keyword, slider_solver, sign_generator
+            keyword, slider_solver, sign_generator, verify_url
         )
 
     # 正常返回，无需验证
@@ -82,7 +84,8 @@ async def _perform_slider_verification(
     params: Dict[str, str],
     keyword: str,
     slider_solver,
-    sign_generator
+    sign_generator,
+    verify_url: str = None
 ) -> Dict[str, Any]:
     """
     执行滑块验证和重试逻辑
@@ -93,9 +96,10 @@ async def _perform_slider_verification(
         headers: 请求头字典（会被修改）
         merged_cookies: 合并后的cookies
         params: 请求参数
-        keyword: 搜索关键词
+        keyword: 搜索关键词（用于构建验证URL，可选）
         slider_solver: 滑块验证器实例
         sign_generator: 签名生成器实例
+        verify_url: 验证URL（可选，如果不提供则根据keyword自动构建）
 
     Returns:
         Dict[str, Any]: 验证后的JSON响应数据
@@ -126,9 +130,17 @@ async def _perform_slider_verification(
 
     # 重新获取cookie并重试一次
     try:
-        # 重新生成 encoded_kw
-        encoded_kw = quote(keyword)
-        verify_url = f"https://www.ximalaya.com/so/{encoded_kw}"
+        # 如果没有提供 verify_url，则根据 keyword 构建搜索页面URL
+        if verify_url is None:
+            if keyword:
+                encoded_kw = quote(keyword)
+                verify_url = f"https://www.ximalaya.com/so/{encoded_kw}"
+            else:
+                # 如果没有keyword也没有verify_url，使用主页
+                verify_url = "https://www.ximalaya.com/"
+
+        logger.info(f"滑块验证URL: {verify_url}")
+
         cookies_dict = await slider_solver.solve_slider(verify_url)
         logger.info(f"滑块验证响应: {cookies_dict}")
         cookie = slider_solver.get_cookies_string(cookies_dict)

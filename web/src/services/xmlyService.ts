@@ -117,4 +117,14 @@ export const xmlyService = {
     const data = await api.post("/xmly/album/search", { kw });
     return data;
   },
+
+  /**
+   * 获取专辑详情
+   * @param albumId 专辑ID
+   * @returns Promise<any> 专辑详情
+   */
+  getAlbumDetail: async (albumId: string): Promise<any> => {
+    const data = await api.post("/xmly/album/detail", { albumId });
+    return data;
+  },
 };

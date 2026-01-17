@@ -178,7 +178,9 @@ def add_xmly_sign(headers: Dict[str, str], keyword_param: str = 'keyword'):
                         keyword_value = args[param_index]
             print(f'🔍 [DEBUG] 关键词: {keyword_value}')
             if keyword_value is None:
-                raise HTTPException(status_code=400, detail=f"无法找到参数 {keyword_param}")
+                # 有些接口没有关键词参数，比如获取专辑详情
+                print(f'🔍 [DEBUG] 无法找到参数 {keyword_param}，将使用默认Referer')
+                # raise HTTPException(status_code=400, detail=f"无法找到参数 {keyword_param}")
 
             # 初始化签名生成器
             try:
@@ -187,15 +189,21 @@ def add_xmly_sign(headers: Dict[str, str], keyword_param: str = 'keyword'):
                 raise HTTPException(status_code=500, detail=f"签名生成器初始化失败: {e}")
 
             # 生成 xm-sign 和 Referer
-            encoded_kw = quote(keyword_value)
-            print(f'🔍 [DEBUG] encoded_kw: {encoded_kw}')
             success, xm_sign, error_msg = sign_generator.get_xm_sign()
             if not success:
                 raise HTTPException(status_code=400, detail=f"xm-sign 生成失败: {error_msg}")
 
             # 直接修改全局 headers
             headers["xm-sign"] = xm_sign
-            headers["Referer"] = f"https://www.ximalaya.com/so/{encoded_kw}"
+
+            # 如果有关键词，添加搜索页面的Referer；否则使用默认Referer
+            if keyword_value is not None:
+                encoded_kw = quote(keyword_value)
+                print(f'🔍 [DEBUG] encoded_kw: {encoded_kw}')
+                headers["Referer"] = f"https://www.ximalaya.com/so/{encoded_kw}"
+            else:
+                # 没有关键词时，使用主页作为Referer
+                headers["Referer"] = "https://www.ximalaya.com/"
 
             # 调用原始函数
             return await func(*args, **kwargs)

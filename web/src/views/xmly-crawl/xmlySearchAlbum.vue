@@ -99,7 +99,8 @@
                 <div
                 v-for="album in results"
                 :key="album.albumId"
-                class="group relative flex flex-col gap-3 rounded-2xl p-3 bg-[#181818] border border-white/5 transition-all duration-300 hover:border-orange-500/50 hover:shadow-[0_8px_24px_-4px_rgba(249,115,22,0.15)] hover:-translate-y-1 hover:bg-[#1f1f1f]"
+                class="group relative flex flex-col gap-3 rounded-2xl p-3 bg-[#181818] cursor-pointer border border-white/5 transition-all duration-300 hover:border-orange-500/50 hover:shadow-[0_8px_24px_-4px_rgba(249,115,22,0.15)] hover:-translate-y-1 hover:bg-[#1f1f1f]"
+                @click="goToAlbumDetail(album.albumId)"
               >
                 <!-- 封面图 -->
                 <div class="aspect-square relative rounded-xl overflow-hidden bg-gray-900 shadow-inner group-hover:shadow-lg transition-all">
@@ -233,6 +234,7 @@
 
 <script setup lang="ts">
 import { ref } from "vue";
+import { useRouter } from "vue-router";
 import Toast from "@/utils/toast";
 import { xmlyService } from "@/services/xmlyService";
 import type {
@@ -243,6 +245,7 @@ import type {
 
 // -- State --
 const searchQuery = ref("");
+const router = useRouter();
 const loading = ref(false);
 const actionLoading = ref<number | null>(null);
 const hasSearched = ref(false);
@@ -290,6 +293,13 @@ const isSubscribed = (id: number) => {
 };
 
 // -- Actions --
+const goToAlbumDetail = (albumId: number) => {
+  router.push({
+    name: "xmly-crawl-album-detail",
+    query: { albumId: albumId.toString() },
+  });
+};
+
 const handleSearch = async () => {
   if (!searchQuery.value.trim()) return;
   await performSearch(1);

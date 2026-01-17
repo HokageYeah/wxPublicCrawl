@@ -14,7 +14,11 @@ from app.schemas.xmly_data import (
     SearchAlbumResponse,
     SearchAlbumResult,
     SearchAlbumPagination,
-    AlbumPriceType
+    AlbumPriceType,
+    AlbumDetailResponse,
+    AlbumDetailData,
+    AlbumPageMainInfo,
+    SubscriptInfo
 )
 from app.services.system import system_manager
 from app.decorators.request_decorator import extract_wx_credentials, add_xmly_sign
@@ -634,6 +638,165 @@ async def search_album(request: Request, keyword: str) -> SearchAlbumResponse:
                 kw=data.get('kw', keyword),
                 docs=album_results,
                 pagination=pagination
+            )
+
+    except httpx.HTTPStatusError as e:
+        logger.error(f"HTTP错误: {e}")
+        raise HTTPException(status_code=e.response.status_code, detail=str(e))
+    except httpx.RequestError as e:
+        logger.error(f"请求错误: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        logger.error(f"未知错误: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@add_xmly_sign(headers)
+@extract_wx_credentials(
+    global_xmly_cookies,
+    global_xmly_token,
+    cookie_header_name='X-XMLY-Cookies',
+    token_header_name='X-XMLY-Token',
+    state_cookie_key='xmly_cookies',
+    state_token_key='xmly_token'
+)
+async def get_album_detail(request: Request, album_id: str) -> AlbumDetailResponse:
+    """
+    根据专辑ID查询喜马拉雅专辑详情
+
+    Args:
+        request: FastAPI Request对象
+        album_id: 专辑ID
+
+    Returns:
+        AlbumDetailResponse: 专辑详情数据
+
+    Raises:
+        HTTPException: 请求失败时抛出
+    """
+    # 从 request.state 中获取装饰器处理后的 cookies 和 token
+    merged_cookies = request.state.xmly_cookies
+    final_token = request.state.xmly_token
+    
+    # 如果cookies为空，尝试从session加载
+    if not merged_cookies or len(merged_cookies) == 0:
+        session = load_xmly_session()
+        if not session:
+            raise HTTPException(status_code=401, detail="未登录，请先登录")
+        merged_cookies = session['cookies']
+        final_token = session['user_info'].get('token', '')
+        logger.info("从session中加载喜马拉雅登录信息")
+
+    # 构造专辑详情URL
+    url = "https://www.ximalaya.com/revision/album/v1/simple"
+    params = {
+        "albumId": album_id
+    }
+
+    try:
+        async with httpx.AsyncClient(verify=False, timeout=10.0) as client:
+            logger.info(f"正在查询专辑详情，albumId: {album_id}")
+
+            # 设置正确的Referer为专辑页面
+            headers["Referer"] = f"https://www.ximalaya.com/album/{album_id}"
+
+            logger.info(f"请求headers: {headers}")
+            logger.info(f"请求cookies: {merged_cookies}")
+            logger.info(f"请求params: {params}")
+
+            # 发送GET请求（headers 已经由装饰器自动添加 xm-sign，Referer已覆盖）
+            response = await client.get(url, headers=headers, cookies=merged_cookies, params=params)
+            response.raise_for_status()
+
+            # 解析JSON响应
+            json_data = response.json()
+            logger.info(f"专辑详情响应: {json_data}")
+            logger.info(f"专辑详情响应: ret={json_data.get('ret')}")
+
+            # 检查返回码
+            if json_data.get('ret') != 200:
+                error_msg = json_data.get('msg', '未知错误')
+                logger.error(f"查询专辑详情失败: {error_msg}")
+                raise HTTPException(status_code=400, detail=f"查询专辑详情失败: {error_msg}")
+
+            # 处理响应（包括风险验证）
+            json_data = await handle_xmly_risk_verification(
+                client, url, headers, merged_cookies, params,
+                album_id, slider_solver, sign_generator, json_data,
+                verify_url=f"https://www.ximalaya.com/album/{album_id}"
+            )
+
+            # 提取数据
+            data = json_data.get('data', {})
+            logger.info(f"专辑详情数据data: {data}")
+
+            # 解析专辑页面主要信息
+            album_page_main_info = data.get('albumPageMainInfo', {})
+            subscript_info_data = album_page_main_info.get('subscriptInfo', {})
+
+            subscript_info = SubscriptInfo(
+                albumSubscriptValue=subscript_info_data.get('albumSubscriptValue', -1),
+                url=subscript_info_data.get('url', '')
+            )
+
+            album_page_main_info_obj = AlbumPageMainInfo(
+                anchorUid=album_page_main_info.get('anchorUid', 0),
+                albumStatus=album_page_main_info.get('albumStatus', 0),
+                showApplyFinishBtn=album_page_main_info.get('showApplyFinishBtn', False),
+                showEditBtn=album_page_main_info.get('showEditBtn', False),
+                showTrackManagerBtn=album_page_main_info.get('showTrackManagerBtn', False),
+                showInformBtn=album_page_main_info.get('showInformBtn', False),
+                cover=album_page_main_info.get('cover', ''),
+                albumTitle=album_page_main_info.get('albumTitle', ''),
+                updateDate=album_page_main_info.get('updateDate', ''),
+                createDate=album_page_main_info.get('createDate', ''),
+                playCount=album_page_main_info.get('playCount', 0),
+                isPaid=album_page_main_info.get('isPaid', False),
+                isFinished=album_page_main_info.get('isFinished', 0),
+                isSubscribe=album_page_main_info.get('isSubscribe', False),
+                richIntro=album_page_main_info.get('richIntro', ''),
+                shortIntro=album_page_main_info.get('shortIntro', ''),
+                detailRichIntro=album_page_main_info.get('detailRichIntro', ''),
+                isPublic=album_page_main_info.get('isPublic', True),
+                hasBuy=album_page_main_info.get('hasBuy', False),
+                vipType=album_page_main_info.get('vipType', 0),
+                canCopyText=album_page_main_info.get('canCopyText', False),
+                subscribeCount=album_page_main_info.get('subscribeCount', 0),
+                sellingPoint=album_page_main_info.get('sellingPoint', {}),
+                subscriptInfo=subscript_info,
+                albumSubscript=album_page_main_info.get('albumSubscript', -1),
+                tags=album_page_main_info.get('tags', []),
+                categoryId=album_page_main_info.get('categoryId', 0),
+                ximiVipFreeType=album_page_main_info.get('ximiVipFreeType', 0),
+                joinXimi=album_page_main_info.get('joinXimi', False),
+                freeExpiredTime=album_page_main_info.get('freeExpiredTime', 0),
+                categoryTitle=album_page_main_info.get('categoryTitle', ''),
+                anchorName=album_page_main_info.get('anchorName', ''),
+                visibleStatus=album_page_main_info.get('visibleStatus', 0),
+                personalDescription=album_page_main_info.get('personalDescription', ''),
+                bigshotRecommend=album_page_main_info.get('bigshotRecommend', ''),
+                outline=album_page_main_info.get('outline', ''),
+                customTitle=album_page_main_info.get('customTitle'),
+                produceTeam=album_page_main_info.get('produceTeam', ''),
+                recommendReason=album_page_main_info.get('recommendReason', ''),
+                albumSeoTitle=album_page_main_info.get('albumSeoTitle')
+            )
+
+            # 构造专辑详情数据
+            album_detail_data = AlbumDetailData(
+                albumId=data.get('albumId', 0),
+                isSelfAlbum=data.get('isSelfAlbum', False),
+                currentUid=data.get('currentUid', 0),
+                albumPageMainInfo=album_page_main_info_obj,
+                isTemporaryVIP=data.get('isTemporaryVIP', False)
+            )
+
+            logger.info(f"专辑详情查询成功，专辑ID: {album_detail_data.albumId}, 标题: {album_detail_data.albumPageMainInfo.albumTitle}")
+
+            return AlbumDetailResponse(
+                ret=json_data.get('ret', 200),
+                msg=json_data.get('msg', '成功'),
+                data=album_detail_data
             )
 
     except httpx.HTTPStatusError as e:
