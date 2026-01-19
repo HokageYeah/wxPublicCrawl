@@ -613,6 +613,85 @@ class SystemManager:
         """
         return self.get_user_behavior(user_id, BehaviorType.UPLOAD_TO_ALIYUN)
 
+    def get_ximalaya_download_path(self) -> Optional[str]:
+        """
+        获取喜马拉雅下载路径（便捷方法）
+
+        Returns:
+            Optional[str]: 下载路径，如果不存在则返回 None
+        """
+        return self.get_user_behavior("XIMALAYA_DOWNLOAD_PATH", BehaviorType.XIMALAYA_DOWNLOAD_PATH)
+
+    def get_ximalaya_album_download_status(self, user_id: str, album_id: str) -> Optional[Dict]:
+        """
+        获取喜马拉雅专辑的下载状态
+
+        Args:
+            user_id: 用户ID
+            album_id: 专辑ID
+
+        Returns:
+            Optional[Dict]: 专辑下载状态，如果不存在则返回 None
+        """
+        try:
+            from app.utils.src_path import get_writable_dir
+            import aiofiles
+            import asyncio
+
+            # 1. 获取下载路径
+            download_path = self.get_ximalaya_download_path()
+            if not download_path:
+                return None
+
+            # 2. 获取全局专辑状态文件路径
+            status_file = os.path.join(download_path, "albums_status.json")
+            if not os.path.exists(status_file):
+                return None
+
+            # 3. 读取全局状态
+            with open(status_file, "r", encoding="utf-8") as f:
+                import json
+                global_status = json.load(f)
+
+            # 4. 查找专辑信息
+            album_key = str(album_id)
+            if album_key not in global_status:
+                return None
+
+            album_info = global_status[album_key]
+            album_name = album_info.get("album_name")
+            if not album_name:
+                return None
+
+            # 5. 读取下载进度文件
+            from app.utils.download_manager import DownloadManager
+            download_manager = DownloadManager(download_path)
+            progress = asyncio.run(download_manager.load_progress(album_name))
+
+            if not progress:
+                return {
+                    "album_id": album_id,
+                    "album_name": album_name,
+                    "total_count": 0,
+                    "success_count": 0,
+                    "failed_count": 0,
+                    "downloads": {}
+                }
+
+            # 6. 构建下载状态信息
+            return {
+                "album_id": album_id,
+                "album_name": album_name,
+                "total_count": progress.get("total_count", 0),
+                "success_count": progress.get("success_count", 0),
+                "failed_count": progress.get("failed_count", 0),
+                "downloads": progress.get("downloads", {})
+            }
+
+        except Exception as e:
+            logger.error(f"获取专辑下载状态失败: {e}")
+            return None
+
 
 # 全局单例
 system_manager = SystemManager()

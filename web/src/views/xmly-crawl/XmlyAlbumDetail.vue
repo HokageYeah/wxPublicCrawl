@@ -534,14 +534,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, nextTick, watch } from "vue";
+import { ref, onMounted, computed, nextTick, watch, onUnmounted } from "vue";
 import { useRoute } from "vue-router";
 import { xmlyService } from "@/services/xmlyService";
+import { useXmlyLoginStore } from "@/stores/xmlyLoginStore";
 import request from "@/utils/request";
 import Toast from "@/utils/toast";
 import type { AlbumDetailData, TrackInfo } from "@/types/xmly";
 
 const route = useRoute();
+const xmlyStore = useXmlyLoginStore();
 const loading = ref(false);
 const submitting = ref(false);
 const error = ref("");
@@ -558,6 +560,11 @@ const tracksLoading = ref(false);
 const currentPage = ref(1);
 const pageSize = ref(30);
 const tracksTotalCount = ref(0);
+
+// 下载状态管理（每个曲目的下载状态）
+const trackDownloadStatus = ref<Record<number, {downloading: boolean, downloaded: boolean, progress: number}>>({});
+const downloadStatusPolling = ref(false);
+const downloadStatusInterval = ref<number | null>(null);
 
 const totalPages = computed(() => Math.ceil(tracksTotalCount.value / pageSize.value));
 
@@ -630,9 +637,18 @@ const selectDownloadFolder = async () => {
 const loadDownloadPath = async () => {
   try {
     loadingDownloadPath.value = true;
+    // 从喜马拉雅登录状态中获取用户ID
+    const userId = xmlyStore.userInfo?.uid || xmlyStore.userInfo?.nick_name || "";
+    
+    if (!userId) {
+      console.warn("未获取到用户ID");
+      return;
+    }
+    
     const res = await request.get<{success: boolean, path?: string}>('/system/download-path', {
       params: {
-        user_id: 'XIMALAYA_DOWNLOAD_PATH'
+        user_id: userId,
+        behavior_type: "XIMALAYA_DOWNLOAD_PATH"
       }
     });
     if (res.success && res.path) {
@@ -649,9 +665,18 @@ const loadDownloadPath = async () => {
 const saveDownloadPath = async (path: string) => {
   if (!path) return;
   try {
+    // 从喜马拉雅登录状态中获取用户ID
+    const userId = xmlyStore.userInfo?.uid || xmlyStore.userInfo?.nick_name || "";
+    
+    if (!userId) {
+      console.warn("未获取到用户ID，无法保存下载路径");
+      return;
+    }
+    
     await request.post('/system/download-path', {
-      user_id: 'XIMALAYA_DOWNLOAD_PATH',
-      download_path: path
+      user_id: userId,
+      download_path: path,
+      behavior_type: "XIMALAYA_DOWNLOAD_PATH"
     });
     console.log('下载路径已保存:', path);
   } catch (error) {
@@ -768,13 +793,14 @@ const downloadTrack = async (track: TrackInfo) => {
   try {
     Toast.info("正在获取下载信息...");
 
-    // 获取专辑ID和专辑名称
+    // 获取专辑ID、专辑名称和用户ID
     const albumId = albumData.value?.albumId?.toString() || "";
     const albumName = albumData.value?.albumPageMainInfo?.albumTitle || "";
+    const userId = xmlyStore.userInfo?.uid || xmlyStore.userInfo?.nick_name || "";
 
     // 使用批量下载接口，即使单个曲目也走批量逻辑
     const trackIds = [track.trackId.toString()];
-    const res = await xmlyService.batchGetTracksDownloadInfo(trackIds, albumId, albumName);
+    const res = await xmlyService.batchGetTracksDownloadInfo(trackIds, albumId, albumName, userId);
     console.log("曲目下载信息:", res);
 
     // 检查返回数据格式
@@ -794,45 +820,17 @@ const downloadTrack = async (track: TrackInfo) => {
       const successCount = downloadData.success_count || 0;
       const failedCount = downloadData.failed_count || 0;
 
-      if (successCount > 0) {
-        // 遍历成功的下载项（单个曲目只有一个）
-        downloadData.success.forEach((item: any, index: number) => {
-          setTimeout(() => {
-            const trackInfo = item.data;
-            let downloadUrl = "";
+      // 显示消息
+      Toast.success(downloadData.message || "下载任务已启动");
 
-            // 从返回的数据中提取下载链接
-            if (trackInfo && trackInfo.src) {
-              downloadUrl = trackInfo.src;
-            } else if (trackInfo && trackInfo.url) {
-              downloadUrl = trackInfo.url;
-            } else if (trackInfo && trackInfo.path) {
-              downloadUrl = trackInfo.path;
-            }
-
-            if (downloadUrl) {
-              const link = document.createElement("a");
-              link.href = downloadUrl;
-              link.download = `${track.title}.m4a`;
-              link.target = "_blank";
-              document.body.appendChild(link);
-              link.click();
-              document.body.removeChild(link);
-
-              Toast.success(`开始下载: ${track.title}`);
-            } else {
-              Toast.error("未找到下载链接");
-              console.warn("下载信息:", trackInfo);
-            }
-          }, index * 500);
-        });
+      // 启动轮询下载状态
+      if (downloadData.downloading) {
+        const albumId = albumData.value?.albumId?.toString() || "";
+        await startDownloadStatusPolling(albumId, 3000); // 每3秒轮询一次
       }
 
-      if (failedCount > 0) {
-        setTimeout(() => {
-          Toast.error("获取下载信息失败");
-        }, 500);
-      }
+      // 不再触发浏览器下载，因为后台任务已经在下载
+      // 只是为了兼容性保留原代码（但不会执行）
     } else {
       Toast.error("获取下载信息失败");
     }
@@ -858,12 +856,13 @@ const downloadAllTracks = async () => {
   try {
     Toast.info(`正在获取 ${tracksList.value.length} 个曲目的下载信息...`);
 
-    // 获取专辑ID和专辑名称
+    // 获取专辑ID、专辑名称和用户ID
     const albumId = albumData.value?.albumId?.toString() || "";
     const albumName = albumData.value?.albumPageMainInfo?.albumTitle || "";
+    const userId = xmlyStore.userInfo?.uid || xmlyStore.userInfo?.nick_name || "";
 
     const trackIds = tracksList.value.map(track => track.trackId.toString());
-    const res = await xmlyService.batchGetTracksDownloadInfo(trackIds, albumId, albumName);
+    const res = await xmlyService.batchGetTracksDownloadInfo(trackIds, albumId, albumName, userId);
     console.log("批量下载信息:", res);
 
     // 检查返回数据格式
@@ -967,16 +966,17 @@ const downloadSelectedTracks = async () => {
     return;
   }
 
-  // 获取专辑ID和专辑名称
+  // 获取专辑ID、专辑名称和用户ID
   const albumId = albumData.value?.albumId?.toString() || "";
   const albumName = albumData.value?.albumPageMainInfo?.albumTitle || "";
+  const userId = xmlyStore.userInfo?.uid || xmlyStore.userInfo?.nick_name || "";
 
   const trackIds = Array.from(selectedTracks.value).map(id => id.toString());
 
   try {
     Toast.info(`正在获取 ${trackIds.length} 个选中曲目的下载信息...`);
 
-    const res = await xmlyService.batchGetTracksDownloadInfo(trackIds, albumId, albumName);
+    const res = await xmlyService.batchGetTracksDownloadInfo(trackIds, albumId, albumName, userId);
     console.log("选中曲目下载信息:", res);
 
     let downloadData: any = res;
@@ -1031,6 +1031,92 @@ const downloadSelectedTracks = async () => {
     Toast.error(err.message || "下载失败");
   }
 };
+
+// 查询专辑下载状态
+const checkAlbumDownloadStatus = async () => {
+  const albumId = albumData.value?.albumId?.toString() || "";
+  const albumName = albumData.value?.albumPageMainInfo?.albumTitle || "";
+  const userId = xmlyStore.userInfo?.uid || xmlyStore.userInfo?.nick_name || "";
+
+  if (!albumId || !userId) {
+    console.warn("无法获取专辑ID或用户ID");
+    return;
+  }
+
+  try {
+    const status = await xmlyService.getAlbumDownloadStatus(userId, albumId);
+    console.log("专辑下载状态:", status);
+
+    if (status.success && status.data) {
+      const albumInfo = status.data;
+      const downloads = albumInfo.downloads || {};
+
+      // 更新每个曲目的下载状态
+      Object.entries(downloads).forEach(([trackId, trackStatus]: [string, any]) => {
+        const statusValue = trackStatus.status;
+        const isDownloaded = statusValue === "success";
+        const isLoading = statusValue === "pending";
+
+        if (trackDownloadStatus.value[trackId]) {
+          trackDownloadStatus.value[trackId] = {
+            ...trackDownloadStatus.value[trackId],
+            downloaded: isDownloaded,
+            loading: isLoading,
+            progress: isDownloaded ? 100 : (isLoading ? 50 : 0)
+          };
+        }
+      });
+    }
+  } catch (error) {
+    console.error("查询专辑下载状态失败:", error);
+  }
+};
+
+// 开始轮询下载状态
+const startDownloadStatusPolling = async (albumId: string, intervalMs: number = 2000) => {
+  if (downloadStatusInterval.value) {
+    // 清除之前的轮询
+    clearInterval(downloadStatusInterval.value);
+  }
+
+  downloadStatusPolling.value = true;
+
+  // 立即查询一次
+  await checkAlbumDownloadStatus();
+
+  // 启动轮询
+  downloadStatusInterval.value = window.setInterval(async () => {
+    await checkAlbumDownloadStatus();
+
+    // 检查是否所有都下载完成或失败
+    const allTracks = tracksList.value;
+    const allDownloaded = allTracks.every(track => {
+      const status = trackDownloadStatus.value[track.trackId];
+      return status && (status.downloaded || (!status.loading && status.progress > 0));
+    });
+
+    if (allDownloaded && allTracks.length > 0) {
+      // 全部完成，停止轮询
+      stopDownloadStatusPolling();
+      Toast.success("所有曲目下载完成");
+    }
+  }, intervalMs);
+};
+
+// 停止轮询下载状态
+const stopDownloadStatusPolling = () => {
+  if (downloadStatusInterval.value) {
+    clearInterval(downloadStatusInterval.value);
+    downloadStatusInterval.value = null;
+  }
+  downloadStatusPolling.value = false;
+  console.log("停止轮询下载状态");
+};
+
+// 下载状态轮询的清理
+onUnmounted(() => {
+  stopDownloadStatusPolling();
+});
 
 const handleSubscribe = async () => {
   if (!albumData.value || submitting.value) return;

@@ -154,17 +154,20 @@ export const xmlyService = {
    * @param trackIds 曲目ID列表（单个曲目时传入包含一个ID的数组）
    * @param albumId 专辑ID（可选）
    * @param albumName 专辑名称（可选）
+   * @param userId 用户ID
    * @returns Promise<BatchDownloadResponseData> 批量下载信息
    */
   batchGetTracksDownloadInfo: async (
     trackIds: string[],
     albumId?: string,
-    albumName?: string
+    albumName?: string,
+    userId?: string
   ): Promise<BatchDownloadResponseData> => {
     const data = await api.post("/xmly/track/batch-download-info", {
       trackIds,
       albumId: albumId || "",
-      albumName: albumName || ""
+      albumName: albumName || "",
+      userId: userId || ""
     });
     let resData: any = data;
     if (typeof data === "string") {
@@ -172,6 +175,28 @@ export const xmlyService = {
         resData = JSON.parse(data);
       } catch (e) {
         console.error("解析批量下载信息失败:", e);
+      }
+    }
+    return resData;
+  },
+
+  /**
+   * 查询专辑下载状态
+   * @param userId 用户ID
+   * @param albumId 专辑ID
+   * @returns Promise<any> 专辑下载状态
+   */
+  getAlbumDownloadStatus: async (userId: string, albumId: string): Promise<any> => {
+    const data = await api.post("/xmly/album/download-status", {
+      userId,
+      albumId
+    });
+    let resData: any = data;
+    if (typeof data === "string") {
+      try {
+        resData = JSON.parse(data);
+      } catch (e) {
+        console.error("解析专辑下载状态失败:", e);
       }
     }
     return resData;

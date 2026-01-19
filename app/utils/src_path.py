@@ -63,7 +63,7 @@ def get_npx_bridge_file_path(filename):
     return os.path.join(temp_dir, filename)
 
 # 获取管理专辑下载路径
-def get_xmly_download_path(filename):
+def get_xmly_download_path(filename=""):
     """
     获取管理专辑下载路径
     """

@@ -166,6 +166,7 @@ jaraco.classes==3.4.0
 jaraco.context==6.0.2
 jaraco.functools==4.4.0
 setuptools==80.9.0
+colorama==0.4.8
 
 # ----------------------------------------------------
 # 时间与日期 (Date & Time)

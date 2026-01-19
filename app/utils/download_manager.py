@@ -21,8 +21,8 @@ colorama.init(autoreset=True)
 class DownloadManager:
     """管理专辑下载流程,支持断点续传和速率限制"""
 
-    def __init__(self, base_path: str = get_xmly_download_path()):
-        self.base_path = base_path
+    def __init__(self, base_path: str = ""):
+        self.base_path = base_path if base_path else get_xmly_download_path()
         self.rate_limit_errors = ["系统繁忙", "请求过于频繁", "Too Many Requests"]
         self.global_status_file = os.path.join(base_path, "albums_status.json")
 

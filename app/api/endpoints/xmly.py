@@ -15,6 +15,7 @@ from app.services.xmly import (
     get_tracks_list
 )
 from app.services.xmly_download import batch_get_tracks_download_info
+from app.services.system import system_manager
 from app.schemas.common_data import ApiResponseData
 from app.schemas.xmly_data import (
     XmlyQrcodeResponse, 
@@ -358,7 +359,7 @@ async def xmly_batch_get_tracks_download_info(request: Request, params: dict):
         trackIds: 曲目ID列表（单个曲目时传入包含一个ID的数组）
         albumId: 专辑ID
         albumName: 专辑名称
-
+        userId: 用户ID
     Returns:
         批量下载信息，包含成功和失败的统计
     """
@@ -367,7 +368,8 @@ async def xmly_batch_get_tracks_download_info(request: Request, params: dict):
         track_ids = params.get("trackIds", [])
         album_id = params.get("albumId", "")
         album_name = params.get("albumName", "")
-        result = await batch_get_tracks_download_info(request, track_ids, album_id, album_name)
+        user_id = params.get("userId", "")
+        result = await batch_get_tracks_download_info(request, track_ids, album_id, album_name, user_id)
         logger.info(f"批量曲目下载信息返回结果: {result}")
         return result
 
@@ -377,4 +379,51 @@ async def xmly_batch_get_tracks_download_info(request: Request, params: dict):
     except Exception as e:
         logger.error(f"批量获取曲目下载信息异常: {e}")
         raise HTTPException(status_code=500, detail=f"批量获取曲目下载信息失败: {str(e)}")
+
+
+# 喜马拉雅查询专辑下载状态接口
+@router.post("/album/download-status", response_model=ApiResponseData)
+async def xmly_get_album_download_status(request: Request, params: dict):
+    """
+    查询专辑的下载状态（所有音频的下载状态）
+
+    Args:
+        userId: 用户ID
+        albumId: 专辑ID
+        trackIds: 曲目ID列表（可选，用于过滤）
+
+    Returns:
+        专辑下载状态，包括每个音频的下载状态
+    """
+    try:
+        user_id = params.get("userId", "")
+        album_id = params.get("albumId", "")
+
+        if not user_id or not album_id:
+            return {
+                "success": False,
+                "message": "参数不完整",
+                "data": None
+            }
+
+        # 调用服务层获取专辑下载状态
+        status = system_manager.get_ximalaya_album_download_status(user_id, album_id)
+
+        if not status:
+            return {
+                "success": False,
+                "message": "专辑下载状态不存在",
+                "data": None
+            }
+
+        return {
+            "success": True,
+            "message": "获取专辑下载状态成功",
+            "data": status
+        }
+
+    except Exception as e:
+        logger.error(f"查询专辑下载状态失败: {e}")
+        raise HTTPException(status_code=500, detail=f"查询专辑下载状态失败: {str(e)}")
+
 
