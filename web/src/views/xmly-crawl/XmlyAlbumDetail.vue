@@ -33,7 +33,9 @@
     <!-- 下载路径设置 -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:8 pb-4">
       <div class="bg-[#141414] rounded-2xl border border-white/5 p-4">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <div
+          class="flex flex-col sm:flex-row items-start sm:items-center gap-4"
+        >
           <div class="flex items-center gap-2 text-sm">
             <span class="i-carbon-download text-orange-500 text-lg"></span>
             <span class="text-gray-300 font-medium">下载路径:</span>
@@ -51,13 +53,19 @@
                 :disabled="loadingDownloadPath"
                 class="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-orange-500/10 text-orange-400 hover:bg-orange-500 hover:text-white border border-orange-500/20 rounded-md text-xs font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
               >
-                <span v-if="loadingDownloadPath" class="i-carbon-circle-dash animate-spin"></span>
+                <span
+                  v-if="loadingDownloadPath"
+                  class="i-carbon-circle-dash animate-spin"
+                ></span>
                 <span v-else>选择文件夹</span>
               </button>
             </div>
           </div>
         </div>
-        <div v-if="!downloadPath" class="mt-3 flex items-start gap-2 text-xs text-amber-500 bg-amber-500/5 border border-amber-500/10 rounded-lg px-3 py-2">
+        <div
+          v-if="!downloadPath"
+          class="mt-3 flex items-start gap-2 text-xs text-amber-500 bg-amber-500/5 border border-amber-500/10 rounded-lg px-3 py-2"
+        >
           <span class="i-carbon-warning-filled mt-0.5 flex-shrink-0"></span>
           <p>请先设置下载路径，否则无法使用下载功能。</p>
         </div>
@@ -331,7 +339,7 @@
                     <span class="text-gray-500 text-sm">
                       共 {{ tracksTotalCount }} 首曲目
                     </span>
-                    
+
                     <!-- 批量操作按钮 -->
                     <button
                       @click="toggleAllTracks"
@@ -339,11 +347,19 @@
                       title="全选/取消全选"
                     >
                       <span
-                        :class="selectedTracks.size === tracksList.length ? 'i-carbon-checkbox-checked-filled' : 'i-carbon-checkbox'"
+                        :class="
+                          selectedTracks.size === tracksList.length
+                            ? 'i-carbon-checkbox-checked-filled'
+                            : 'i-carbon-checkbox'
+                        "
                       ></span>
-                      <span>{{ selectedTracks.size === tracksList.length ? '取消' : '全选' }}</span>
+                      <span>{{
+                        selectedTracks.size === tracksList.length
+                          ? "取消"
+                          : "全选"
+                      }}</span>
                     </button>
-                    
+
                     <button
                       @click="downloadSelectedTracks"
                       :disabled="selectedTracks.size === 0"
@@ -353,7 +369,7 @@
                       <span class="i-carbon-download"></span>
                       下载选中 ({{ selectedTracks.size }})
                     </button>
-                    
+
                     <button
                       @click="downloadAllTracks"
                       class="px-3 py-1.5 bg-[#1f1f1f] text-gray-400 hover:text-orange-400 hover:bg-[#252525] border border-white/5 rounded-lg text-sm transition-all flex items-center gap-1.5"
@@ -392,12 +408,18 @@
                     >
                       <div
                         class="w-6 h-6 flex items-center justify-center rounded border-2 cursor-pointer transition-all"
-                        :class="selectedTracks.has(track.trackId)
-                          ? 'bg-orange-500 border-orange-500 text-white'
-                          : 'bg-[#1f1f1f] border-white/10 text-gray-400 hover:border-gray-600'"
+                        :class="
+                          selectedTracks.has(track.trackId)
+                            ? 'bg-orange-500 border-orange-500 text-white'
+                            : 'bg-[#1f1f1f] border-white/10 text-gray-400 hover:border-gray-600'
+                        "
                       >
                         <span
-                          :class="selectedTracks.has(track.trackId) ? 'i-carbon-checkbox-checked-filled' : 'i-carbon-checkbox'"
+                          :class="
+                            selectedTracks.has(track.trackId)
+                              ? 'i-carbon-checkbox-checked-filled'
+                              : 'i-carbon-checkbox'
+                          "
                           class="text-lg"
                         ></span>
                       </div>
@@ -419,18 +441,22 @@
                         {{ track.title }}
                       </h4>
                       <div class="flex items-center gap-3 mt-1">
-                        <span class="text-gray-500 text-sm flex items-center gap-1">
+                        <span
+                          class="text-gray-500 text-sm flex items-center gap-1"
+                        >
                           <span class="i-carbon-time"></span>
                           {{ formatDuration(track.duration) }}
                         </span>
-                        <span class="text-gray-600 text-sm flex items-center gap-1">
+                        <span
+                          class="text-gray-600 text-sm flex items-center gap-1"
+                        >
                           <span class="i-carbon-headphones"></span>
                           {{ formatPlayCount(track.playCount) }}
                         </span>
                         <span
                           v-if="track.isPaid"
                           class="text-orange-500 text-xs px-2 py-0.5 bg-orange-500/10 border border-orange-500/20 rounded"
-                        >VIP</span
+                          >VIP</span
                         >
                       </div>
                     </div>
@@ -460,7 +486,9 @@
                   v-if="tracksList.length === 0 && !tracksLoading"
                   class="flex flex-col items-center justify-center py-16 text-center"
                 >
-                  <span class="i-carbon-music text-5xl text-gray-600 mb-4"></span>
+                  <span
+                    class="i-carbon-music text-5xl text-gray-600 mb-4"
+                  ></span>
                   <p class="text-gray-500">暂无曲目数据</p>
                 </div>
               </div>
@@ -485,12 +513,13 @@
                     :key="page"
                     @click="goToPage(page)"
                     class="min-w-[40px] h-10 rounded-lg transition-all flex items-center justify-center"
-                    :class="currentPage === page
-                      ? 'bg-orange-500 text-white font-medium'
-                      : 'bg-[#1f1f1f] text-gray-400 hover:text-white hover:bg-[#2a2a2a] border border-white/10'
+                    :class="
+                      currentPage === page
+                        ? 'bg-orange-500 text-white font-medium'
+                        : 'bg-[#1f1f1f] text-gray-400 hover:text-white hover:bg-[#2a2a2a] border border-white/10'
                     "
                   >
-                    {{ page === -1 ? '...' : page }}
+                    {{ page === -1 ? "..." : page }}
                   </button>
                 </div>
 
@@ -562,11 +591,18 @@ const pageSize = ref(30);
 const tracksTotalCount = ref(0);
 
 // 下载状态管理（每个曲目的下载状态）
-const trackDownloadStatus = ref<Record<number, {downloading: boolean, downloaded: boolean, progress: number}>>({});
+const trackDownloadStatus = ref<
+  Record<
+    number,
+    { downloading: boolean; downloaded: boolean; progress: number }
+  >
+>({});
 const downloadStatusPolling = ref(false);
 const downloadStatusInterval = ref<number | null>(null);
 
-const totalPages = computed(() => Math.ceil(tracksTotalCount.value / pageSize.value));
+const totalPages = computed(() =>
+  Math.ceil(tracksTotalCount.value / pageSize.value),
+);
 
 // 显示的页码（智能分页）
 const displayedPages = computed(() => {
@@ -614,21 +650,21 @@ const formatPlayCount = (count: number) => {
 const formatDuration = (seconds: number) => {
   const minutes = Math.floor(seconds / 60);
   const secs = seconds % 60;
-  return `${minutes}:${secs.toString().padStart(2, '0')}`;
+  return `${minutes}:${secs.toString().padStart(2, "0")}`;
 };
 
 // 下载路径相关函数
 const selectDownloadFolder = async () => {
   try {
     loadingDownloadPath.value = true;
-    const res = await request.get<{path: string}>('/system/select-folder');
+    const res = await request.get<{ path: string }>("/system/select-folder");
     if (res && res.path) {
       downloadPath.value = res.path;
-      Toast.success('路径已选择');
+      Toast.success("路径已选择");
     }
   } catch (error) {
-    console.error('选择文件夹失败:', error);
-    Toast.error('选择文件夹失败');
+    console.error("选择文件夹失败:", error);
+    Toast.error("选择文件夹失败");
   } finally {
     loadingDownloadPath.value = false;
   }
@@ -638,25 +674,29 @@ const loadDownloadPath = async () => {
   try {
     loadingDownloadPath.value = true;
     // 从喜马拉雅登录状态中获取用户ID
-    const userId = xmlyStore.userInfo?.uid || xmlyStore.userInfo?.nick_name || "";
-    
+    const userId =
+      xmlyStore.userInfo?.uid || xmlyStore.userInfo?.nick_name || "";
+
     if (!userId) {
       console.warn("未获取到用户ID");
       return;
     }
-    
-    const res = await request.get<{success: boolean, path?: string}>('/system/download-path', {
-      params: {
-        user_id: userId,
-        behavior_type: "XIMALAYA_DOWNLOAD_PATH"
-      }
-    });
+
+    const res = await request.get<{ success: boolean; path?: string }>(
+      "/system/download-path",
+      {
+        params: {
+          user_id: userId,
+          behavior_type: "XIMALAYA_DOWNLOAD_PATH",
+        },
+      },
+    );
     if (res.success && res.path) {
       downloadPath.value = res.path;
-      console.log('从数据库加载下载路径:', res.path);
+      console.log("从数据库加载下载路径:", res.path);
     }
   } catch (error) {
-    console.error('加载下载路径失败:', error);
+    console.error("加载下载路径失败:", error);
   } finally {
     loadingDownloadPath.value = false;
   }
@@ -666,21 +706,22 @@ const saveDownloadPath = async (path: string) => {
   if (!path) return;
   try {
     // 从喜马拉雅登录状态中获取用户ID
-    const userId = xmlyStore.userInfo?.uid || xmlyStore.userInfo?.nick_name || "";
-    
+    const userId =
+      xmlyStore.userInfo?.uid || xmlyStore.userInfo?.nick_name || "";
+
     if (!userId) {
       console.warn("未获取到用户ID，无法保存下载路径");
       return;
     }
-    
-    await request.post('/system/download-path', {
+
+    await request.post("/system/download-path", {
       user_id: userId,
       download_path: path,
-      behavior_type: "XIMALAYA_DOWNLOAD_PATH"
+      behavior_type: "XIMALAYA_DOWNLOAD_PATH",
     });
-    console.log('下载路径已保存:', path);
+    console.log("下载路径已保存:", path);
   } catch (error) {
-    console.error('保存下载路径失败:', error);
+    console.error("保存下载路径失败:", error);
   }
 };
 
@@ -786,7 +827,7 @@ const goToPage = (page: number) => {
 const downloadTrack = async (track: TrackInfo) => {
   // 检查下载路径
   if (!downloadPath.value) {
-    Toast.error('请先设置下载路径');
+    Toast.error("请先设置下载路径");
     return;
   }
 
@@ -796,11 +837,17 @@ const downloadTrack = async (track: TrackInfo) => {
     // 获取专辑ID、专辑名称和用户ID
     const albumId = albumData.value?.albumId?.toString() || "";
     const albumName = albumData.value?.albumPageMainInfo?.albumTitle || "";
-    const userId = xmlyStore.userInfo?.uid || xmlyStore.userInfo?.nick_name || "";
+    const userId =
+      xmlyStore.userInfo?.uid || xmlyStore.userInfo?.nick_name || "";
 
     // 使用批量下载接口，即使单个曲目也走批量逻辑
     const trackIds = [track.trackId.toString()];
-    const res = await xmlyService.batchGetTracksDownloadInfo(trackIds, albumId, albumName, userId);
+    const res = await xmlyService.batchGetTracksDownloadInfo(
+      trackIds,
+      albumId,
+      albumName,
+      userId,
+    );
     console.log("曲目下载信息:", res);
 
     // 检查返回数据格式
@@ -816,7 +863,12 @@ const downloadTrack = async (track: TrackInfo) => {
     }
 
     // 处理批量下载结果
-    if (downloadData && downloadData.success && Array.isArray(downloadData.success) && downloadData.success.length > 0) {
+    if (
+      downloadData &&
+      downloadData.success &&
+      Array.isArray(downloadData.success) &&
+      downloadData.success.length > 0
+    ) {
       const successCount = downloadData.success_count || 0;
       const failedCount = downloadData.failed_count || 0;
 
@@ -844,7 +896,7 @@ const downloadTrack = async (track: TrackInfo) => {
 const downloadAllTracks = async () => {
   // 检查下载路径
   if (!downloadPath.value) {
-    Toast.error('请先设置下载路径');
+    Toast.error("请先设置下载路径");
     return;
   }
 
@@ -859,10 +911,16 @@ const downloadAllTracks = async () => {
     // 获取专辑ID、专辑名称和用户ID
     const albumId = albumData.value?.albumId?.toString() || "";
     const albumName = albumData.value?.albumPageMainInfo?.albumTitle || "";
-    const userId = xmlyStore.userInfo?.uid || xmlyStore.userInfo?.nick_name || "";
+    const userId =
+      xmlyStore.userInfo?.uid || xmlyStore.userInfo?.nick_name || "";
 
-    const trackIds = tracksList.value.map(track => track.trackId.toString());
-    const res = await xmlyService.batchGetTracksDownloadInfo(trackIds, albumId, albumName, userId);
+    const trackIds = tracksList.value.map((track) => track.trackId.toString());
+    const res = await xmlyService.batchGetTracksDownloadInfo(
+      trackIds,
+      albumId,
+      albumName,
+      userId,
+    );
     console.log("批量下载信息:", res);
 
     // 检查返回数据格式
@@ -905,7 +963,9 @@ const downloadAllTracks = async () => {
                 const link = document.createElement("a");
                 link.href = downloadUrl;
                 // 从曲目列表中查找标题
-                const track = tracksList.value.find(t => t.trackId.toString() === item.trackId.toString());
+                const track = tracksList.value.find(
+                  (t) => t.trackId.toString() === item.trackId.toString(),
+                );
                 const title = track ? track.title : `曲目_${item.trackId}`;
                 link.download = `${title}.m4a`;
                 link.target = "_blank";
@@ -919,9 +979,12 @@ const downloadAllTracks = async () => {
       }
 
       if (failedCount > 0) {
-        setTimeout(() => {
-          Toast.error(`${failedCount} 个曲目下载信息获取失败`);
-        }, successCount * 500 + 1000);
+        setTimeout(
+          () => {
+            Toast.error(`${failedCount} 个曲目下载信息获取失败`);
+          },
+          successCount * 500 + 1000,
+        );
       }
     } else {
       Toast.error("批量获取下载信息失败");
@@ -949,7 +1012,9 @@ const toggleAllTracks = () => {
     selectedTracks.value.clear();
   } else {
     // 全部选中
-    tracksList.value.forEach(track => selectedTracks.value.add(track.trackId));
+    tracksList.value.forEach((track) =>
+      selectedTracks.value.add(track.trackId),
+    );
   }
 };
 
@@ -957,7 +1022,7 @@ const toggleAllTracks = () => {
 const downloadSelectedTracks = async () => {
   // 检查下载路径
   if (!downloadPath.value) {
-    Toast.error('请先设置下载路径');
+    Toast.error("请先设置下载路径");
     return;
   }
 
@@ -971,12 +1036,17 @@ const downloadSelectedTracks = async () => {
   const albumName = albumData.value?.albumPageMainInfo?.albumTitle || "";
   const userId = xmlyStore.userInfo?.uid || xmlyStore.userInfo?.nick_name || "";
 
-  const trackIds = Array.from(selectedTracks.value).map(id => id.toString());
+  const trackIds = Array.from(selectedTracks.value).map((id) => id.toString());
 
   try {
     Toast.info(`正在获取 ${trackIds.length} 个选中曲目的下载信息...`);
 
-    const res = await xmlyService.batchGetTracksDownloadInfo(trackIds, albumId, albumName, userId);
+    const res = await xmlyService.batchGetTracksDownloadInfo(
+      trackIds,
+      albumId,
+      albumName,
+      userId,
+    );
     console.log("选中曲目下载信息:", res);
 
     let downloadData: any = res;
@@ -990,7 +1060,11 @@ const downloadSelectedTracks = async () => {
       }
     }
 
-    if (downloadData && downloadData.success && Array.isArray(downloadData.success)) {
+    if (
+      downloadData &&
+      downloadData.success &&
+      Array.isArray(downloadData.success)
+    ) {
       const successCount = downloadData.success_count || 0;
       Toast.success(`开始下载 ${successCount} 个选中曲目`);
 
@@ -1010,7 +1084,9 @@ const downloadSelectedTracks = async () => {
           if (downloadUrl) {
             const link = document.createElement("a");
             link.href = downloadUrl;
-            const track = tracksList.value.find(t => t.trackId.toString() === item.trackId.toString());
+            const track = tracksList.value.find(
+              (t) => t.trackId.toString() === item.trackId.toString(),
+            );
             const title = track ? track.title : `曲目_${item.trackId}`;
             link.download = `${title}.m4a`;
             link.target = "_blank";
@@ -1037,7 +1113,7 @@ const checkAlbumDownloadStatus = async () => {
   const albumId = albumData.value?.albumId?.toString() || "";
   const albumName = albumData.value?.albumPageMainInfo?.albumTitle || "";
   const userId = xmlyStore.userInfo?.uid || xmlyStore.userInfo?.nick_name || "";
-
+  debugger;
   if (!albumId || !userId) {
     console.warn("无法获取专辑ID或用户ID");
     return;
@@ -1052,20 +1128,22 @@ const checkAlbumDownloadStatus = async () => {
       const downloads = albumInfo.downloads || {};
 
       // 更新每个曲目的下载状态
-      Object.entries(downloads).forEach(([trackId, trackStatus]: [string, any]) => {
-        const statusValue = trackStatus.status;
-        const isDownloaded = statusValue === "success";
-        const isLoading = statusValue === "pending";
+      Object.entries(downloads).forEach(
+        ([trackId, trackStatus]: [string, any]) => {
+          const statusValue = trackStatus.status;
+          const isDownloaded = statusValue === "success";
+          const isLoading = statusValue === "pending";
 
-        if (trackDownloadStatus.value[trackId]) {
-          trackDownloadStatus.value[trackId] = {
-            ...trackDownloadStatus.value[trackId],
-            downloaded: isDownloaded,
-            loading: isLoading,
-            progress: isDownloaded ? 100 : (isLoading ? 50 : 0)
-          };
-        }
-      });
+          if (trackDownloadStatus.value[trackId]) {
+            trackDownloadStatus.value[trackId] = {
+              ...trackDownloadStatus.value[trackId],
+              downloaded: isDownloaded,
+              loading: isLoading,
+              progress: isDownloaded ? 100 : isLoading ? 50 : 0,
+            };
+          }
+        },
+      );
     }
   } catch (error) {
     console.error("查询专辑下载状态失败:", error);
@@ -1073,7 +1151,10 @@ const checkAlbumDownloadStatus = async () => {
 };
 
 // 开始轮询下载状态
-const startDownloadStatusPolling = async (albumId: string, intervalMs: number = 2000) => {
+const startDownloadStatusPolling = async (
+  albumId: string,
+  intervalMs: number = 2000,
+) => {
   if (downloadStatusInterval.value) {
     // 清除之前的轮询
     clearInterval(downloadStatusInterval.value);
@@ -1090,9 +1171,12 @@ const startDownloadStatusPolling = async (albumId: string, intervalMs: number = 
 
     // 检查是否所有都下载完成或失败
     const allTracks = tracksList.value;
-    const allDownloaded = allTracks.every(track => {
+    const allDownloaded = allTracks.every((track) => {
       const status = trackDownloadStatus.value[track.trackId];
-      return status && (status.downloaded || (!status.loading && status.progress > 0));
+      return (
+        status &&
+        (status.downloaded || (!status.loading && status.progress > 0))
+      );
     });
 
     if (allDownloaded && allTracks.length > 0) {

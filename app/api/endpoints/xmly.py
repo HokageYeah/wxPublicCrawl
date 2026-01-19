@@ -407,8 +407,8 @@ async def xmly_get_album_download_status(request: Request, params: dict):
             }
 
         # 调用服务层获取专辑下载状态
-        status = system_manager.get_ximalaya_album_download_status(user_id, album_id)
-
+        status = await  system_manager.get_ximalaya_album_download_status(user_id, album_id)
+        
         if not status:
             return {
                 "success": False,

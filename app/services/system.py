@@ -9,6 +9,7 @@ from app.models.search_tag import SearchTag
 from app.models.user_behavior import UserBehavior, BehaviorType
 from app.db.sqlalchemy_db import database
 from sqlalchemy.exc import IntegrityError
+from loguru import logger
 
 class SystemManager:
     """管理用户会话的单例类"""
@@ -613,16 +614,7 @@ class SystemManager:
         """
         return self.get_user_behavior(user_id, BehaviorType.UPLOAD_TO_ALIYUN)
 
-    def get_ximalaya_download_path(self) -> Optional[str]:
-        """
-        获取喜马拉雅下载路径（便捷方法）
-
-        Returns:
-            Optional[str]: 下载路径，如果不存在则返回 None
-        """
-        return self.get_user_behavior("XIMALAYA_DOWNLOAD_PATH", BehaviorType.XIMALAYA_DOWNLOAD_PATH)
-
-    def get_ximalaya_album_download_status(self, user_id: str, album_id: str) -> Optional[Dict]:
+    async  def get_ximalaya_album_download_status(self, user_id: str, album_id: str) -> Optional[Dict]:
         """
         获取喜马拉雅专辑的下载状态
 
@@ -639,20 +631,23 @@ class SystemManager:
             import asyncio
 
             # 1. 获取下载路径
-            download_path = self.get_ximalaya_download_path()
+            download_path = self.get_download_path(user_id, BehaviorType.XIMALAYA_DOWNLOAD_PATH)
+            print(f'专辑的下载路径是 {download_path}')
             if not download_path:
                 return None
 
             # 2. 获取全局专辑状态文件路径
             status_file = os.path.join(download_path, "albums_status.json")
+            print(f'专辑的下载路径是 status_file {status_file}')
             if not os.path.exists(status_file):
                 return None
 
-            # 3. 读取全局状态
-            with open(status_file, "r", encoding="utf-8") as f:
-                import json
-                global_status = json.load(f)
+            # 3. 异步读取全局状态
+            async with aiofiles.open(status_file, "r", encoding="utf-8") as f:
+                content = await f.read()
+                global_status = json.loads(content)
 
+            print(f'专辑的下载路径是 global_status {global_status}')
             # 4. 查找专辑信息
             album_key = str(album_id)
             if album_key not in global_status:
@@ -666,7 +661,7 @@ class SystemManager:
             # 5. 读取下载进度文件
             from app.utils.download_manager import DownloadManager
             download_manager = DownloadManager(download_path)
-            progress = asyncio.run(download_manager.load_progress(album_name))
+            progress = await download_manager.load_progress(album_name)
 
             if not progress:
                 return {
