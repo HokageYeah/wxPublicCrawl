@@ -62,6 +62,13 @@ def get_npx_bridge_file_path(filename):
     temp_dir = get_writable_dir('npx_bridge')
     return os.path.join(temp_dir, filename)
 
+# 获取管理专辑下载路径
+def get_xmly_download_path(filename):
+    """
+    获取管理专辑下载路径
+    """
+    download_dir = get_writable_dir('xmly_download')
+    return os.path.join(download_dir, filename)
 
 def get_resource_path(relative_path):
     """

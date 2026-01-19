@@ -18,7 +18,10 @@ from app.schemas.xmly_data import (
     AlbumDetailResponse,
     AlbumDetailData,
     AlbumPageMainInfo,
-    SubscriptInfo
+    SubscriptInfo,
+    TracksListResponse,
+    TracksListData,
+    TrackInfo
 )
 from app.services.system import system_manager
 from app.decorators.request_decorator import extract_wx_credentials, add_xmly_sign
@@ -797,6 +800,146 @@ async def get_album_detail(request: Request, album_id: str) -> AlbumDetailRespon
                 ret=json_data.get('ret', 200),
                 msg=json_data.get('msg', '成功'),
                 data=album_detail_data
+            )
+
+    except httpx.HTTPStatusError as e:
+        logger.error(f"HTTP错误: {e}")
+        raise HTTPException(status_code=e.response.status_code, detail=str(e))
+    except httpx.RequestError as e:
+        logger.error(f"请求错误: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        logger.error(f"未知错误: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@add_xmly_sign(headers)
+@extract_wx_credentials(
+    global_xmly_cookies,
+    global_xmly_token,
+    cookie_header_name='X-XMLY-Cookies',
+    token_header_name='X-XMLY-Token',
+    state_cookie_key='xmly_cookies',
+    state_token_key='xmly_token'
+)
+async def get_tracks_list(request: Request, album_id: str, page_num: int = 1, page_size: int = 30) -> TracksListResponse:
+    """
+    根据专辑ID获取曲目列表（分页）
+
+    Args:
+        request: FastAPI Request对象
+        album_id: 专辑ID
+        page_num: 页码，默认1
+        page_size: 每页数量，默认30
+
+    Returns:
+        TracksListResponse: 曲目列表数据
+
+    Raises:
+        HTTPException: 请求失败时抛出
+    """
+    # 从 request.state 中获取装饰器处理后的 cookies 和 token
+    merged_cookies = request.state.xmly_cookies
+    final_token = request.state.xmly_token
+    
+    # 如果cookies为空，尝试从session加载
+    if not merged_cookies or len(merged_cookies) == 0:
+        session = load_xmly_session()
+        if not session:
+            raise HTTPException(status_code=401, detail="未登录，请先登录")
+        merged_cookies = session['cookies']
+        final_token = session['user_info'].get('token', '')
+        logger.info("从session中加载喜马拉雅登录信息")
+
+    # 构造曲目列表URL
+    url = "https://www.ximalaya.com/revision/album/v1/getTracksList"
+    params = {
+        "albumId": album_id,
+        "pageNum": page_num,
+        "pageSize": page_size
+    }
+
+    try:
+        async with httpx.AsyncClient(verify=False, timeout=10.0) as client:
+            logger.info(f"正在获取曲目列表，albumId: {album_id}, pageNum: {page_num}, pageSize: {page_size}")
+
+            # 设置正确的Referer为专辑页面
+            headers["Referer"] = f"https://www.ximalaya.com/album/{album_id}"
+
+            logger.info(f"get_tracks_list---请求headers: {headers}")
+            logger.info(f"get_tracks_list---请求cookies: {merged_cookies}")
+            logger.info(f"get_tracks_list---请求params: {params}")
+
+            # 发送GET请求（headers 已经由装饰器自动添加 xm-sign，Referer已覆盖）
+            response = await client.get(url, headers=headers, cookies=merged_cookies, params=params)
+            response.raise_for_status()
+
+            # 解析JSON响应
+            json_data = response.json()
+            logger.info(f"曲目列表响应: ret={json_data.get('ret')}")
+
+            # 处理响应（包括风险验证）
+            json_data = await handle_xmly_risk_verification(
+                client, url, headers, merged_cookies, params,
+                album_id, slider_solver, sign_generator, json_data,
+                verify_url=f"https://www.ximalaya.com/album/{album_id}"
+            )
+
+
+            # 提取数据
+            data = json_data.get('data', {})
+
+            # 解析曲目列表
+            tracks_data = data.get('tracks', [])
+            tracks_list = []
+            for track in tracks_data:
+                tracks_list.append(TrackInfo(
+                    index=track.get('index', 0),
+                    trackId=track.get('trackId', 0),
+                    isPaid=track.get('isPaid', False),
+                    tag=track.get('tag', 0),
+                    title=track.get('title', ''),
+                    playCount=track.get('playCount', 0),
+                    showLikeBtn=track.get('showLikeBtn', True),
+                    isLike=track.get('isLike', False),
+                    showShareBtn=track.get('showShareBtn', True),
+                    showCommentBtn=track.get('showCommentBtn', True),
+                    showForwardBtn=track.get('showForwardBtn', True),
+                    createDateFormat=track.get('createDateFormat', ''),
+                    url=track.get('url', ''),
+                    duration=track.get('duration', 0),
+                    isVideo=track.get('isVideo', False),
+                    isVipFirst=track.get('isVipFirst', False),
+                    breakSecond=track.get('breakSecond', 0),
+                    length=track.get('length', 0),
+                    albumId=track.get('albumId', 0),
+                    albumTitle=track.get('albumTitle', ''),
+                    albumCoverPath=track.get('albumCoverPath', ''),
+                    anchorId=track.get('anchorId', 0),
+                    anchorName=track.get('anchorName', ''),
+                    ximiVipFreeType=track.get('ximiVipFreeType', 0),
+                    joinXimi=track.get('joinXimi', False),
+                    videoCover=track.get('videoCover')
+                ))
+
+            # 构造曲目列表数据
+            tracks_list_data = TracksListData(
+                currentUid=data.get('currentUid', 0),
+                albumId=data.get('albumId', 0),
+                trackTotalCount=data.get('trackTotalCount', 0),
+                sort=data.get('sort', 0),
+                tracks=tracks_list,
+                pageNum=data.get('pageNum', page_num),
+                pageSize=data.get('pageSize', page_size),
+                superior=data.get('superior', []),
+                lastPlayTrackId=data.get('lastPlayTrackId')
+            )
+
+            logger.info(f"曲目列表获取成功，专辑ID: {tracks_list_data.albumId}, 总数: {tracks_list_data.trackTotalCount}, 当前页: {tracks_list_data.pageNum}")
+
+            return TracksListResponse(
+                ret=json_data.get('ret', 200),
+                data=tracks_list_data
             )
 
     except httpx.HTTPStatusError as e:

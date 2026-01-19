@@ -11,8 +11,10 @@ from app.services.xmly import (
     subscribe_album,
     unsubscribe_album,
     search_album,
-    get_album_detail
+    get_album_detail,
+    get_tracks_list
 )
+from app.services.xmly_download import batch_get_tracks_download_info
 from app.schemas.common_data import ApiResponseData
 from app.schemas.xmly_data import (
     XmlyQrcodeResponse, 
@@ -23,7 +25,8 @@ from app.schemas.xmly_data import (
     SubscribeAlbumResponse,
     SearchAlbumRequest,
     SearchAlbumResponse,
-    GetAlbumDetailRequest
+    GetAlbumDetailRequest,
+    GetTracksListRequest
 )
 
 router = APIRouter()
@@ -313,4 +316,65 @@ async def xmly_get_album_detail(request: Request, params: GetAlbumDetailRequest)
     except Exception as e:
         logger.error(f"查询专辑详情异常: {e}")
         raise HTTPException(status_code=500, detail=f"查询专辑详情失败: {str(e)}")
+
+
+# 喜马拉雅曲目列表查询接口
+@router.post("/album/tracks", response_model=ApiResponseData)
+async def xmly_get_tracks_list(request: Request, params: GetTracksListRequest):
+    """
+    根据专辑ID获取曲目列表（分页）
+
+    Args:
+        albumId: 专辑ID
+        pageNum: 页码，默认1
+        pageSize: 每页数量，默认30
+
+    Returns:
+        曲目列表和分页信息
+    """
+    try:
+        # 调用服务层函数，装饰器会自动处理cookie和token
+        result = await get_tracks_list(request, params.albumId, params.pageNum, params.pageSize)
+        # 将result转换为json
+        result_json = result.model_dump_json()
+        logger.info(f"曲目列表返回结果: {result_json}")
+        return result_json
+
+    except HTTPException as e:
+        logger.error(f"查询曲目列表失败: {e.detail}")
+        raise e
+    except Exception as e:
+        logger.error(f"查询曲目列表异常: {e}")
+        raise HTTPException(status_code=500, detail=f"查询曲目列表失败: {str(e)}")
+
+
+# 喜马拉雅批量曲目下载信息接口（也支持单个曲目）
+@router.post("/track/batch-download-info", response_model=ApiResponseData)
+async def xmly_batch_get_tracks_download_info(request: Request, params: dict):
+    """
+    批量获取多个曲目的下载信息（也支持单个曲目）
+
+    Args:
+        trackIds: 曲目ID列表（单个曲目时传入包含一个ID的数组）
+        albumId: 专辑ID
+        albumName: 专辑名称
+
+    Returns:
+        批量下载信息，包含成功和失败的统计
+    """
+    try:
+        # 调用服务层函数，装饰器会自动处理cookie和token
+        track_ids = params.get("trackIds", [])
+        album_id = params.get("albumId", "")
+        album_name = params.get("albumName", "")
+        result = await batch_get_tracks_download_info(request, track_ids, album_id, album_name)
+        logger.info(f"批量曲目下载信息返回结果: {result}")
+        return result
+
+    except HTTPException as e:
+        logger.error(f"批量获取曲目下载信息失败: {e.detail}")
+        raise e
+    except Exception as e:
+        logger.error(f"批量获取曲目下载信息异常: {e}")
+        raise HTTPException(status_code=500, detail=f"批量获取曲目下载信息失败: {str(e)}")
 

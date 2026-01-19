@@ -5,7 +5,10 @@ from typing import Dict, Any
 from fastapi import HTTPException
 from httpx import AsyncClient
 from loguru import logger
-
+import binascii
+import base64
+from Crypto.Cipher import AES
+import re
 
 async def handle_xmly_risk_verification(
     client: AsyncClient,
@@ -64,9 +67,16 @@ async def handle_xmly_risk_verification(
         logger.error(f"请求失败: {error_msg}")
         raise HTTPException(status_code=400, detail=error_msg)
 
-    # 检查是否需要风险验证
+    # 检查是否需要风险验证 
     reason = json_data.get("data", {}).get("reason")
-    if reason == "risk invalid":
+    risk_level = json_data.get('data', {}).get('riskLevel', 0)
+    tracks =  json_data.get('data', {}).get('tracks', None)
+    print(f'🔍 [DEBUG] tracks: {tracks}')
+    print(f'🔍 [DEBUG] len(tracks): {json_data.get('data', {}).get('tracks', None)}')
+    print(f'🔍 [DEBUG] risk_level: {risk_level}')
+    print(f'🔍 [DEBUG] reason: {reason}')
+     # riskLevel=5 或 tracks为空表示需要滑块验证
+    if reason == "risk invalid" or risk_level == 5 or (tracks is not None and len(tracks) == 0):
         return await _perform_slider_verification(
             client, url, headers, merged_cookies, params,
             keyword, slider_solver, sign_generator, verify_url
@@ -141,13 +151,20 @@ async def _perform_slider_verification(
 
         logger.info(f"滑块验证URL: {verify_url}")
 
-        cookies_dict = await slider_solver.solve_slider(verify_url)
-        logger.info(f"滑块验证响应: {cookies_dict}")
-        cookie = slider_solver.get_cookies_string(cookies_dict)
-        logger.info(f"滑块验证cookie: {cookie}")
-        headers["Cookie"] = cookie
-        headers["xm-sign"] = xm_sign
-        logger.info(f"滑块验证sign: {xm_sign}")
+        try:
+            cookies_dict = await slider_solver.solve_slider(verify_url)
+            logger.info(f"滑块验证响应: {cookies_dict}")
+            cookie = slider_solver.get_cookies_string(cookies_dict)
+            logger.info(f"滑块验证cookie: {cookie}")
+            headers["Cookie"] = cookie
+            headers["Xm-Sign"] = xm_sign
+            logger.info(f"滑块验证sign: {xm_sign}")
+        except Exception as e:
+            logger.error(f"❌ 滑块验证失败: {str(e)}")
+            # 即使滑块验证失败，也尝试继续使用原始cookies请求
+            logger.warning("⚠️ 使用原始cookies重试...")
+            headers["Xm-Sign"] = xm_sign
+            logger.info(f"重试sign: {xm_sign}")
 
         resp = await client.get(url, headers=headers, cookies=merged_cookies, params=params)
         resp.raise_for_status()
@@ -168,3 +185,13 @@ async def _perform_slider_verification(
         logger.error(f"❌ 重新验证失败: {e}")
         raise HTTPException(status_code=500, detail="滑块验证失败")
 
+
+
+# 解密vip声音url
+def decrypt_url(ciphertext):
+    key = binascii.unhexlify("aaad3e4fd540b0f79dca95606e72bf93")
+    ciphertext = base64.urlsafe_b64decode(ciphertext + '=' * (4 - len(ciphertext) % 4))
+    cipher = AES.new(key, AES.MODE_ECB)
+    plaintext = cipher.decrypt(ciphertext)
+    plaintext = re.sub(r"[^\x20-\x7E]", "", plaintext.decode("utf-8"))
+    return plaintext

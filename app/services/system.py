@@ -538,7 +538,7 @@ class SystemManager:
     # 便捷方法：常用用户行为操作
     # ------------------------------------------------------------
 
-    def set_download_path(self, user_id: str, download_path: str) -> dict:
+    def set_download_path(self, user_id: str, download_path: str, behavior_type: str = BehaviorType.SAVE_DOWNLOAD_PATH) -> dict:
         """
         设置下载路径（便捷方法）
 
@@ -549,9 +549,9 @@ class SystemManager:
         Returns:
             dict: 操作结果
         """
-        return self.set_user_behavior(user_id, BehaviorType.SAVE_DOWNLOAD_PATH, download_path)
+        return self.set_user_behavior(user_id, behavior_type, download_path)
 
-    def get_download_path(self, user_id: str) -> Optional[str]:
+    def get_download_path(self, user_id: str, behavior_type: str = BehaviorType.SAVE_DOWNLOAD_PATH) -> Optional[str]:
         """
         获取下载路径（便捷方法）
 
@@ -561,7 +561,7 @@ class SystemManager:
         Returns:
             Optional[str]: 下载路径，如果不存在则返回 None
         """
-        return self.get_user_behavior(user_id, BehaviorType.SAVE_DOWNLOAD_PATH)
+        return self.get_user_behavior(user_id, behavior_type)
 
     def set_save_to_local(self, user_id: str, save_to_local: str) -> dict:
         """

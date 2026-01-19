@@ -194,7 +194,7 @@ def add_xmly_sign(headers: Dict[str, str], keyword_param: str = 'keyword'):
                 raise HTTPException(status_code=400, detail=f"xm-sign 生成失败: {error_msg}")
 
             # 直接修改全局 headers
-            headers["xm-sign"] = xm_sign
+            headers["Xm-Sign"] = xm_sign
 
             # 如果有关键词，添加搜索页面的Referer；否则使用默认Referer
             if keyword_value is not None:

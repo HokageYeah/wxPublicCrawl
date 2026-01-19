@@ -5,6 +5,7 @@ import type {
   CheckQrcodeStatusResponse,
   SessionResponse,
   XmlyUserInfo,
+  BatchDownloadResponseData,
 } from "@/types/xmly";
 
 // 基础URL
@@ -65,7 +66,7 @@ export const xmlyService = {
    * @returns Promise<Blob> 二进制图片数据
    */
   getQrcodeImage: async (): Promise<Blob> => {
-    const qrcodeResponse = await this.generateQrcode();
+    const qrcodeResponse = await xmlyService.generateQrcode();
     const base64Data = qrcodeResponse.img;
 
     // 移除可能存在的data URL前缀
@@ -126,5 +127,53 @@ export const xmlyService = {
   getAlbumDetail: async (albumId: string): Promise<any> => {
     const data = await api.post("/xmly/album/detail", { albumId });
     return data;
+  },
+
+  /**
+   * 获取曲目列表
+   * @param albumId 专辑ID
+   * @param pageNum 页码，默认1
+   * @param pageSize 每页数量，默认30
+   * @returns Promise<any> 曲目列表
+   */
+  getTracksList: async (
+    albumId: string,
+    pageNum: number = 1,
+    pageSize: number = 30
+  ): Promise<any> => {
+    const data = await api.post("/xmly/album/tracks", {
+      albumId,
+      pageNum,
+      pageSize
+    });
+    return data;
+  },
+
+  /**
+   * 批量获取多个曲目的下载信息（也支持单个曲目）
+   * @param trackIds 曲目ID列表（单个曲目时传入包含一个ID的数组）
+   * @param albumId 专辑ID（可选）
+   * @param albumName 专辑名称（可选）
+   * @returns Promise<BatchDownloadResponseData> 批量下载信息
+   */
+  batchGetTracksDownloadInfo: async (
+    trackIds: string[],
+    albumId?: string,
+    albumName?: string
+  ): Promise<BatchDownloadResponseData> => {
+    const data = await api.post("/xmly/track/batch-download-info", {
+      trackIds,
+      albumId: albumId || "",
+      albumName: albumName || ""
+    });
+    let resData: any = data;
+    if (typeof data === "string") {
+      try {
+        resData = JSON.parse(data);
+      } catch (e) {
+        console.error("解析批量下载信息失败:", e);
+      }
+    }
+    return resData;
   },
 };

@@ -22,6 +22,9 @@ class BehaviorType:
     # 搜索历史
     SEARCH_HISTORY = "SEARCH_HISTORY"
 
+    # 喜马拉雅下载路径保存行为
+    XIMALAYA_DOWNLOAD_PATH = "XIMALAYA_DOWNLOAD_PATH"
+
     # 其他用户行为可以继续添加
 
 

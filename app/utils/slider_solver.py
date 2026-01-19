@@ -58,10 +58,17 @@ class SliderSolver:
             print(f"URL: {album_url}")
             print("=" * 60)
 
-            # 访问专辑页面
-            await page.goto(album_url, wait_until='networkidle')
-
-            # 等待页面加载
+            # 访问专辑页面，设置60秒超时，使用更宽松的等待条件
+            try:
+                await page.goto(
+                    album_url,
+                    wait_until='domcontentloaded',
+                    timeout=60000  # 60秒超时
+                )
+            except PlaywrightTimeout:
+                print("⚠️ 页面加载超时，但继续尝试获取cookies...")
+            
+            # 等待页面加载完成
             await asyncio.sleep(2)
 
             # 检查是否出现滑块验证

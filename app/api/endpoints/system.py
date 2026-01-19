@@ -190,10 +190,12 @@ async def get_all_user_behaviors(
 
 @router.get("/download-path", response_model=ApiResponseData)
 async def get_download_path(
-    user_id: str = Query(..., description="用户ID（uin 或 nick_name）")
+    user_id: str = Query(..., description="用户ID（uin 或 nick_name）"),
+    # 不传默认 BehaviorType.SAVE_DOWNLOAD_PATH
+    behavior_type: str = Query(default=BehaviorType.SAVE_DOWNLOAD_PATH, description="行为类型，不传默认 BehaviorType.SAVE_DOWNLOAD_PATH")
 ):
     """获取下载路径（便捷方法）"""
-    path = system_manager.get_download_path(user_id)
+    path = system_manager.get_download_path(user_id, behavior_type)
     if path is not None:
         return {"success": True, "path": path}
     else:
@@ -205,11 +207,12 @@ async def set_download_path(data: dict):
     """设置下载路径（便捷方法）"""
     user_id = data.get("user_id")
     download_path = data.get("download_path")
-
+    # 不传默认 BehaviorType.SAVE_DOWNLOAD_PATH
+    behavior_type = data.get("behavior_type", BehaviorType.SAVE_DOWNLOAD_PATH)
     if not user_id or not download_path:
         return {"success": False, "message": "参数不完整"}
 
-    return system_manager.set_download_path(user_id, download_path)
+    return system_manager.set_download_path(user_id, download_path, behavior_type)
 
 
 @router.get("/save-to-local", response_model=ApiResponseData)
