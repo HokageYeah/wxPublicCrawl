@@ -33,6 +33,107 @@ headers = {
 }
 
 
+@add_xmly_sign(headers)
+@extract_wx_credentials(
+    global_xmly_cookies,
+    global_xmly_token,
+    cookie_header_name='X-XMLY-Cookies',
+    token_header_name='X-XMLY-Token',
+    state_cookie_key='xmly_cookies',
+    state_token_key='xmly_token'
+)
+async def get_track_play_url(request: Request, album_id: str, user_id: str, track_id: str) -> Dict[str, Any]:
+    """
+    获取喜马拉雅音频播放链接
+
+    Args:
+        request: FastAPI Request对象
+        album_id: 专辑ID
+        user_id: 用户ID
+        track_id: 曲目ID
+
+    Returns:
+        Dict: 包含播放链接的音频信息
+        {
+            "success": True,
+            "data": {
+                "trackId": "曲目ID",
+                "title": "曲目标题",
+                "intro": "简介",
+                "coverSmall": "封面URL",
+                "duration": 时长,
+                "playUrls": {
+                    "high": "高品质播放链接(M4A)",
+                    "medium": "中品质播放链接(MP3_64)",
+                    "low": "低品质播放链接(MP3_32)"
+                }
+            }
+        }
+
+    Raises:
+        HTTPException: 请求失败时抛出
+    """
+    import aiohttp
+
+    # 从 request.state 中获取装饰器处理后的 cookies 和 token
+    merged_cookies = request.state.xmly_cookies
+    final_token = request.state.xmly_token
+
+    # 如果cookies为空，尝试从session加载
+    if not merged_cookies or len(merged_cookies) == 0:
+        session = load_xmly_session()
+        if not session:
+            raise HTTPException(status_code=401, detail="未登录，请先登录")
+        merged_cookies = session['cookies']
+        final_token = session['user_info'].get('token', '')
+        logger.info("从session中加载喜马拉雅登录信息")
+
+    logger.info(f"开始获取音频播放链接: albumId={album_id}, userId={user_id}, trackId={track_id}")
+
+    try:
+        # 创建 aiohttp session
+        session = aiohttp.ClientSession()
+
+        # 调用 _async_analyze_sound 解析音频详情
+        sound_info = await _async_analyze_sound(track_id, session, headers, merged_cookies)
+
+        # 关闭 session
+        await session.close()
+
+        # 检测是否触发速率限制
+        if sound_info == "RATE_LIMITED":
+            logger.warning("获取音频播放链接触发速率限制")
+            raise HTTPException(status_code=429, detail="请求过于频繁，请稍后再试")
+
+        if sound_info is False or sound_info == 0:
+            logger.error(f"获取音频播放链接失败: {sound_info}")
+            raise HTTPException(status_code=400, detail="获取音频播放链接失败或未授权")
+
+        # 解析成功，返回播放链接信息
+        result = {
+            "success": True,
+            "trackId": sound_info.get("trackId", ""),
+            "title": sound_info.get("name", ""),
+            "intro": sound_info.get("intro", ""),
+            "coverSmall": sound_info.get("coverSmall", ""),
+            "duration": 0,  # API 返回中没有 duration 字段
+            "playUrls": {
+                "high": sound_info.get(2, ""),      # M4A_64/M4A_128
+                "medium": sound_info.get(1, ""),    # MP3_64
+                "low": sound_info.get(0, "")       # MP3_32
+            }
+        }
+
+        logger.info(f"成功获取音频播放链接: trackId={track_id}, title={result['title']}")
+        return result
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"获取音频播放链接异常: {e}")
+        raise HTTPException(status_code=500, detail=f"获取音频播放链接失败: {str(e)}")
+
+
 # async def get_track_download_info(request: Request, track_id: str) -> Dict[str, Any]:
 #     """
 #     获取单个曲目的下载信息

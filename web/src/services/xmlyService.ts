@@ -4,7 +4,6 @@ import type {
   CheckQrcodeStatusRequest,
   CheckQrcodeStatusResponse,
   SessionResponse,
-  XmlyUserInfo,
   BatchDownloadResponseData,
 } from "@/types/xmly";
 
@@ -197,6 +196,30 @@ export const xmlyService = {
         resData = JSON.parse(data);
       } catch (e) {
         console.error("解析专辑下载状态失败:", e);
+      }
+    }
+    return resData;
+  },
+
+  /**
+   * 获取音频播放链接
+   * @param albumId 专辑ID
+   * @param userId 用户ID
+   * @param trackId 曲目ID
+   * @returns Promise<any> 播放链接数据
+   */
+  getTrackPlayUrl: async (albumId: string, userId: string, trackId: string): Promise<any> => {
+    const data = await api.post("/xmly/track/play-url", {
+      albumId,
+      userId,
+      trackId
+    });
+    let resData: any = data;
+    if (typeof data === "string") {
+      try {
+        resData = JSON.parse(data);
+      } catch (e) {
+        console.error("解析播放链接失败:", e);
       }
     }
     return resData;

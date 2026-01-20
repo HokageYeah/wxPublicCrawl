@@ -409,3 +409,37 @@ class BatchDownloadResponseData(BaseModel):
     total: int = Field(..., description="总数")
     success_count: int = Field(..., description="成功数量")
     failed_count: int = Field(..., description="失败数量")
+
+
+# 音频播放链接URL
+class TrackPlayUrls(BaseModel):
+    """音频播放链接"""
+    high: str = Field(..., description="高品质播放链接(M4A)")
+    medium: str = Field(..., description="中品质播放链接(MP3_64)")
+    low: str = Field(..., description="低品质播放链接(MP3_32)")
+
+
+# 音频播放链接数据
+class TrackPlayUrlData(BaseModel):
+    """音频播放链接数据"""
+    trackId: str = Field(..., description="曲目ID")
+    title: str = Field(..., description="曲目标题")
+    intro: str = Field(..., description="简介")
+    coverSmall: str = Field(..., description="封面URL")
+    duration: int = Field(..., description="时长（秒）")
+    playUrls: TrackPlayUrls = Field(..., description="播放链接")
+
+
+# 音频播放链接响应
+class TrackPlayUrlResponse(BaseModel):
+    """音频播放链接响应"""
+    success: bool = Field(..., description="是否成功")
+    data: TrackPlayUrlData = Field(..., description="音频播放链接数据")
+
+
+# 获取音频播放链接请求
+class GetTrackPlayUrlRequest(BaseModel):
+    """获取音频播放链接请求"""
+    albumId: str = Field(..., description="专辑ID")
+    userId: str = Field(..., description="用户ID")
+    trackId: str = Field(..., description="曲目ID")

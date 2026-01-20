@@ -14,12 +14,12 @@ from app.services.xmly import (
     get_album_detail,
     get_tracks_list
 )
-from app.services.xmly_download import batch_get_tracks_download_info
+from app.services.xmly_download import batch_get_tracks_download_info, get_track_play_url
 from app.services.system import system_manager
 from app.schemas.common_data import ApiResponseData
 from app.schemas.xmly_data import (
-    XmlyQrcodeResponse, 
-    XmlyQrcodeStatusResponse, 
+    XmlyQrcodeResponse,
+    XmlyQrcodeStatusResponse,
     XmlyLoginStatusResponse,
     CheckQrcodeStatusRequest,
     SubscribeAlbumRequest,
@@ -27,7 +27,8 @@ from app.schemas.xmly_data import (
     SearchAlbumRequest,
     SearchAlbumResponse,
     GetAlbumDetailRequest,
-    GetTracksListRequest
+    GetTracksListRequest,
+    GetTrackPlayUrlRequest
 )
 
 router = APIRouter()
@@ -408,11 +409,53 @@ async def xmly_get_album_download_status(request: Request, params: dict):
 
         # 调用服务层获取专辑下载状态
         status = await  system_manager.get_ximalaya_album_download_status(user_id, album_id)
-        
+
         return status
 
     except Exception as e:
         logger.error(f"查询专辑下载状态失败: {e}")
         raise HTTPException(status_code=500, detail=f"查询专辑下载状态失败: {str(e)}")
+
+
+# 喜马拉雅获取音频播放链接接口
+@router.post("/track/play-url", response_model=ApiResponseData)
+async def xmly_get_track_play_url(request: Request, params: GetTrackPlayUrlRequest):
+    """
+    获取喜马拉雅音频播放链接
+
+    Args:
+        albumId: 专辑ID
+        userId: 用户ID
+        trackId: 曲目ID
+
+    Returns:
+        {
+            "success": True,
+            "data": {
+                "trackId": "曲目ID",
+                "title": "曲目标题",
+                "intro": "简介",
+                "coverSmall": "封面URL",
+                "duration": 时长,
+                "playUrls": {
+                    "high": "高品质播放链接(M4A)",
+                    "medium": "中品质播放链接(MP3_64)",
+                    "low": "低品质播放链接(MP3_32)"
+                }
+            }
+        }
+    """
+    try:
+        # 调用服务层函数，装饰器会自动处理cookie和token
+        result = await get_track_play_url(request, params.albumId, params.userId, params.trackId)
+        logger.info(f"获取音频播放链接返回结果: {result}")
+        return result
+
+    except HTTPException as e:
+        logger.error(f"获取音频播放链接失败: {e.detail}")
+        raise e
+    except Exception as e:
+        logger.error(f"获取音频播放链接异常: {e}")
+        raise HTTPException(status_code=500, detail=f"获取音频播放链接失败: {str(e)}")
 
 

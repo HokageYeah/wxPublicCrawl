@@ -208,6 +208,7 @@
                 class="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-6"
               >
                 <button
+                  @click="playFirstTrack"
                   class="group relative px-8 py-3 bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-500 hover:to-orange-400 text-white rounded-full font-bold shadow-lg shadow-orange-900/30 hover:shadow-orange-700/50 transition-all hover:-translate-y-0.5"
                 >
                   <div class="flex items-center gap-2">
@@ -604,6 +605,18 @@
         </div>
       </div>
     </div>
+
+    <!-- 音频播放器 -->
+    <AudioPlayer
+      v-model:show="showAudioPlayer"
+      :track="currentPlayingTrack"
+      :auto-play="true"
+      @play="handleAudioPlay"
+      @pause="handleAudioPause"
+      @ended="handleAudioEnded"
+      @error="handleAudioError"
+      ref="audioPlayerRef"
+    />
   </div>
 </template>
 
@@ -614,7 +627,8 @@ import { xmlyService } from "@/services/xmlyService";
 import { useXmlyLoginStore } from "@/stores/xmlyLoginStore";
 import request from "@/utils/request";
 import Toast from "@/utils/toast";
-import type { AlbumDetailData, TrackInfo } from "@/types/xmly";
+import type { AlbumDetailData, TrackInfo, CurrentTrack } from "@/types/xmly";
+import AudioPlayer from "../components/audio-player.vue";
 
 const route = useRoute();
 const xmlyStore = useXmlyLoginStore();
@@ -627,6 +641,11 @@ const isGalleryExpanded = ref(false);
 // 下载路径相关
 const downloadPath = ref("");
 const loadingDownloadPath = ref(false);
+
+// 音频播放器相关
+const showAudioPlayer = ref(false);
+const currentPlayingTrack = ref<CurrentTrack | null>(null);
+const audioPlayerRef = ref<InstanceType<typeof AudioPlayer> | null>(null);
 
 // 曲目列表相关
 const tracksList = ref<TrackInfo[]>([]);
@@ -861,10 +880,78 @@ const fetchTracksList = async (page: number = currentPage.value) => {
   }
 };
 
-const playTrack = (track: TrackInfo) => {
+const playTrack = async (track: TrackInfo) => {
   // 播放曲目的逻辑
   console.log("播放曲目:", track);
-  Toast.info(`开始播放: ${track.title}`);
+
+  try {
+    // Toast.loading("正在获取播放链接...");
+    Toast.info("正在获取播放链接...");
+
+    // 获取专辑ID和用户ID
+    const albumId = albumData.value?.albumId?.toString() || "";
+    const userId = xmlyStore.userInfo?.uid?.toString() || "";
+    const trackId = track.trackId.toString();
+
+    if (!albumId || !userId) {
+      Toast.error("缺少必要信息，无法播放");
+      return;
+    }
+
+    // 调用接口获取播放链接
+    const response = await xmlyService.getTrackPlayUrl(albumId, userId, trackId);
+
+    if (response && response.success) {
+      // 设置当前播放的曲目
+      currentPlayingTrack.value = {
+        trackId: response.trackId,
+        title: response.title,
+        intro: response.intro,
+        coverSmall: response.coverSmall,
+        albumTitle: track.albumTitle || albumData.value?.albumPageMainInfo?.albumTitle,
+        duration: track.duration || 0,
+        playUrls: response.playUrls
+      };
+
+      // 显示播放器
+      showAudioPlayer.value = true;
+
+      Toast.success(`开始播放: ${track.title}`);
+    } else {
+      Toast.error("获取播放链接失败");
+    }
+  } catch (error: any) {
+    console.error("播放曲目失败:", error);
+    Toast.error(error.message || "播放失败，请稍后再试");
+  }
+};
+
+// 音频播放器事件处理
+const handleAudioPlay = () => {
+  console.log("音频开始播放");
+};
+
+const handleAudioPause = () => {
+  console.log("音频暂停");
+};
+
+const handleAudioEnded = () => {
+  console.log("音频播放结束");
+  Toast.info("播放完成");
+};
+
+const handleAudioError = () => {
+  console.error("音频播放出错");
+  Toast.error("播放出错，请重试");
+};
+
+// 播放第一个曲目
+const playFirstTrack = async () => {
+  if (tracksList.value.length === 0) {
+    Toast.warning("暂无曲目可播放");
+    return;
+  }
+  await playTrack(tracksList.value[0]);
 };
 
 const prevPage = () => {

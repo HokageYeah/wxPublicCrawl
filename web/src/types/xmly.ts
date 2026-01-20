@@ -337,3 +337,47 @@ export interface BatchDownloadResponseData {
   success_count: number; // 成功数量
   failed_count: number; // 失败数量
 }
+
+// ========== 音频播放相关类型 ==========
+
+// 音频播放URL（高/中/低品质）
+export interface PlayUrls {
+  high: string; // 高品质播放链接(M4A)
+  medium: string; // 中品质播放链接(MP3_64)
+  low: string; // 低品质播放链接(MP3_32)
+}
+
+// 音频播放链接数据
+export interface TrackPlayUrlData {
+  trackId: string; // 曲目ID
+  title: string; // 曲目标题
+  intro: string; // 简介
+  coverSmall: string; // 封面URL
+  duration: number; // 时长（秒）
+  playUrls: PlayUrls; // 播放链接
+}
+
+// 音频播放链接响应
+export interface TrackPlayUrlResponse {
+  success: boolean; // 是否成功
+  data: TrackPlayUrlData; // 音频播放链接数据
+}
+
+// 获取音频播放链接请求
+export interface GetTrackPlayUrlRequest {
+  albumId: string; // 专辑ID
+  userId: string; // 用户ID
+  trackId: string; // 曲目ID
+}
+
+// 当前播放的音频信息
+export interface CurrentTrack {
+  trackId: string;
+  title: string;
+  intro: string;
+  coverSmall: string;
+  albumTitle?: string;
+  duration: number;
+  playUrls: PlayUrls;
+}
+
