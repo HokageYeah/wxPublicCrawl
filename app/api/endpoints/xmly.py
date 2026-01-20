@@ -409,18 +409,7 @@ async def xmly_get_album_download_status(request: Request, params: dict):
         # 调用服务层获取专辑下载状态
         status = await  system_manager.get_ximalaya_album_download_status(user_id, album_id)
         
-        if not status:
-            return {
-                "success": False,
-                "message": "专辑下载状态不存在",
-                "data": None
-            }
-
-        return {
-            "success": True,
-            "message": "获取专辑下载状态成功",
-            "data": status
-        }
+        return status
 
     except Exception as e:
         logger.error(f"查询专辑下载状态失败: {e}")

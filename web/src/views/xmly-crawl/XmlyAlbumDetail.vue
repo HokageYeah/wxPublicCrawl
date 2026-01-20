@@ -328,7 +328,7 @@
               class="bg-[#141414] rounded-2xl border border-white/5 overflow-hidden mt-8"
             >
               <div class="p-4 border-b border-white/5">
-                <div class="flex items-center justify-between">
+                  <div class="flex items-center justify-between relative">
                   <h3
                     class="font-bold text-white text-lg flex items-center gap-2"
                   >
@@ -369,6 +369,34 @@
                       <span class="i-carbon-download"></span>
                       下载选中 ({{ selectedTracks.size }})
                     </button>
+
+                    <!-- 速率限制警告图标 -->
+                    <div v-if="selectedTracks.size > 3" class="group">
+                      <button
+                          class="w-9 h-9 flex items-center justify-center text-amber-400 hover:text-amber-300 transition-all"
+                          title="速率限制警告"
+                        >
+                          <span class="i-carbon-warning-alt text-base"></span>
+                      </button>
+
+                      <!-- 悬浮提示 -->
+                      <div
+                          class="absolute top-full right-0 mt-2 w-64 bg-[#1a1a1a] border border-amber-500/20 rounded-lg shadow-xl z-50 p-3 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none group-hover:pointer-events-auto"
+                        >
+                          <div class="flex items-start gap-2">
+                            <span class="i-carbon-warning-alt text-amber-400 mt-0.5 flex-shrink-0"></span>
+                            <div>
+                              <p class="text-amber-200 text-sm font-medium mb-1">
+                                速率限制警告
+                              </p>
+                              <p class="text-gray-400 text-xs leading-relaxed">
+                                <!-- 超过3个曲目 显示红色字体 -->
+                                下载<span class="font-bold text-red-400">超过3个曲目</span>个曲目可能会触发喜马拉雅的<span class="font-bold text-red-400">速率限制</span>，这会拉长下载时间！建议每次选择<span class="font-bold text-amber-400">3个以内</span>，并等待下载完成后继续。
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                    </div>
 
                     <button
                       @click="downloadAllTracks"
@@ -470,7 +498,24 @@
                       >
                         <span class="i-carbon-play-filled"></span>
                       </button>
+                      <!-- 下载按钮区域 -->
+                      <div
+                        v-if="trackDownloadStatus[track.trackId]?.downloaded"
+                        class="w-9 h-9 flex items-center justify-center rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 opacity-100 transition-all"
+                        title="已下载"
+                      >
+                        <span class="i-carbon-checkmark-filled"></span>
+                      </div>
                       <button
+                        v-else-if="trackDownloadStatus[track.trackId]?.downloading"
+                        class="w-9 h-9 flex items-center justify-center rounded-full bg-orange-500/20 border border-orange-500/30 text-orange-400 opacity-100 transition-all"
+                        title="下载中"
+                        disabled
+                      >
+                        <span class="i-carbon-circle-dash animate-spin"></span>
+                      </button>
+                      <button
+                        v-else
                         class="w-9 h-9 flex items-center justify-center rounded-full bg-[#1f1f1f] border border-white/5 text-gray-400 hover:text-orange-500 hover:border-orange-500/30 transition-all opacity-0 group-hover:opacity-100"
                         title="下载"
                         @click.stop="downloadTrack(track)"
@@ -594,11 +639,18 @@ const tracksTotalCount = ref(0);
 const trackDownloadStatus = ref<
   Record<
     number,
-    { downloading: boolean; downloaded: boolean; progress: number }
+    {
+      downloading: boolean;  // 下载中
+      downloaded: boolean;   // 已下载
+      progress: number       // 进度 0-100
+    }
   >
 >({});
 const downloadStatusPolling = ref(false);
 const downloadStatusInterval = ref<number | null>(null);
+
+// 记录用户点击下载的曲目ID集合
+const downloadingTracks = ref<Set<number>>(new Set());
 
 const totalPages = computed(() =>
   Math.ceil(tracksTotalCount.value / pageSize.value),
@@ -790,6 +842,15 @@ const fetchTracksList = async (page: number = currentPage.value) => {
       tracksList.value = resData.data.tracks;
       tracksTotalCount.value = resData.data.trackTotalCount;
       currentPage.value = resData.data.pageNum;
+
+      // 加载曲目列表后，查询一次专辑下载状态
+      await checkAlbumDownloadStatus();
+
+      // 如果有正在下载的曲目且当前没有轮询，则启动轮询
+      if (downloadingTracks.value.size > 0 && !downloadStatusPolling.value) {
+        const albumId = albumData.value?.albumId?.toString() || "";
+        await startDownloadStatusPolling(albumId, 6000); /// 每6秒轮询一次
+      }
     } else {
       Toast.error("加载曲目列表失败");
     }
@@ -834,6 +895,13 @@ const downloadTrack = async (track: TrackInfo) => {
   try {
     Toast.info("正在获取下载信息...");
 
+    // 初始化该曲目的下载状态为下载中
+    trackDownloadStatus.value[track.trackId] = {
+      downloading: true,
+      downloaded: false,
+      progress: 0
+    };
+
     // 获取专辑ID、专辑名称和用户ID
     const albumId = albumData.value?.albumId?.toString() || "";
     const albumName = albumData.value?.albumPageMainInfo?.albumTitle || "";
@@ -875,10 +943,13 @@ const downloadTrack = async (track: TrackInfo) => {
       // 显示消息
       Toast.success(downloadData.message || "下载任务已启动");
 
+      // 将该曲目添加到下载中集合
+      downloadingTracks.value.add(track.trackId);
+
       // 启动轮询下载状态
       if (downloadData.downloading) {
         const albumId = albumData.value?.albumId?.toString() || "";
-        await startDownloadStatusPolling(albumId, 3000); // 每3秒轮询一次
+        await startDownloadStatusPolling(albumId, 6000); /// 每6秒轮询一次
       }
 
       // 不再触发浏览器下载，因为后台任务已经在下载
@@ -907,6 +978,15 @@ const downloadAllTracks = async () => {
 
   try {
     Toast.info(`正在获取 ${tracksList.value.length} 个曲目的下载信息...`);
+
+    // 初始化所有曲目的下载状态为下载中
+    tracksList.value.forEach(track => {
+      trackDownloadStatus.value[track.trackId] = {
+        downloading: true,
+        downloaded: false,
+        progress: 0
+      };
+    });
 
     // 获取专辑ID、专辑名称和用户ID
     const albumId = albumData.value?.albumId?.toString() || "";
@@ -947,6 +1027,8 @@ const downloadAllTracks = async () => {
         // 遍历成功的下载项
         if (downloadData.success && Array.isArray(downloadData.success)) {
           downloadData.success.forEach((item: any, index: number) => {
+            // 将曲目ID添加到下载中集合
+            downloadingTracks.value.add(parseInt(item.trackId));
             setTimeout(() => {
               const trackInfo = item.data;
               let downloadUrl = "";
@@ -1041,6 +1123,15 @@ const downloadSelectedTracks = async () => {
   try {
     Toast.info(`正在获取 ${trackIds.length} 个选中曲目的下载信息...`);
 
+    // 初始化所有选中曲目的下载状态为下载中
+    selectedTracks.value.forEach(trackId => {
+      trackDownloadStatus.value[trackId] = {
+        downloading: true,
+        downloaded: false,
+        progress: 0
+      };
+    });
+
     const res = await xmlyService.batchGetTracksDownloadInfo(
       trackIds,
       albumId,
@@ -1067,6 +1158,11 @@ const downloadSelectedTracks = async () => {
     ) {
       const successCount = downloadData.success_count || 0;
       Toast.success(`开始下载 ${successCount} 个选中曲目`);
+
+      // 将所有选中的曲目ID添加到下载中集合
+      selectedTracks.value.forEach(trackId => {
+        downloadingTracks.value.add(trackId);
+      });
 
       downloadData.success.forEach((item: any, index: number) => {
         setTimeout(() => {
@@ -1099,6 +1195,10 @@ const downloadSelectedTracks = async () => {
 
       // 清除选择
       selectedTracks.value.clear();
+      // 启动轮询下载状态
+      if (downloadData.downloading) {
+        await startDownloadStatusPolling(albumId, 6000); /// 每6秒轮询一次
+      }
     } else {
       Toast.error("获取下载信息失败");
     }
@@ -1113,7 +1213,6 @@ const checkAlbumDownloadStatus = async () => {
   const albumId = albumData.value?.albumId?.toString() || "";
   const albumName = albumData.value?.albumPageMainInfo?.albumTitle || "";
   const userId = xmlyStore.userInfo?.uid || xmlyStore.userInfo?.nick_name || "";
-  debugger;
   if (!albumId || !userId) {
     console.warn("无法获取专辑ID或用户ID");
     return;
@@ -1123,28 +1222,29 @@ const checkAlbumDownloadStatus = async () => {
     const status = await xmlyService.getAlbumDownloadStatus(userId, albumId);
     console.log("专辑下载状态:", status);
 
-    if (status.success && status.data) {
-      const albumInfo = status.data;
-      const downloads = albumInfo.downloads || {};
+    const downloads = status.downloads || {};
 
       // 更新每个曲目的下载状态
-      Object.entries(downloads).forEach(
-        ([trackId, trackStatus]: [string, any]) => {
-          const statusValue = trackStatus.status;
-          const isDownloaded = statusValue === "success";
-          const isLoading = statusValue === "pending";
+    Object.entries(downloads).forEach(
+      ([trackId, trackStatus]: [string, any]) => {
+        const statusValue = trackStatus.status;
+        const isDownloaded = statusValue === "success";
+        const isDownloading = statusValue === "pending" || statusValue === "downloading";
 
-          if (trackDownloadStatus.value[trackId]) {
-            trackDownloadStatus.value[trackId] = {
-              ...trackDownloadStatus.value[trackId],
-              downloaded: isDownloaded,
-              loading: isLoading,
-              progress: isDownloaded ? 100 : isLoading ? 50 : 0,
-            };
-          }
-        },
-      );
-    }
+        // 更新下载状态
+        trackDownloadStatus.value[trackId] = {
+            ...trackDownloadStatus.value[trackId],
+            downloaded: isDownloaded,
+            downloading: isDownloading,
+            progress: isDownloaded ? 100 : isDownloading ? 50 : 0,
+        };
+
+        // 如果正在下载，添加到下载中集合
+        if (isDownloading) {
+          downloadingTracks.value.add(parseInt(trackId));
+        }
+      },
+    );
   } catch (error) {
     console.error("查询专辑下载状态失败:", error);
   }
@@ -1168,19 +1268,28 @@ const startDownloadStatusPolling = async (
   // 启动轮询
   downloadStatusInterval.value = window.setInterval(async () => {
     await checkAlbumDownloadStatus();
+    debugger;
 
-    // 检查是否所有都下载完成或失败
-    const allTracks = tracksList.value;
-    const allDownloaded = allTracks.every((track) => {
-      const status = trackDownloadStatus.value[track.trackId];
-      return (
-        status &&
-        (status.downloaded || (!status.loading && status.progress > 0))
-      );
+    // 检查所有用户点击下载的曲目，将已完成的曲目从集合中移除
+    const downloadingTrackIds = Array.from(downloadingTracks.value);
+    if (downloadingTrackIds.length === 0) {
+      stopDownloadStatusPolling();
+      return;
+    }
+
+    // 遍历所有正在下载的曲目，移除已完成的
+    downloadingTrackIds.forEach((trackId) => {
+      const status = trackDownloadStatus.value[trackId];
+      console.log("曲目下载状态:", trackId, status);
+
+      // 如果已下载或失败，从集合中移除
+      if (status && (status.downloaded || (!status.downloading && status.progress > 0))) {
+        downloadingTracks.value.delete(trackId);
+      }
     });
 
-    if (allDownloaded && allTracks.length > 0) {
-      // 全部完成，停止轮询
+    // 如果集合为空，说明所有曲目都已完成，停止轮询
+    if (downloadingTracks.value.size === 0 && downloadingTrackIds.length > 0) {
       stopDownloadStatusPolling();
       Toast.success("所有曲目下载完成");
     }

@@ -163,7 +163,7 @@ class DownloadManager:
                               album_cover: str, sounds: List[Dict],
                               resource_type: str):
         """
-        保存专辑解析结果到JSON文件
+        保存专辑解析结果到JSON文件，支持增量更新
 
         Args:
             album_id: 专辑ID
@@ -173,7 +173,35 @@ class DownloadManager:
             resource_type: 资源类型(歌曲/故事)
         """
         cache_path = self._get_album_cache_path(album_name)
+        logger.info(f"专辑缓存目录路径: {cache_path}")
+        logger.info(f"专辑信息sounds: {sounds}")
         os.makedirs(cache_path, exist_ok=True)
+
+        # 检查是否已存在专辑信息
+        existing_info = await self.get_album_info_by_id(album_id)
+        existing_sounds = []
+
+        if existing_info:
+            # 获取已存在的sounds列表
+            existing_sounds = existing_info.get("sounds", [])
+            existing_track_ids = {str(s.get("trackId")) for s in existing_sounds}
+            logger.info(f"已存在专辑信息，现有曲目数: {len(existing_sounds)}")
+
+            # 合并sounds，只添加新的曲目
+            merged_sounds = existing_sounds.copy()
+            new_sounds = []
+
+            for sound in sounds:
+                track_id = str(sound.get("trackId"))
+                if track_id not in existing_track_ids:
+                    merged_sounds.append(sound)
+                    new_sounds.append(sound)
+                    logger.info(f"新增曲目: {track_id} - {sound.get('title', '')}")
+
+            sounds = merged_sounds
+            logger.info(f"合并后总曲目数: {len(sounds)}，新增曲目数: {len(new_sounds)}")
+        else:
+            logger.info(f"新建专辑信息，曲目数: {len(sounds)}")
 
         album_info = {
             "album_id": album_id,
@@ -198,8 +226,8 @@ class DownloadManager:
             total_count=len(sounds), success_count=0
         )
 
-        # 初始化下载进度文件
-        await self._init_progress(album_name, sounds)
+        # 初始化或更新下载进度文件
+        await self._init_or_update_progress(album_name, sounds)
 
     async def _init_progress(self, album_name: str, sounds: List[Dict]):
         """初始化下载进度记录"""
@@ -233,6 +261,57 @@ class DownloadManager:
             await f.write(json.dumps(progress, ensure_ascii=False, indent=2))
 
         print(colorama.Fore.GREEN + f"✓ 下载进度文件已初始化: {progress_path}")
+
+    async def _init_or_update_progress(self, album_name: str, sounds: List[Dict]):
+        """
+        初始化或更新下载进度记录，支持增量更新
+
+        Args:
+            album_name: 专辑名称
+            sounds: 音频列表
+        """
+        progress_path = self._get_progress_path(album_name)
+
+        # 检查进度文件是否已存在
+        if os.path.exists(progress_path):
+            # 加载现有进度
+            async with aiofiles.open(progress_path, mode="r", encoding="utf-8") as f:
+                content = await f.read()
+                progress = json.loads(content)
+
+            print(colorama.Fore.YELLOW + f"⚠ 检测到已有下载进度，准备合并...")
+
+            # 获取现有的track IDs
+            existing_track_ids = set(progress["downloads"].keys())
+
+            # 只添加新的曲目到进度中
+            new_count = 0
+            for sound in sounds:
+                track_id = str(sound.get("trackId"))
+                if track_id not in existing_track_ids:
+                    progress["downloads"][track_id] = {
+                        "status": "pending",
+                        "title": sound.get("title", ""),
+                        "retry_count": 0,
+                        "last_attempt": None,
+                        "error_message": None
+                    }
+                    new_count += 1
+                    logger.info(f"新增曲目到进度文件: {track_id} - {sound.get('title', '')}")
+
+            # 更新总数
+            progress["total_count"] = len(sounds)
+            progress["last_update"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+            # 保存更新后的进度
+            async with aiofiles.open(progress_path, mode="w", encoding="utf-8") as f:
+                await f.write(json.dumps(progress, ensure_ascii=False, indent=2))
+
+            print(colorama.Fore.GREEN + f"✓ 下载进度文件已更新，新增 {new_count} 个曲目")
+            logger.info(f"下载进度文件已更新，新增 {new_count} 个曲目")
+        else:
+            # 首次初始化进度文件
+            await self._init_progress(album_name, sounds)
 
     async def load_album_info(self, album_name: str) -> Optional[Dict]:
         """加载专辑信息"""
@@ -358,6 +437,49 @@ class DownloadManager:
         wait_seconds = (next_hour - now).total_seconds()
 
         print(colorama.Fore.YELLOW + f"\n⏳ 检测到速率限制,将等待到下个小时 {next_hour.strftime('%H:%M:%S')}")
+        print(colorama.Fore.YELLOW + f"⏳ 等待时间: {int(wait_seconds // 60)} 分 {int(wait_seconds % 60)} 秒")
+
+        # 显示倒计时
+        while wait_seconds > 0:
+            mins, secs = divmod(int(wait_seconds), 60)
+            timer = f"{mins:02d}:{secs:02d}"
+            print(f"\r⏳ 剩余时间: {timer}", end="", flush=True)
+            await asyncio.sleep(1)
+            wait_seconds -= 1
+
+        print(colorama.Fore.GREEN + f"\n✓ 等待结束,继续下载...")
+
+    async def wait_until_next_minute(self, minutes: int = 2):
+        """
+        等待到下一个指定分钟数的起点
+
+        Args:
+            minutes: 分钟间隔，默认2分钟
+        """
+        now = datetime.now()
+        current_minute = now.minute
+        current_second = now.second
+
+        # 计算下一个目标分钟数
+        next_minute = ((current_minute // minutes) + 1) * minutes
+
+        # 如果超过60分钟，进入下个小时
+        if next_minute >= 60:
+            next_hour = now.hour + 1
+            next_minute = next_minute - 60
+        else:
+            next_hour = now.hour
+
+        # 构建目标时间
+        next_time = now.replace(hour=next_hour, minute=next_minute, second=0, microsecond=0)
+
+        # 如果计算出的目标时间小于当前时间，说明需要进入下一个周期
+        if next_time <= now:
+            next_time = next_time + timedelta(minutes=minutes)
+
+        wait_seconds = (next_time - now).total_seconds()
+
+        print(colorama.Fore.YELLOW + f"\n⏳ 检测到速率限制,将等待到下一个{minutes}分钟节点 {next_time.strftime('%H:%M:%S')}")
         print(colorama.Fore.YELLOW + f"⏳ 等待时间: {int(wait_seconds // 60)} 分 {int(wait_seconds % 60)} 秒")
 
         # 显示倒计时

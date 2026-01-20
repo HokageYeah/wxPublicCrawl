@@ -10,6 +10,7 @@ from app.models.user_behavior import UserBehavior, BehaviorType
 from app.db.sqlalchemy_db import database
 from sqlalchemy.exc import IntegrityError
 from loguru import logger
+from fastapi import HTTPException
 
 class SystemManager:
     """管理用户会话的单例类"""
@@ -634,12 +635,14 @@ class SystemManager:
             download_path = self.get_download_path(user_id, BehaviorType.XIMALAYA_DOWNLOAD_PATH)
             print(f'专辑的下载路径是 {download_path}')
             if not download_path:
+                raise HTTPException(status_code=404, detail="专辑下载路径不存在")
                 return None
 
             # 2. 获取全局专辑状态文件路径
             status_file = os.path.join(download_path, "albums_status.json")
             print(f'专辑的下载路径是 status_file {status_file}')
             if not os.path.exists(status_file):
+                raise HTTPException(status_code=404, detail="专辑下载状态文件不存在")
                 return None
 
             # 3. 异步读取全局状态
@@ -651,11 +654,13 @@ class SystemManager:
             # 4. 查找专辑信息
             album_key = str(album_id)
             if album_key not in global_status:
+                raise HTTPException(status_code=404, detail="专辑下载状态不存在")
                 return None
 
             album_info = global_status[album_key]
             album_name = album_info.get("album_name")
             if not album_name:
+                raise HTTPException(status_code=404, detail="专辑名称不存在")
                 return None
 
             # 5. 读取下载进度文件
@@ -685,7 +690,7 @@ class SystemManager:
 
         except Exception as e:
             logger.error(f"获取专辑下载状态失败: {e}")
-            return None
+            raise HTTPException(status_code=500, detail=f"获取专辑下载状态失败: {str(e)}")
 
 
 # 全局单例

@@ -169,7 +169,7 @@ async def _perform_slider_verification(
         resp = await client.get(url, headers=headers, cookies=merged_cookies, params=params)
         resp.raise_for_status()
         json_data = resp.json()
-        logger.info(f"重试响应: {json_data}")
+        # logger.info(f"重试响应: {json_data}")
         logger.info(f"重试响应: ret={json_data.get('ret')}")
 
         # 再次检查返回码

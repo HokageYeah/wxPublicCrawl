@@ -33,90 +33,90 @@ headers = {
 }
 
 
-async def get_track_download_info(request: Request, track_id: str) -> Dict[str, Any]:
-    """
-    获取单个曲目的下载信息
+# async def get_track_download_info(request: Request, track_id: str) -> Dict[str, Any]:
+#     """
+#     获取单个曲目的下载信息
 
-    Args:
-        request: FastAPI Request对象
-        track_id: 曲目ID
+#     Args:
+#         request: FastAPI Request对象
+#         track_id: 曲目ID
 
-    Returns:
-        Dict: 曲目下载信息
+#     Returns:
+#         Dict: 曲目下载信息
 
-    Raises:
-        HTTPException: 请求失败时抛出
-    """
-    # 从 request.state 中获取装饰器处理后的 cookies 和 token
-    merged_cookies = request.state.xmly_cookies
-    final_token = request.state.xmly_token
+#     Raises:
+#         HTTPException: 请求失败时抛出
+#     """
+#     # 从 request.state 中获取装饰器处理后的 cookies 和 token
+#     merged_cookies = request.state.xmly_cookies
+#     final_token = request.state.xmly_token
 
-    # 如果cookies为空，尝试从session加载
-    if not merged_cookies or len(merged_cookies) == 0:
-        session = load_xmly_session()
-        if not session:
-            raise HTTPException(status_code=401, detail="未登录，请先登录")
-        merged_cookies = session['cookies']
-        final_token = session['user_info'].get('token', '')
-        logger.info("从session中加载喜马拉雅登录信息")
+#     # 如果cookies为空，尝试从session加载
+#     if not merged_cookies or len(merged_cookies) == 0:
+#         session = load_xmly_session()
+#         if not session:
+#             raise HTTPException(status_code=401, detail="未登录，请先登录")
+#         merged_cookies = session['cookies']
+#         final_token = session['user_info'].get('token', '')
+#         logger.info("从session中加载喜马拉雅登录信息")
 
-    # 构造下载信息URL
-    url = f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
-    params = {
-        "device": "web",
-        "trackId": track_id,
-        "trackQualityLevel": 2
-    }
+#     # 构造下载信息URL
+#     url = f"https://www.ximalaya.com/mobile-playpage/track/v3/baseInfo/{int(time.time() * 1000)}"
+#     params = {
+#         "device": "web",
+#         "trackId": track_id,
+#         "trackQualityLevel": 2
+#     }
 
-    try:
-        async with httpx.AsyncClient(verify=False, timeout=30.0) as client:
-            logger.info(f"正在获取曲目下载信息，trackId: {track_id}")
-            logger.info(f"下载信息请求headers: {headers}")
-            logger.info(f"下载信息请求cookies: {merged_cookies}")
-            logger.info(f"下载信息请求params: {params}")
+#     try:
+#         async with httpx.AsyncClient(verify=False, timeout=30.0) as client:
+#             logger.info(f"正在获取曲目下载信息，trackId: {track_id}")
+#             logger.info(f"下载信息请求headers: {headers}")
+#             logger.info(f"下载信息请求cookies: {merged_cookies}")
+#             logger.info(f"下载信息请求params: {params}")
 
-            # 发送GET请求
-            response = await client.get(url, headers=headers, cookies=merged_cookies, params=params)
-            response.raise_for_status()
+#             # 发送GET请求
+#             response = await client.get(url, headers=headers, cookies=merged_cookies, params=params)
+#             response.raise_for_status()
 
-            # 解析JSON响应
-            json_data = response.json()
-            # logger.info(f"曲目下载信息响应: {json_data}")
-            sound_name = json_data["trackInfo"]["title"]
-            intro = json_data["trackInfo"].get("intro", "")
-            trackId = json_data["trackInfo"]["trackId"]
-            cover_url = json_data["trackInfo"]["coverSmall"] or ""
-            encrypted_url_list = json_data["trackInfo"]["playUrlList"]
+#             # 解析JSON响应
+#             json_data = response.json()
+#             # logger.info(f"曲目下载信息响应: {json_data}")
+#             sound_name = json_data["trackInfo"]["title"]
+#             intro = json_data["trackInfo"].get("intro", "")
+#             trackId = json_data["trackInfo"]["trackId"]
+#             cover_url = json_data["trackInfo"]["coverSmall"] or ""
+#             encrypted_url_list = json_data["trackInfo"]["playUrlList"]
 
-            sound_info = {
-                "name": sound_name,
-                "intro": intro,
-                "trackId": trackId,
-                "coverSmall": cover_url,
-                0: "",
-                1: "",
-                2: ""
-            }
-            for encrypted_url in encrypted_url_list:
-                if encrypted_url["type"] == "M4A_128" or encrypted_url["type"] == "M4A_64":
-                    sound_info[2] = decrypt_url(encrypted_url["url"])
-                elif encrypted_url["type"] == "MP3_64":
-                    sound_info[1] = decrypt_url(encrypted_url["url"])
-                elif encrypted_url["type"] == "MP3_32":
-                    sound_info[0] = decrypt_url(encrypted_url["url"])
-            logger.info(f'ID为{track_id}的声音解析成功！sound_info: {sound_info}')
+#             sound_info = {
+#                 "name": sound_name,
+#                 "intro": intro,
+#                 "trackId": trackId,
+#                 "coverSmall": cover_url,
+#                 0: "",
+#                 1: "",
+#                 2: ""
+#             }
+#             for encrypted_url in encrypted_url_list:
+#                 if encrypted_url["type"] == "M4A_128" or encrypted_url["type"] == "M4A_64":
+#                     sound_info[2] = decrypt_url(encrypted_url["url"])
+#                 elif encrypted_url["type"] == "MP3_64":
+#                     sound_info[1] = decrypt_url(encrypted_url["url"])
+#                 elif encrypted_url["type"] == "MP3_32":
+#                     sound_info[0] = decrypt_url(encrypted_url["url"])
+#             logger.info(f'ID为{track_id}的声音解析成功！sound_info: {sound_info}')
 
-            return sound_info
+#             return sound_info
 
-    except httpx.HTTPStatusError as e:
-        logger.error(f"HTTP错误: {e}")
-        raise HTTPException(status_code=e.response.status_code, detail=str(e))
-    except httpx.RequestError as e:
-        logger.error(f"请求错误: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-    except Exception as e:
-        logger.error(f"未知错误: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+#     except httpx.HTTPStatusError as e:
+#         logger.error(f"HTTP错误: {e}")
+#         raise HTTPException(status_code=e.response.status_code, detail=str(e))
+#     except httpx.RequestError as e:
+#         logger.error(f"请求错误: {e}")
+#         raise HTTPException(status_code=500, detail=str(e))
+#     except Exception as e:
+#         logger.error(f"未知错误: {e}")
+#         raise HTTPException(status_code=500, detail=str(e))
 
 @add_xmly_sign(headers)
 @extract_wx_credentials(
@@ -171,54 +171,101 @@ async def batch_get_tracks_download_info(request: Request, track_ids: List[str],
         logger.info(f"使用下载路径: {download_path}")
         download_manager = DownloadManager(download_path)
 
-    # 并发获取多个曲目的下载信息
-    tasks = []
-    for track_id in track_ids:
-        task = get_track_download_info(request, track_id)
-        tasks.append(task)
-
-    results = await asyncio.gather(*tasks, return_exceptions=True)
-
-    # 处理结果并构建音频列表（用于下载管理器）
+    # 串行获取多个曲目的下载信息（避免触发限速）
+    import aiohttp
+    session = aiohttp.ClientSession()
     sounds = []
     success_results = []
     failed_results = []
 
-    for i, result in enumerate(results):
-        track_id = track_ids[i]
-        if isinstance(result, Exception):
-            logger.error(f"获取曲目 {track_id} 下载信息失败: {result}")
-            failed_results.append({
-                "trackId": track_id,
-                "error": str(result),
-                "status": "failed",
-                "progress": 0
-            })
-        else:
-            # 构建适合下载管理器的音频信息
-            sound_info = {
-                "trackId": result.get("trackId", ""),
-                "title": result.get("name", ""),
+    for idx, track_id in enumerate(track_ids, 1):
+        try:
+            logger.info(f"[{idx}/{len(track_ids)}] 获取曲目 {track_id} 下载信息")
+
+            # 解析音频详情(获取下载URL)
+            sound_info = await _async_analyze_sound(track_id, session, headers, merged_cookies)
+            logger.info(f"音频详情解析结果: {sound_info}")
+
+            # 检测是否触发速率限制
+            if sound_info == "RATE_LIMITED":
+                logger.warning("触发速率限制，等待到下个2分钟节点")
+                await download_manager.wait_until_next_minute(2)
+                # 重试当前音频
+                logger.info(f"重试音频: {track_id}")
+                sound_info = await _async_analyze_sound(track_id, session, headers, merged_cookies)
+                logger.info(f"重试后音频详情解析结果: {sound_info}")
+
+                # 如果重试后还是限速，标记为失败
+                if sound_info == "RATE_LIMITED":
+                    logger.error(f"曲目 {track_id} 经过重试后仍然触发限速")
+                    failed_results.append({
+                        "trackId": track_id,
+                        "error": "触发速率限制",
+                        "status": "failed",
+                        "progress": 0
+                    })
+                    continue
+
+            if sound_info is False or sound_info == 0:
+                logger.error(f"音频详情解析失败: {sound_info}")
+                failed_results.append({
+                    "trackId": track_id,
+                    "error": "解析失败或未授权",
+                    "status": "failed",
+                    "progress": 0
+                })
+                continue
+
+            # 解析成功，构建适合下载管理器的音频信息
+            sound_data = {
+                "trackId": sound_info.get("trackId", ""),
+                "title": sound_info.get("name", ""),
                 "albumTitle": album_name,
                 "albumId": album_id,
-                "intro": result.get("intro", ""),
-                "duration": 0,  # 从API获取不到duration，使用0
-                "coverSmall": result.get("coverSmall", ""),
-                "anchorName": "",  # 从API获取不到anchorName，使用空字符串
-                0: result.get(0, ""),
-                1: result.get(1, ""),
-                2: result.get(2, "")
+                "intro": sound_info.get("intro", ""),
+                "duration": 0,
+                "coverSmall": sound_info.get("coverSmall", ""),
+                "anchorName": "",
+                0: sound_info.get(0, ""),
+                1: sound_info.get(1, ""),
+                2: sound_info.get(2, "")
             }
-            sounds.append(sound_info)
+            sounds.append(sound_data)
 
             success_results.append({
                 "trackId": track_id,
-                "data": result,
+                "data": sound_info,
                 "albumId": album_id,
                 "albumName": album_name,
                 "status": "success",
-                "progress": 100  # 下载信息获取成功，进度100%
+                "progress": 100
             })
+
+            # 请求间隔，避免触发限速（除了最后一个）
+            if idx < len(track_ids):
+                logger.info("等待10秒后处理下一个曲目...")
+                await asyncio.sleep(10)
+
+        except Exception as e:
+            error_msg = str(e)
+            logger.error(f"获取曲目 {track_id} 下载信息时出错: {error_msg}")
+
+            # 检测速率限制
+            if download_manager.is_rate_limited(error_msg):
+                logger.warning("检测到速率限制错误，等待到下个2分钟节点")
+                await download_manager.wait_until_next_minute(2)
+                # 不标记为失败，继续下一个
+                continue
+            else:
+                failed_results.append({
+                    "trackId": track_id,
+                    "error": error_msg,
+                    "status": "failed",
+                    "progress": 0
+                })
+
+    await session.close()
+    logger.info(f"批量获取曲目下载信息完成：成功 {len(success_results)} 个，失败 {len(failed_results)} 个")
 
     # 如果有成功的音频且提供了专辑信息，启动后台下载任务
     if sounds and album_id and album_name:
@@ -303,23 +350,17 @@ async def _background_download_album(sounds: List[Dict], album_id: int, album_na
                 continue
 
             try:
-                # 6.1 解析音频详情(获取下载URL)
-                sound_info = await _async_analyze_sound(sound["trackId"], session, headers, merged_cookies)
-
-                # 检测是否触发速率限制
-                if sound_info is False:
-                    error_msg = "系统繁忙"
-                    if download_manager.is_rate_limited(error_msg):
-                        logger.warning("触发速率限制")
-                        await download_manager.wait_until_next_hour()
-                        # 重试当前音频
-                        sound_info = await _async_analyze_sound(sound["trackId"], session, headers, merged_cookies)
-
-                if sound_info is False or sound_info == 0:
-                    await download_manager.update_download_status(
-                        album_name, track_id, "failed", "解析失败或未授权", album_id
-                    )
-                    continue
+                # 从sounds中查找对应的sound信息（已经解析好的）
+                # 不需要再解析，直接下载
+                sound_info = {
+                    "name": sound.get("title", ""),
+                    "intro": sound.get("intro", ""),
+                    "trackId": sound.get("trackId", ""),
+                    "coverSmall": sound.get("coverSmall", ""),
+                    0: sound.get(0, ""),
+                    1: sound.get(1, ""),
+                    2: sound.get(2, "")
+                }
 
                 # 6.2 下载音频文件
                 # 优先使用最高音质(2)，降级到中等音质(1)
@@ -374,18 +415,12 @@ async def _background_download_album(sounds: List[Dict], album_id: int, album_na
             except Exception as e:
                 error_msg = str(e)
                 logger.error(f"下载音频 {track_id} 时出错: {error_msg}")
-
-                # 检测速率限制
-                if download_manager.is_rate_limited(error_msg):
-                    logger.warning("检测到速率限制错误")
-                    await download_manager.wait_until_next_hour()
-                    # 不标记为失败,下次会重试
-                else:
-                    await download_manager.update_download_status(
-                        album_name, track_id, "failed", error_msg, album_id
-                    )
+                await download_manager.update_download_status(
+                    album_name, track_id, "failed", error_msg, album_id
+                )
 
         await session.close()
+
 
         # 7. 显示最终统计
         final_progress = await download_manager.load_progress(album_name)
@@ -435,11 +470,40 @@ async def _async_analyze_sound(sound_id: str, session, headers: Dict, merged_coo
         "trackId": sound_id,
         "trackQualityLevel": 2
     }
+    logger.info(f"开始解析音频详情URL: {url}")
+    logger.info(f"开始解析音频详情params: {params}")
+    logger.info(f"开始解析音频详情session: {session}")
     try:
         import aiohttp
         async with session.get(url, headers=headers, cookies=merged_cookies, params=params, timeout=60) as response:
+            response_text = await response.text()
+            logger.debug(f"API响应状态码: {response.status}")
+            logger.debug(f"API响应内容: {response_text[:500]}...")  # 只打印前500字符
+
             import json
-            response_json = json.loads(await response.text())
+            response_json = json.loads(response_text)
+
+            # 检查是否有错误信息（可能是速率限制或其他错误）
+            if "ret" in response_json and response_json["ret"] != 0:
+                error_msg = response_json.get("msg", "未知错误")
+                logger.error(f"API返回错误: ret={response_json['ret']}, msg={error_msg}")
+
+                # 检查是否是速率限制
+                rate_limit_keywords = ["系统繁忙", "请求过于频繁", "Too Many Requests", "429"]
+                if any(keyword in error_msg for keyword in rate_limit_keywords):
+                    logger.warning(f"检测到速率限制: {error_msg}")
+                    return "RATE_LIMITED"
+
+                # 其他错误
+                return False
+
+            # 检查是否有 trackInfo
+            if "trackInfo" not in response_json:
+                logger.error(f"API响应中缺少 trackInfo 字段")
+                logger.debug(f"完整响应: {response_json}")
+                return False
+
+            # 解析音频信息
             sound_name = response_json["trackInfo"]["title"]
             intro = response_json["trackInfo"].get("intro", "")
             trackId = response_json["trackInfo"]["trackId"]

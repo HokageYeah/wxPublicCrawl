@@ -713,7 +713,7 @@ async def get_album_detail(request: Request, album_id: str) -> AlbumDetailRespon
 
             # 解析JSON响应
             json_data = response.json()
-            logger.info(f"专辑详情响应: {json_data}")
+            # logger.info(f"专辑详情响应: {json_data}")
             logger.info(f"专辑详情响应: ret={json_data.get('ret')}")
 
             # 检查返回码
@@ -731,7 +731,7 @@ async def get_album_detail(request: Request, album_id: str) -> AlbumDetailRespon
 
             # 提取数据
             data = json_data.get('data', {})
-            logger.info(f"专辑详情数据data: {data}")
+            # logger.info(f"专辑详情数据data: {data}")
 
             # 解析专辑页面主要信息
             album_page_main_info = data.get('albumPageMainInfo', {})
