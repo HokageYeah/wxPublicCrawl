@@ -260,9 +260,38 @@ class SliderSolver:
             return False
 
     def _save_cookies(self, cookies):
-        """保存cookies到文件"""
-        with open(self.cookies_file, 'w', encoding='utf-8') as f:
-            json.dump(cookies, f, indent=2, ensure_ascii=False)
+        """
+        保存cookies
+        使用的是 app.services.xmly 中的 session 管理机制
+        """
+        try:
+            # 延迟导入以避免循环依赖
+            from app.services.xmly import load_xmly_session, save_xmly_session
+            
+            # 将 Playwright cookies 列表转换为字典
+            cookies_dict = self._cookies_to_dict(cookies)
+            
+            # 尝试加载现有会话
+            session = load_xmly_session()
+            
+            status_data = {}
+            if session and session.get('user_info'):
+                status_data = session['user_info']
+
+            old_cookies = {}
+            # 如果有cookie 则合并
+            if session and session.get('cookies'):
+                old_cookies = session.get('cookies')
+
+            merged_cookies = {**old_cookies, **cookies_dict }
+            
+            # 保存会话 (如果存在则更新 cookies，不存在则创建新会话)
+            save_xmly_session(status_data, merged_cookies)
+            
+            print(f"[INFO] Cookies已通过 save_xmly_session 更新")
+            
+        except Exception as e:
+            print(f"[ERROR] 保存cookies失败: {e}")
 
     def load_cookies(self):
         """
