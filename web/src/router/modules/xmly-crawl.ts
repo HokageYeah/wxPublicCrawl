@@ -34,6 +34,15 @@ const routes: Array<RouteRecordRaw> = [
         },
       },
       {
+        path: "subscribed-albums",
+        name: "xmly-crawl-subscribed-albums",
+        component: () => import("@/views/xmly-crawl/XmlySubscribedAlbum.vue"),
+        meta: {
+          title: "订阅专辑",
+          requiresAuth: true,
+        },
+      },
+      {
         path: "album-detail",
         name: "xmly-crawl-album-detail",
         component: () => import("@/views/xmly-crawl/XmlyAlbumDetail.vue"),

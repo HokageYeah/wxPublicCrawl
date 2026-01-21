@@ -513,3 +513,73 @@ async def generate_session_id():
     session_id = f"{timestamp}{random_num}"  # 拼接成会话ID
     print('session_id----------', session_id)
     return session_id
+
+
+async def export_articles_to_excel(articles: list, save_path: str, file_name: str):
+    """
+    将文章列表导出到Excel文件
+    
+    参数:
+        articles: 文章列表，包含aid, title, publish_time, update_time, link
+        save_path: 保存路径
+        file_name: 文件名（不含扩展名）
+        
+    返回:
+        dict: 包含保存路径和文件名的结果
+    """
+    import pandas as pd
+    import os
+    from pathlib import Path
+    
+    try:
+        logger.info(f"开始导出文章到Excel，共 {len(articles)} 篇文章")
+        
+        # 将Pydantic模型转换为字典（如果传入的是模型对象）
+        article_dicts = []
+        for article in articles:
+            # 如果是Pydantic模型，转换为字典
+            if hasattr(article, 'model_dump'):
+                article_dict = article.model_dump()
+            elif hasattr(article, 'dict'):
+                article_dict = article.dict()
+            else:
+                article_dict = article
+            article_dicts.append(article_dict)
+        
+        # 创建DataFrame，按照指定顺序：aid, title, publish_time, update_time, link
+        df_data = []
+        for article in article_dicts:
+            df_data.append({
+                "文章ID": article.get("aid", "") if isinstance(article, dict) else getattr(article, "aid", ""),
+                "文章标题": article.get("title", "") if isinstance(article, dict) else getattr(article, "title", ""),
+                "发布时间": article.get("publish_time", "") if isinstance(article, dict) else getattr(article, "publish_time", ""),
+                "更新时间": article.get("update_time", "") if isinstance(article, dict) else getattr(article, "update_time", ""),
+                "文章链接": article.get("link", "") if isinstance(article, dict) else getattr(article, "link", "")
+            })
+        
+        df = pd.DataFrame(df_data)
+        
+        # 确保保存路径存在
+        save_dir = Path(save_path)
+        save_dir.mkdir(parents=True, exist_ok=True)
+        
+        # 构建完整文件路径
+        full_path = save_dir / f"{file_name}.xlsx"
+        
+        # 导出到Excel
+        df.to_excel(full_path, index=False, engine='openpyxl')
+        
+        logger.info(f"文章导出成功: {full_path}")
+        
+        return {
+            "success": True,
+            "file_path": str(full_path),
+            "article_count": len(articles)
+        }
+        
+    except ImportError as e:
+        logger.error(f"缺少必要的库: {e}")
+        raise HTTPException(status_code=500, detail=f"缺少必要的库，请安装 pandas 和 openpyxl: pip install pandas openpyxl")
+    except Exception as e:
+        logger.error(f"导出Excel失败: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"导出Excel失败: {str(e)}")

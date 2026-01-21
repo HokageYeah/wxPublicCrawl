@@ -443,3 +443,79 @@ class GetTrackPlayUrlRequest(BaseModel):
     albumId: str = Field(..., description="专辑ID")
     userId: str = Field(..., description="用户ID")
     trackId: str = Field(..., description="曲目ID")
+
+
+# 订阅专辑主播信息模型
+class SubscribedAlbumAnchor(BaseModel):
+    """订阅专辑主播信息"""
+    anchorUrl: str = Field(..., description="主播URL")
+    anchorNickName: str = Field(..., description="主播昵称")
+    anchorUid: int = Field(..., description="主播用户ID")
+    anchorCoverPath: str = Field(..., description="主播头像路径")
+    logoType: int = Field(..., description="logo类型")
+
+
+# 订阅专辑信息模型
+class SubscribedAlbumInfo(BaseModel):
+    """订阅专辑信息"""
+    id: int = Field(..., description="专辑ID")
+    title: str = Field(..., description="专辑标题")
+    subTitle: str = Field(..., description="副标题")
+    description: str = Field(..., description="描述")
+    coverPath: str = Field(..., description="封面路径")
+    isFinished: bool = Field(..., description="是否完结")
+    isPaid: bool = Field(..., description="是否付费")
+    anchor: SubscribedAlbumAnchor = Field(..., description="主播信息")
+    playCount: int = Field(..., description="播放量")
+    trackCount: int = Field(..., description="曲目数量")
+    albumUrl: str = Field(..., description="专辑URL")
+    albumStatus: int = Field(..., description="专辑状态")
+    lastUptrackAt: int = Field(..., description="最后更新时间戳")
+    lastUptrackAtStr: str = Field(..., description="最后更新时间字符串")
+    serialState: int = Field(..., description="连载状态")
+    isTop: bool = Field(..., description="是否置顶")
+    categoryCode: str = Field(..., description="分类编码")
+    categoryTitle: str = Field(..., description="分类标题")
+    lastUptrackUrl: str = Field(..., description="最后更新URL")
+    lastUptrackTitle: str = Field(..., description="最后更新标题")
+    vipType: int = Field(..., description="VIP类型")
+    albumSubscript: int = Field(..., description="专辑订阅数")
+    albumScore: str = Field(..., description="专辑评分")
+
+
+# 订阅专辑分类模型
+class SubscribedAlbumCategory(BaseModel):
+    """订阅专辑分类"""
+    code: str = Field(..., description="分类编码")
+    title: str = Field(..., description="分类标题")
+    count: int = Field(..., description="该分类下的专辑数量")
+
+
+# 订阅专辑数据模型
+class SubscribedAlbumsData(BaseModel):
+    """订阅专辑数据"""
+    albumsInfo: list[SubscribedAlbumInfo] = Field(default_factory=list, description="专辑信息列表")
+    privateSub: bool = Field(..., description="是否私人订阅")
+    pageNum: int = Field(..., description="当前页码")
+    pageSize: int = Field(..., description="每页数量")
+    totalCount: int = Field(..., description="总数量")
+    uid: int = Field(..., description="用户ID")
+    currentUid: int = Field(..., description="当前用户ID")
+    categoryCode: str = Field(..., description="当前分类编码")
+    categoryArray: list[SubscribedAlbumCategory] = Field(default_factory=list, description="分类数组")
+
+
+# 订阅专辑响应模型
+class SubscribedAlbumsResponse(BaseModel):
+    """订阅专辑响应"""
+    ret: int = Field(..., description="返回码，200表示成功")
+    data: SubscribedAlbumsData = Field(..., description="订阅专辑数据")
+
+
+# 获取订阅专辑请求模型
+class GetSubscribedAlbumsRequest(BaseModel):
+    """获取订阅专辑请求"""
+    num: int = Field(default=1, description="页码，默认1")
+    size: int = Field(default=30, description="每页数量，默认30")
+    subType: int = Field(default=3, description="订阅类型，1-最近常听，2-最新更新，3-最近订阅，默认3")
+    category: str = Field(default="all", description="分类，默认all")

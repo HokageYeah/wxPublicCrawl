@@ -5,6 +5,7 @@ import type {
   CheckQrcodeStatusResponse,
   SessionResponse,
   BatchDownloadResponseData,
+  SubscribedAlbumsResponse,
 } from "@/types/xmly";
 
 // 基础URL
@@ -220,6 +221,40 @@ export const xmlyService = {
         resData = JSON.parse(data);
       } catch (e) {
         console.error("解析播放链接失败:", e);
+      }
+    }
+    return resData;
+  },
+
+  /**
+   * 获取用户订阅专辑列表
+   * @param num 页码，默认1
+   * @param size 每页数量，默认30
+   * @param subType 订阅类型，1-最近常听，2-最新更新，3-最近订阅，默认3
+   * @param category 分类，默认all
+   * @returns Promise<SubscribedAlbumsResponse> 订阅专辑列表
+   */
+  getSubscribedAlbums: async (
+    num: number = 1,
+    size: number = 30,
+    subType: number = 3,
+    category: string = "all"
+  ): Promise<SubscribedAlbumsResponse> => {
+    const data = await api.post<SubscribedAlbumsResponse>(
+      "/xmly/subscription/subscribed-albums",
+      {
+        num,
+        size,
+        subType,
+        category
+      }
+    );
+    let resData: any = data;
+    if (typeof data === "string") {
+      try {
+        resData = JSON.parse(data);
+      } catch (e) {
+        console.error("解析订阅专辑列表失败:", e);
       }
     }
     return resData;

@@ -381,3 +381,74 @@ export interface CurrentTrack {
   playUrls: PlayUrls;
 }
 
+// ========== 订阅专辑相关类型 ==========
+
+// 订阅专辑主播信息
+export interface SubscribedAlbumAnchor {
+  anchorUrl: string; // 主播URL
+  anchorNickName: string; // 主播昵称
+  anchorUid: number; // 主播用户ID
+  anchorCoverPath: string; // 主播头像路径
+  logoType: number; // logo类型
+}
+
+// 订阅专辑信息
+export interface SubscribedAlbumInfo {
+  id: number; // 专辑ID
+  title: string; // 专辑标题
+  subTitle: string; // 副标题
+  description: string; // 描述
+  coverPath: string; // 封面路径
+  isFinished: boolean; // 是否完结
+  isPaid: boolean; // 是否付费
+  anchor: SubscribedAlbumAnchor; // 主播信息
+  playCount: number; // 播放量
+  trackCount: number; // 曲目数量
+  albumUrl: string; // 专辑URL
+  albumStatus: number; // 专辑状态
+  lastUptrackAt: number; // 最后更新时间戳
+  lastUptrackAtStr: string; // 最后更新时间字符串
+  serialState: number; // 连载状态
+  isTop: boolean; // 是否置顶
+  categoryCode: string; // 分类编码
+  categoryTitle: string; // 分类标题
+  lastUptrackUrl: string; // 最后更新URL
+  lastUptrackTitle: string; // 最后更新标题
+  vipType: number; // VIP类型
+  albumSubscript: number; // 专辑订阅数
+  albumScore: string; // 专辑评分
+}
+
+// 订阅专辑分类
+export interface SubscribedAlbumCategory {
+  code: string; // 分类编码
+  title: string; // 分类标题
+  count: number; // 该分类下的专辑数量
+}
+
+// 订阅专辑数据
+export interface SubscribedAlbumsData {
+  albumsInfo: SubscribedAlbumInfo[]; // 专辑信息列表
+  privateSub: boolean; // 是否私人订阅
+  pageNum: number; // 当前页码
+  pageSize: number; // 每页数量
+  totalCount: number; // 总数量
+  uid: number; // 用户ID
+  currentUid: number; // 当前用户ID
+  categoryCode: string; // 当前分类编码
+  categoryArray: SubscribedAlbumCategory[]; // 分类数组
+}
+
+// 订阅专辑响应
+export interface SubscribedAlbumsResponse {
+  ret: number; // 返回码，200表示成功
+  data: SubscribedAlbumsData; // 订阅专辑数据
+}
+
+// 获取订阅专辑请求
+export interface GetSubscribedAlbumsRequest {
+  num?: number; // 页码，默认1
+  size?: number; // 每页数量，默认30
+  subType?: number; // 订阅类型，1-最近常听，2-最新更新，3-最近订阅，默认3
+  category?: string; // 分类，默认all
+}

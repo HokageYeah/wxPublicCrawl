@@ -21,7 +21,12 @@ from app.schemas.xmly_data import (
     SubscriptInfo,
     TracksListResponse,
     TracksListData,
-    TrackInfo
+    TrackInfo,
+    SubscribedAlbumsResponse,
+    SubscribedAlbumsData,
+    SubscribedAlbumInfo,
+    SubscribedAlbumAnchor,
+    SubscribedAlbumCategory
 )
 from app.services.system import system_manager
 from app.decorators.request_decorator import extract_wx_credentials, add_xmly_sign
@@ -952,3 +957,157 @@ async def get_tracks_list(request: Request, album_id: str, page_num: int = 1, pa
         logger.error(f"未知错误: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@add_xmly_sign(headers)
+@extract_wx_credentials(
+    global_cookies={},
+    global_token='',
+    cookie_header_name='X-XMLY-Cookies',
+    token_header_name='X-XMLY-Token',
+    state_cookie_key='xmly_cookies',
+    state_token_key='xmly_token'
+)
+async def get_subscribed_albums(request: Request, num: int = 1, size: int = 30, sub_type: int =3, category: str = 'all') -> SubscribedAlbumsResponse:
+    """
+    获取用户订阅的专辑列表
+
+    Args:
+        request: FastAPI Request对象
+        num: 页码，默认1
+        size: 每页数量，默认30
+        sub_type: 订阅类型，1-最近常听，2-最新更新，3-最近订阅，默认3
+        category: 分类，默认all
+
+    Returns:
+        SubscribedAlbumsResponse: 订阅专辑数据
+
+    Raises:
+        HTTPException: 请求失败时抛出
+    """
+    # 从 request.state 中获取装饰器处理后的 cookies 和 token
+    merged_cookies = request.state.xmly_cookies
+    final_token = request.state.xmly_token
+
+    # 如果cookies为空，尝试从session加载
+    if not merged_cookies or len(merged_cookies) == 0:
+        session = load_xmly_session()
+        if not session:
+            raise HTTPException(status_code=401, detail="未登录，请先登录")
+        merged_cookies = session['cookies']
+        final_token = session['user_info'].get('token', '')
+        logger.info("从session中加载喜马拉雅登录信息")
+
+    # 构造订阅专辑列表URL
+    url = "https://www.ximalaya.com/revision/album/v1/sub/comprehensive"
+    params = {
+        "num": num,
+        "size": size,
+        "subType": sub_type,
+        "category": category
+    }
+
+    try:
+        async with httpx.AsyncClient(verify=False, timeout=10.0) as client:
+            logger.info(f"正在获取订阅专辑列表，num: {num}, size: {size}, subType: {sub_type}, category: {category}")
+
+            # 设置正确的Referer
+            headers["Referer"] = "https://www.ximalaya.com/my/subscribed"
+
+            logger.info(f"get_subscribed_albums---请求headers: {headers}")
+            logger.info(f"get_subscribed_albums---请求cookies: {merged_cookies}")
+            logger.info(f"get_subscribed_albums---请求params: {params}")
+
+            # 发送GET请求
+            response = await client.get(url, params=params, headers=headers, cookies=merged_cookies)
+            response.raise_for_status()
+
+            json_data = response.json()
+
+            # 检查返回码
+            ret = json_data.get('ret', 0)
+            if ret != 200:
+                logger.error(f"获取订阅专辑列表失败，返回码: {ret}, 消息: {json_data.get('msg', '')}")
+                raise HTTPException(status_code=400, detail=json_data.get('msg', '获取订阅专辑列表失败'))
+
+            # 提取数据
+            data = json_data.get('data', {})
+
+            # 解析专辑列表
+            albums_data = data.get('albumsInfo', [])
+            albums_list = []
+            for album in albums_data:
+                # 解析主播信息
+                anchor_data = album.get('anchor', {})
+                anchor = SubscribedAlbumAnchor(
+                    anchorUrl=anchor_data.get('anchorUrl', ''),
+                    anchorNickName=anchor_data.get('anchorNickName', ''),
+                    anchorUid=anchor_data.get('anchorUid', 0),
+                    anchorCoverPath=anchor_data.get('anchorCoverPath', ''),
+                    logoType=anchor_data.get('logoType', 0)
+                )
+
+                # 解析专辑信息
+                albums_list.append(SubscribedAlbumInfo(
+                    id=album.get('id', 0),
+                    title=album.get('title', ''),
+                    subTitle=album.get('subTitle', ''),
+                    description=album.get('description', ''),
+                    coverPath=album.get('coverPath', ''),
+                    isFinished=album.get('isFinished', False),
+                    isPaid=album.get('isPaid', False),
+                    anchor=anchor,
+                    playCount=album.get('playCount', 0),
+                    trackCount=album.get('trackCount', 0),
+                    albumUrl=album.get('albumUrl', ''),
+                    albumStatus=album.get('albumStatus', 0),
+                    lastUptrackAt=album.get('lastUptrackAt', 0),
+                    lastUptrackAtStr=album.get('lastUptrackAtStr', ''),
+                    serialState=album.get('serialState', 0),
+                    isTop=album.get('isTop', False),
+                    categoryCode=album.get('categoryCode', ''),
+                    categoryTitle=album.get('categoryTitle', ''),
+                    lastUptrackUrl=album.get('lastUptrackUrl', ''),
+                    lastUptrackTitle=album.get('lastUptrackTitle', ''),
+                    vipType=album.get('vipType', 0),
+                    albumSubscript=album.get('albumSubscript', 0),
+                    albumScore=album.get('albumScore', '0.0')
+                ))
+
+            # 解析分类数组
+            category_array_data = data.get('categoryArray', [])
+            category_list = []
+            for cat in category_array_data:
+                category_list.append(SubscribedAlbumCategory(
+                    code=cat.get('code', ''),
+                    title=cat.get('title', ''),
+                    count=cat.get('count', 0)
+                ))
+
+            # 构造订阅专辑数据
+            subscribed_albums_data = SubscribedAlbumsData(
+                albumsInfo=albums_list,
+                privateSub=data.get('privateSub', False),
+                pageNum=data.get('pageNum', num),
+                pageSize=data.get('pageSize', size),
+                totalCount=data.get('totalCount', 0),
+                uid=data.get('uid', 0),
+                currentUid=data.get('currentUid', 0),
+                categoryCode=data.get('categoryCode', category),
+                categoryArray=category_list
+            )
+
+            logger.info(f"订阅专辑列表获取成功，总数: {subscribed_albums_data.totalCount}, 当前页: {subscribed_albums_data.pageNum}")
+
+            return SubscribedAlbumsResponse(
+                ret=json_data.get('ret', 200),
+                data=subscribed_albums_data
+            )
+
+    except httpx.HTTPStatusError as e:
+        logger.error(f"HTTP错误: {e}")
+        raise HTTPException(status_code=e.response.status_code, detail=str(e))
+    except httpx.RequestError as e:
+        logger.error(f"请求错误: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        logger.error(f"未知错误: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

@@ -16,9 +16,10 @@ from app.services.wx_public import (
     fetch_get_login_info,
     fetch_redirect_login_info,
     fetch_verify_user_info,
+    export_articles_to_excel,
 )
-from app.schemas.wx_data import ArticleDetailRequest, ArticleListRequest, CookieTokenRequest, PreloginRequest, WebreportRequest, StartLoginRequest, RedirectLoginInfoRequest, EducationAnalyzeRequest, EducationAnalyzeByIdRequest
-from app.ai.code.education_analyze import analyze_education_articles, analyze_education_articles_by_id
+from app.schemas.wx_data import ArticleDetailRequest, ArticleListRequest, CookieTokenRequest, PreloginRequest, WebreportRequest, StartLoginRequest, RedirectLoginInfoRequest, EducationAnalyzeRequest, EducationAnalyzeByIdRequest, GetAllArticlesInfoByIdRequest, ExportArticlesToExcelRequest
+from app.ai.code.education_analyze import analyze_education_articles, analyze_education_articles_by_id, get_all_articles_info_by_id
 from app.schemas.common_data import ApiResponseData
 from app.decorators.cache_decorator import ttl_cache, timed_cache, get_cache
 
@@ -86,6 +87,50 @@ async def analyze_education_content_by_id(params: EducationAnalyzeByIdRequest):
     AI通过公众号ID分析教育相关文章
     """
     result = await analyze_education_articles_by_id(params.wx_public_id)
+    return {"code": 0, "msg": "success", "data": result}
+
+
+# AI通过ID获取公众号所有文章信息
+@router.post("/get-all-articles-info-by-id", response_model=ApiResponseData)
+async def get_all_articles_info_by_id_endpoint(params: GetAllArticlesInfoByIdRequest):
+    """
+    AI通过公众号ID获取所有文章的标题、发布时间、链接
+    """
+    result = await get_all_articles_info_by_id(params.wx_public_id)
+    return {"code": 0, "msg": "success", "data": result}
+
+
+# 导出文章到Excel
+@router.post("/export-articles-to-excel", response_model=ApiResponseData)
+async def export_articles_to_excel_endpoint(params: ExportArticlesToExcelRequest):
+    """
+    将文章列表导出到Excel文件
+    
+    请求体示例:
+    ```json
+    {
+        "articles": [
+            {
+                "aid": "2247484875_1",
+                "link": "https://mp.weixin.qq.com/s/pRZA_mYBGy6iWUjqqdYG9A",
+                "publish_time": "2025-08-13 20:50:17",
+                "title": "文章标题",
+                "update_time": 1755089417
+            }
+        ],
+        "save_path": "/Users/username/Desktop",
+        "file_name": "公众号文章"
+    }
+    ```
+    
+    Excel表头顺序：
+    1. 文章ID (aid)
+    2. 文章标题
+    3. 发布时间 (publish_time)
+    4. 更新时间 (update_time)
+    5. 文章链接
+    """
+    result = await export_articles_to_excel(params.articles, params.save_path, params.file_name)
     return {"code": 0, "msg": "success", "data": result}
 
 

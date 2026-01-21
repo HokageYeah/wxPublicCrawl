@@ -29,10 +29,19 @@
                             <span v-else class="i-carbon-idea mr-2 text-lg"></span>
                             AI帮分析
                         </button>
+                        <button @click="exportArticles" :disabled="exporting || !downloadPath" class="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm disabled:opacity-70 disabled:cursor-not-allowed">
+                            <span v-if="exporting" class="i-carbon-circle-dash animate-spin mr-2 text-lg"></span>
+                            <span v-else class="i-carbon-download mr-2 text-lg"></span>
+                            文章导出
+                        </button>
                     </div>
                     <p class="text-xs text-gray-500 flex items-center">
                         <span class="i-carbon-information mr-1"></span>
                         AI帮助分析哪些文章是跟教育类有关的
+                    </p>
+                    <p v-if="!downloadPath" class="text-xs text-amber-600 flex items-center">
+                        <span class="i-carbon-warning-filled mr-1"></span>
+                        请先设置下载地址才能使用文章导出功能
                     </p>
                 </div>
             </div>
@@ -250,6 +259,7 @@ import { useRoute, useRouter } from 'vue-router';
 // import axios from 'axios';
 import request from '@/utils/request';
 import { useWechatLoginStore } from '@/stores/wechatLoginStore';
+import { wechatService } from '@/services/wechatService';
 
 // 文章数据接口
 interface Article {
@@ -279,6 +289,7 @@ const isUploadToAliyun = ref(false);
 const articles = ref<Article[]>([]);
 const loading = ref(false);
 const analyzing = ref(false);
+const exporting = ref(false);
 
 // 分页
 const currentPage = ref(1);
@@ -548,6 +559,68 @@ const analyzeEducation = async () => {
         alert('AI分析请求失败，请稍后重试。');
     } finally {
         analyzing.value = false;
+    }
+};
+
+const exportArticles = async () => {
+    if (!downloadPath.value) {
+        alert('请先设置下载地址！');
+        return;
+    }
+    
+    exporting.value = true;
+    try {
+        console.log('========== 开始导出文章信息 ==========');
+        console.log('公众号ID:', fakeid);
+        console.log('公众号名称:', nickname);
+        console.log('保存路径:', downloadPath.value);
+        console.log('');
+        
+        // 调用 wechatService 循环获取所有文章
+        const allArticles = await wechatService.getAllArticles(
+            fakeid,
+            (current: number, total: number, message: string) => {
+                // 进度回调
+                console.log(`[进度] ${message}`);
+            }
+        );
+        
+        console.log('');
+        console.log('========== 文章导出结果 ==========');
+        console.log(`共获取 ${allArticles.length} 篇文章`);
+        console.log('');
+        
+        allArticles.forEach((article, index) => {
+            console.log(`[${index + 1}] ${article.title}`);
+            console.log(`    文章ID: ${article.aid}`);
+            console.log(`    发布时间: ${article.publish_time || '未知'}`);
+            console.log(`    链接: ${article.link}`);
+            console.log('');
+        });
+        
+        console.log('================================');
+        console.log('开始导出到Excel...');
+        
+        // 调用后端接口导出到Excel
+        const exportResult = await wechatService.exportArticlesToExcel(allArticles, downloadPath.value, nickname || '公众号文章');
+        
+        console.log('导出结果:', exportResult);
+        
+        if (exportResult && exportResult.code === 0 && exportResult.data) {
+            console.log('Excel导出成功！');
+            console.log(`文件路径: ${exportResult.data.file_path}`);
+            console.log('================================');
+            
+            alert(`导出成功！\n\n共获取 ${allArticles.length} 篇文章\n已导出到Excel文件：${exportResult.data.file_path}`);
+        } else {
+            console.error('导出Excel失败:', exportResult);
+            alert('导出Excel失败，请查看控制台详情。');
+        }
+    } catch (error) {
+        console.error('导出失败:', error);
+        alert('导出请求失败，请稍后重试。\n错误信息：' + (error as Error).message);
+    } finally {
+        exporting.value = false;
     }
 };
 

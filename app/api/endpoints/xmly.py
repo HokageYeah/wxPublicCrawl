@@ -12,7 +12,8 @@ from app.services.xmly import (
     unsubscribe_album,
     search_album,
     get_album_detail,
-    get_tracks_list
+    get_tracks_list,
+    get_subscribed_albums
 )
 from app.services.xmly_download import batch_get_tracks_download_info, get_track_play_url
 from app.services.system import system_manager
@@ -28,7 +29,8 @@ from app.schemas.xmly_data import (
     SearchAlbumResponse,
     GetAlbumDetailRequest,
     GetTracksListRequest,
-    GetTrackPlayUrlRequest
+    GetTrackPlayUrlRequest,
+    GetSubscribedAlbumsRequest
 )
 
 router = APIRouter()
@@ -457,5 +459,55 @@ async def xmly_get_track_play_url(request: Request, params: GetTrackPlayUrlReque
     except Exception as e:
         logger.error(f"获取音频播放链接异常: {e}")
         raise HTTPException(status_code=500, detail=f"获取音频播放链接失败: {str(e)}")
+
+
+# 喜马拉雅获取用户订阅专辑列表接口
+@router.post("/subscription/subscribed-albums", response_model=ApiResponseData)
+async def xmly_get_subscribed_albums(request: Request, params: GetSubscribedAlbumsRequest):
+    """
+    获取用户订阅的专辑列表
+
+    Args:
+        num: 页码，默认1
+        size: 每页数量，默认30
+        subType: 订阅类型，1-最近常听，2-最新更新，3-最近订阅，默认3
+        category: 分类，默认all
+
+    Returns:
+        {
+            "ret": 200,
+            "data": {
+                "albumsInfo": [...],  // 专辑信息列表
+                "privateSub": false,
+                "pageNum": 1,
+                "pageSize": 30,
+                "totalCount": 1,
+                "uid": 187981619,
+                "currentUid": 187981619,
+                "categoryCode": "all",
+                "categoryArray": [...]  // 分类数组
+            }
+        }
+    """
+    try:
+        # 调用服务层函数，装饰器会自动处理cookie和token
+        result = await get_subscribed_albums(
+            request,
+            params.num,
+            params.size,
+            params.subType,
+            params.category
+        )
+        # 将result转换为json
+        result_json = result.model_dump_json()
+        logger.info(f"获取订阅专辑列表返回结果: {result_json}")
+        return result_json
+
+    except HTTPException as e:
+        logger.error(f"获取订阅专辑列表失败: {e.detail}")
+        raise e
+    except Exception as e:
+        logger.error(f"获取订阅专辑列表异常: {e}")
+        raise HTTPException(status_code=500, detail=f"获取订阅专辑列表失败: {str(e)}")
 
 
