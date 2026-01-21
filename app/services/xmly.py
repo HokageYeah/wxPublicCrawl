@@ -1019,8 +1019,16 @@ async def get_subscribed_albums(request: Request, num: int = 1, size: int = 30, 
             # 发送GET请求
             response = await client.get(url, params=params, headers=headers, cookies=merged_cookies)
             response.raise_for_status()
+            logger.info(f"get_subscribed_albums---响应: {response.text}")
 
             json_data = response.json()
+
+            # 处理响应（包括风险验证）
+            json_data = await handle_xmly_risk_verification(
+                client, url, headers, merged_cookies, params,
+                '', slider_solver, sign_generator, json_data,
+                verify_url=f"https://www.ximalaya.com/my/subscribed"
+            )
 
             # 检查返回码
             ret = json_data.get('ret', 0)

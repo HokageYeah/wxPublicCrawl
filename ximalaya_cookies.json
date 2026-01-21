@@ -1,7 +1,7 @@
 [
   {
     "name": "HWWAFSESID",
-    "value": "3ed3327df6e2bedf62f",
+    "value": "10381247a18c64f5c7b",
     "domain": "www.ximalaya.com",
     "path": "/",
     "expires": -1,
@@ -11,8 +11,28 @@
   },
   {
     "name": "HWWAFSESTIME",
-    "value": "1768992739007",
+    "value": "1768996392781",
     "domain": "www.ximalaya.com",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "trackType",
+    "value": "web",
+    "domain": ".ximalaya.com",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "x_xmly_traffic",
+    "value": "utm_source%3A%26utm_medium%3A%26utm_campaign%3A%26utm_content%3A%26utm_term%3A%26utm_from%3A",
+    "domain": ".ximalaya.com",
     "path": "/",
     "expires": -1,
     "httpOnly": false,
@@ -21,97 +41,17 @@
   },
   {
     "name": "_xmLog",
-    "value": "h5&0b2daf1a-3c56-4060-be70-6dd84156c3ce&process.env.sdkVersion",
+    "value": "h5&aa86e0ea-3610-49d5-9002-3300a7f0f62b&2.4.15-alpha.2",
     "domain": ".ximalaya.com",
     "path": "/",
-    "expires": 1803552744.693574,
-    "httpOnly": false,
-    "secure": false,
-    "sameSite": "Lax"
-  },
-  {
-    "name": "xm-page-viewid",
-    "value": "ximalaya-web",
-    "domain": ".ximalaya.com",
-    "path": "/",
-    "expires": -1,
-    "httpOnly": false,
-    "secure": false,
-    "sameSite": "Lax"
-  },
-  {
-    "name": "DATE",
-    "value": "1768992744564",
-    "domain": "www.ximalaya.com",
-    "path": "/",
-    "expires": -1,
-    "httpOnly": false,
-    "secure": false,
-    "sameSite": "Lax"
-  },
-  {
-    "name": "wfp",
-    "value": "ACM3MjdmZDQ4ZTY0YjM5NWU4sM-AgYQZ73x4bXdlYl93d3c",
-    "domain": ".ximalaya.com",
-    "path": "/",
-    "expires": 1800528745,
-    "httpOnly": false,
-    "secure": false,
-    "sameSite": "Lax"
-  },
-  {
-    "name": "crystal",
-    "value": "U2FsdGVkX19BoFctnWR8oZboZKvZ+S5Oo7JzAXVwm22Pq+SLZ4robMQi6cx4XyAtUFtgQIUnWYapfsoIJixqIIpeMErD/fLPlVrlXvE+S0QTHEcBOm3hBT03LvInOoEBV9nrC+Wckv7O3dlNatN4/vECG1uJp5rb1MPW9IBy1JuKiYm3K5VWHvsEqHCwNzTpTUq6Lt1lNZ4d5pnqKVTExv/6Tfdyj6ChVJUxdX3lgAXSX+K09K+9MWdsUD6HVX4+",
-    "domain": "www.ximalaya.com",
-    "path": "/",
-    "expires": -1,
-    "httpOnly": false,
-    "secure": false,
-    "sameSite": "Lax"
-  },
-  {
-    "name": "HMACCOUNT_BFESS",
-    "value": "578487F7DAD37CDA",
-    "domain": ".hm.baidu.com",
-    "path": "/",
-    "expires": 1803552745.241992,
-    "httpOnly": false,
-    "secure": true,
-    "sameSite": "None"
-  },
-  {
-    "name": "Hm_lvt_4a7d8ec50cfd6af753c4f8aee3425070",
-    "value": "1768992745",
-    "domain": ".ximalaya.com",
-    "path": "/",
-    "expires": 1800528745,
-    "httpOnly": false,
-    "secure": false,
-    "sameSite": "Lax"
-  },
-  {
-    "name": "Hm_lpvt_4a7d8ec50cfd6af753c4f8aee3425070",
-    "value": "1768992745",
-    "domain": ".ximalaya.com",
-    "path": "/",
-    "expires": -1,
-    "httpOnly": false,
-    "secure": false,
-    "sameSite": "Lax"
-  },
-  {
-    "name": "HMACCOUNT",
-    "value": "578487F7DAD37CDA",
-    "domain": ".ximalaya.com",
-    "path": "/",
-    "expires": -1,
+    "expires": 1803556396.303025,
     "httpOnly": false,
     "secure": false,
     "sameSite": "Lax"
   },
   {
     "name": "impl",
-    "value": "www.ximalaya.com.login",
+    "value": "passport.ximalaya.com.web",
     "domain": ".ximalaya.com",
     "path": "/",
     "expires": -1,
@@ -120,9 +60,9 @@
     "sameSite": "Lax"
   },
   {
-    "name": "cmci9xde",
-    "value": "U2FsdGVkX19PQlqM0917yXZgxKvcUJXx+SohKl34k7gMS/A4bxKWhzu4FY6AT41RJuJ7RoagcgwEf/nbrCseaA==",
-    "domain": "www.ximalaya.com",
+    "name": "s&e",
+    "value": "8c6efef4574ecbaa7f2dfd4fa4f9d5b5",
+    "domain": "passport.ximalaya.com",
     "path": "/",
     "expires": -1,
     "httpOnly": false,
@@ -130,53 +70,13 @@
     "sameSite": "Lax"
   },
   {
-    "name": "pmck9xge",
-    "value": "U2FsdGVkX19MtailtXrScvloeG2Wc5JTZVjrpf7lqA8=",
-    "domain": "www.ximalaya.com",
+    "name": "s&a",
+    "value": "B%0CU%06%04%06%11WOP[%06%09%05%1A%02A%01Y%07%04%07O%09%1B_%05Z%0AV%1DVV[CSBSWRC]_O_SCS",
+    "domain": "passport.ximalaya.com",
     "path": "/",
     "expires": -1,
     "httpOnly": false,
     "secure": false,
     "sameSite": "Lax"
-  },
-  {
-    "name": "assva6",
-    "value": "U2FsdGVkX1+ibdlaNLlJ1jX2p6wLJBz/+tEq0O9wKik=",
-    "domain": "www.ximalaya.com",
-    "path": "/",
-    "expires": -1,
-    "httpOnly": false,
-    "secure": false,
-    "sameSite": "Lax"
-  },
-  {
-    "name": "assva5",
-    "value": "U2FsdGVkX19n6IKKW27IEEdUHrucAqxmdM3TpMaCJycWVJJ6gS5VUiB31dl7cFzSI9kwE1TG5ko7SZ0ASFu+LQ==",
-    "domain": "www.ximalaya.com",
-    "path": "/",
-    "expires": -1,
-    "httpOnly": false,
-    "secure": false,
-    "sameSite": "Lax"
-  },
-  {
-    "name": "vmce9xdq",
-    "value": "U2FsdGVkX19Ft4dCv7ifDHPjtUZ1Pzuo+vKElasE2Y+uIUWJXv4ax1M+ImQFRG1sRYRiS+HBHHNe1rWNPvZJJnV3iCj5E96KmrmWF4N4Rb4BKwkWpwd4Kh21AqrXwJboxtT5FaKmjLYc32gjw7HP1mcCljTuTOgIg0B3NigSLzU=",
-    "domain": "www.ximalaya.com",
-    "path": "/",
-    "expires": -1,
-    "httpOnly": false,
-    "secure": false,
-    "sameSite": "Lax"
-  },
-  {
-    "name": "captcha_v4_user",
-    "value": "70b7f5eaac23449ea8a05b0d348c766b",
-    "domain": "gcaptcha4.geetest.com",
-    "path": "/",
-    "expires": 1800528746.361146,
-    "httpOnly": false,
-    "secure": true,
-    "sameSite": "None"
   }
 ]

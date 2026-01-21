@@ -62,7 +62,7 @@ async def handle_xmly_risk_verification(
         ```
     """
     # 检查返回码
-    if json_data.get('ret') != 200:
+    if json_data.get('ret') != 200 and json_data.get('isNeedLogin') is None:
         error_msg = json_data.get('msg', '未知错误')
         logger.error(f"请求失败: {error_msg}")
         raise HTTPException(status_code=400, detail=error_msg)
@@ -76,7 +76,7 @@ async def handle_xmly_risk_verification(
     print(f'🔍 [DEBUG] risk_level: {risk_level}')
     print(f'🔍 [DEBUG] reason: {reason}')
      # riskLevel=5 或 tracks为空表示需要滑块验证
-    if reason == "risk invalid" or risk_level == 5 or (tracks is not None and len(tracks) == 0):
+    if reason == "risk invalid" or risk_level == 5 or (tracks is not None and len(tracks) == 0) or json_data.get('isNeedLogin') is True:
         return await _perform_slider_verification(
             client, url, headers, merged_cookies, params,
             keyword, slider_solver, sign_generator, verify_url
