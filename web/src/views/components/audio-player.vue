@@ -20,12 +20,12 @@
         </div>
 
         <!-- 控制按钮 -->
-        <div class="flex items-center gap-2 flex-shrink-0">
-          <!-- 快退10秒 -->
+        <div class="flex items-center gap-3 flex-shrink-0">
+          <!-- 上一首 -->
           <button
-            @click="seek(-10)"
+            @click="handlePrevTrack"
             class="w-10 h-10 flex items-center justify-center rounded-full bg-[#1f1f1f] text-gray-400 hover:text-white hover:bg-[#2a2a2a] transition-all"
-            title="快退10秒"
+            title="上一首"
           >
             <span class="i-carbon-skip-back-filled text-lg"></span>
           </button>
@@ -49,14 +49,36 @@
             <span v-else class="i-carbon-play-filled text-2xl ml-1"></span>
           </button>
 
-          <!-- 快进10秒 -->
+          <!-- 下一首 -->
           <button
-            @click="seek(10)"
+            @click="handleNextTrack"
             class="w-10 h-10 flex items-center justify-center rounded-full bg-[#1f1f1f] text-gray-400 hover:text-white hover:bg-[#2a2a2a] transition-all"
-            title="快进10秒"
+            title="下一首"
           >
             <span class="i-carbon-skip-forward-filled text-lg"></span>
           </button>
+
+          <!-- 小的快退/快进按钮组 -->
+          <div class="flex items-center gap-1.5 ml-2">
+            <!-- 快退10秒（小按钮） -->
+            <button
+              @click="seek(-10)"
+              class="flex flex-col items-center justify-center w-6 h-6 rounded-full bg-[#1f1f1f] text-gray-500 hover:text-orange-400 hover:bg-[#2a2a2a] transition-all duration-200 border border-white/5 hover:border-orange-500/30"
+              title="快退10秒"
+            >
+              <span class="i-carbon-rewind text-xs leading-none mb-0.5"></span>
+              <span class="text-[8px] font-medium leading-none">-10s</span>
+            </button>
+            <!-- 快进10秒（小按钮） -->
+            <button
+              @click="seek(10)"
+              class="flex flex-col items-center justify-center w-6 h-6 rounded-full bg-[#1f1f1f] text-gray-500 hover:text-orange-400 hover:bg-[#2a2a2a] transition-all duration-200 border border-white/5 hover:border-orange-500/30"
+              title="快进10秒"
+            >
+              <span class="i-carbon-forward text-xs leading-none mb-0.5"></span>
+              <span class="text-[8px] font-medium leading-none">+10s</span>
+            </button>
+          </div>
 
           <!-- 音量控制 -->
           <div class="flex items-center gap-2 ml-2">
@@ -183,6 +205,8 @@ const emit = defineEmits<{
   (e: "pause"): void;
   (e: "ended"): void;
   (e: "error"): void;
+  (e: "prev"): void;
+  (e: "next"): void;
 }>();
 
 // 响应式数据
@@ -319,6 +343,16 @@ const seek = (seconds: number) => {
   if (!audioElement.value) return;
   const newTime = currentTime.value + seconds;
   audioElement.value.currentTime = Math.max(0, Math.min(newTime, duration.value));
+};
+
+// 上一首
+const handlePrevTrack = () => {
+  emit("prev");
+};
+
+// 下一首
+const handleNextTrack = () => {
+  emit("next");
 };
 
 // 切换静音

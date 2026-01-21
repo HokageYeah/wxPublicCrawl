@@ -24,6 +24,52 @@
               喜马拉雅搜索
             </h1>
           </div>
+
+          <!-- 筛选标签 -->
+          <div
+            v-if="hasSearched && results.length > 0"
+            class="flex items-center gap-2"
+          >
+            <button
+              @click="toggleFilter('paid')"
+              class="px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-300 flex items-center gap-1.5"
+              :class="[
+                filters.paid
+                  ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
+                  : 'bg-gray-800/50 text-gray-400 border-gray-700 hover:bg-gray-800 hover:text-gray-300'
+              ]"
+            >
+              <span
+                :class="filters.paid ? 'i-carbon-checkmark-filled' : 'i-carbon-checkbox'"
+                class="text-base"
+              ></span>
+              付费
+            </button>
+            <button
+              @click="toggleFilter('finished')"
+              class="px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-300 flex items-center gap-1.5"
+              :class="[
+                filters.finished
+                  ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                  : 'bg-gray-800/50 text-gray-400 border-gray-700 hover:bg-gray-800 hover:text-gray-300'
+              ]"
+            >
+              <span
+                :class="filters.finished ? 'i-carbon-checkmark-filled' : 'i-carbon-checkbox'"
+                class="text-base"
+              ></span>
+              完本
+            </button>
+            <!-- 清除所有筛选 -->
+            <button
+              v-if="filters.paid || filters.finished"
+              @click="clearAllFilters"
+              class="px-2.5 py-1.5 text-xs text-gray-500 hover:text-gray-300 transition-colors"
+              title="清除筛选"
+            >
+              <span class="i-carbon-close"></span>
+            </button>
+          </div>
         </div>
 
         <!-- 搜索框 -->
@@ -250,8 +296,13 @@ const loading = ref(false);
 const actionLoading = ref<number | null>(null);
 const hasSearched = ref(false);
 const results = ref<SearchAlbumResult[]>([]);
+const allResults = ref<SearchAlbumResult[]>([]); // 存储完整的搜索结果
 const pagination = ref<SearchAlbumPagination | null>(null);
 const subscribedIds = ref<Set<number>>(new Set());
+const filters = ref({
+  paid: false,
+  finished: false,
+});
 
 // -- Toast Helper --
 const showToast = (
@@ -292,6 +343,31 @@ const isSubscribed = (id: number) => {
   return subscribedIds.value.has(id);
 };
 
+// -- Filter Functions --
+const toggleFilter = (type: 'paid' | 'finished') => {
+  filters.value[type] = !filters.value[type];
+  applyFilters();
+};
+
+const clearAllFilters = () => {
+  filters.value.paid = false;
+  filters.value.finished = false;
+  applyFilters();
+};
+
+const applyFilters = () => {
+  if (!filters.value.paid && !filters.value.finished) {
+    results.value = [...allResults.value];
+    return;
+  }
+
+  results.value = allResults.value.filter((album) => {
+    if (filters.value.paid && !album.isPaid) return false;
+    if (filters.value.finished && album.isFinished !== 2) return false;
+    return true;
+  });
+};
+
 // -- Actions --
 const goToAlbumDetail = (albumId: number) => {
   router.push({
@@ -302,6 +378,9 @@ const goToAlbumDetail = (albumId: number) => {
 
 const handleSearch = async () => {
   if (!searchQuery.value.trim()) return;
+  // 新搜索时重置筛选器
+  filters.value.paid = false;
+  filters.value.finished = false;
   await performSearch(1);
 };
 
@@ -331,7 +410,13 @@ const performSearch = async (page: number) => {
     }
 
     if (data && data.docs) {
-      results.value = data.docs;
+      allResults.value = data.docs; // 保存完整结果
+      results.value = data.docs; // 默认显示所有结果
+
+      // 如果有筛选条件，应用筛选
+      if (filters.value.paid || filters.value.finished) {
+        applyFilters();
+      }
 
       // Handle pagination
       if (data.pagination) {
@@ -347,6 +432,7 @@ const performSearch = async (page: number) => {
       }
     } else {
       if (page === 1) results.value = [];
+      allResults.value = [];
       showToast("未找到相关内容", "info");
     }
   } catch (err: any) {

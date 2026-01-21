@@ -258,7 +258,7 @@ const router = useRouter();
 
 const onContinue = () => {
   console.log("Login complete, redirecting to search...");
-  router.push({ name: "xmly-crawl-search" });
+  router.push({ name: "xmly-crawl-search-album" });
 };
 
 const onLogout = async () => {

@@ -615,6 +615,8 @@
       @pause="handleAudioPause"
       @ended="handleAudioEnded"
       @error="handleAudioError"
+      @prev="handlePrevTrack"
+      @next="handleNextTrack"
       ref="audioPlayerRef"
     />
   </div>
@@ -653,6 +655,7 @@ const tracksLoading = ref(false);
 const currentPage = ref(1);
 const pageSize = ref(30);
 const tracksTotalCount = ref(0);
+const currentTrackIndex = ref(-1); // 当前播放曲目的索引（在tracksList中的位置）
 
 // 下载状态管理（每个曲目的下载状态）
 const trackDownloadStatus = ref<
@@ -862,6 +865,11 @@ const fetchTracksList = async (page: number = currentPage.value) => {
       tracksTotalCount.value = resData.data.trackTotalCount;
       currentPage.value = resData.data.pageNum;
 
+      // 切换页面时重置当前曲目索引
+      if (page !== currentPage.value) {
+        currentTrackIndex.value = -1;
+      }
+
       // 加载曲目列表后，查询一次专辑下载状态
       await checkAlbumDownloadStatus();
 
@@ -902,6 +910,12 @@ const playTrack = async (track: TrackInfo) => {
     const response = await xmlyService.getTrackPlayUrl(albumId, userId, trackId);
 
     if (response && response.success) {
+      // 找到当前曲目在tracksList中的索引
+      const index = tracksList.value.findIndex(t => t.trackId === track.trackId);
+      if (index !== -1) {
+        currentTrackIndex.value = index;
+      }
+
       // 设置当前播放的曲目
       currentPlayingTrack.value = {
         trackId: response.trackId,
@@ -938,6 +952,9 @@ const handleAudioPause = () => {
 const handleAudioEnded = () => {
   console.log("音频播放结束");
   Toast.info("播放完成");
+
+  // 自动播放下一首
+  handleNextTrack();
 };
 
 const handleAudioError = () => {
@@ -952,6 +969,54 @@ const playFirstTrack = async () => {
     return;
   }
   await playTrack(tracksList.value[0]);
+};
+
+// 上一首
+const handlePrevTrack = async () => {
+  if (tracksList.value.length === 0) {
+    Toast.warning("暂无曲目");
+    return;
+  }
+
+  // 如果没有正在播放的曲目，播放第一首
+  if (currentTrackIndex.value === -1) {
+    await playTrack(tracksList.value[0]);
+    return;
+  }
+
+  // 计算上一首的索引
+  let prevIndex = currentTrackIndex.value - 1;
+  if (prevIndex < 0) {
+    // 如果是第一首，跳到最后一首
+    prevIndex = tracksList.value.length - 1;
+  }
+
+  console.log(`播放上一首: ${prevIndex + 1}/${tracksList.value.length}`);
+  await playTrack(tracksList.value[prevIndex]);
+};
+
+// 下一首
+const handleNextTrack = async () => {
+  if (tracksList.value.length === 0) {
+    Toast.warning("暂无曲目");
+    return;
+  }
+
+  // 如果没有正在播放的曲目，播放第一首
+  if (currentTrackIndex.value === -1) {
+    await playTrack(tracksList.value[0]);
+    return;
+  }
+
+  // 计算下一首的索引
+  let nextIndex = currentTrackIndex.value + 1;
+  if (nextIndex >= tracksList.value.length) {
+    // 如果是最后一首，跳到第一首
+    nextIndex = 0;
+  }
+
+  console.log(`播放下一首: ${nextIndex + 1}/${tracksList.value.length}`);
+  await playTrack(tracksList.value[nextIndex]);
 };
 
 const prevPage = () => {
