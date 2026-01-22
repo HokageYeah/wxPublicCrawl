@@ -1015,6 +1015,8 @@ async def get_subscribed_albums(request: Request, num: int = 1, size: int = 30, 
             logger.info(f"get_subscribed_albums---请求headers: {headers}")
             logger.info(f"get_subscribed_albums---请求cookies: {merged_cookies}")
             logger.info(f"get_subscribed_albums---请求params: {params}")
+            # 覆盖merged_cookies中的web_login 字段，为当前时间
+            # merged_cookies['web_login'] = str(int(time.time()))
             logger.info(f"get_subscribed_albums---请求cookies: {merged_cookies}")
 
             # 发送GET请求
