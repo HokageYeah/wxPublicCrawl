@@ -256,6 +256,29 @@ async def fetch_xmly_check_qrcode_status_with_cookies(qrId: str) -> Dict[str, An
             if json_data.get('ret') == 0:
                 logger.info(f"用户扫码成功，uid: {json_data.get('uid')}, mobileMask: {json_data.get('mobileMask')}")
                 logger.info(f"获取到的Cookies: {list(response_cookies.keys())}")
+                
+                # 打开浏览器验证登录状态
+                try:
+                    from app.utils.playright_wfp import open_browser_with_cookies
+                    logger.info("正在打开浏览器验证登录状态...")
+                    new_cookies = await open_browser_with_cookies(
+                        url="https://www.ximalaya.com/",
+                        cookies=response_cookies,
+                        headless=False,  # 显示浏览器，方便用户查看
+                        wait_seconds=30  # 保持浏览器打开30秒
+                    )
+                    
+                    # 打印新 cookie 供查看
+                    logger.info("=" * 60)
+                    logger.info("从浏览器获取到的新 Cookies:")
+                    logger.info(f"Cookie 总数: {len(new_cookies)}")
+                    for cookie_name, cookie_value in new_cookies.items():
+                        logger.info(f"  {cookie_name} = {cookie_value}")
+                    logger.info("=" * 60)
+                    
+                except Exception as e:
+                    logger.error(f"打开浏览器失败: {e}")
+                    # 不影响主流程，继续返回结果
 
             return result
 
