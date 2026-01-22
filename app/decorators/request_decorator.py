@@ -105,6 +105,10 @@ def extract_wx_credentials(
                 
                 # 合并全局 cookies 和请求中的 cookies（请求中的优先级更高）
                 merged_cookies = {**global_cookies, **parsed_cookies}
+                # 如果是喜马拉雅接口，覆盖merged_cookies中的web_login 字段，为当前时间
+                import time
+                if cookie_header_name == 'X-XMLY-Cookies':
+                    merged_cookies['web_login'] = str(int(time.time()))
                 
                 # 优先使用请求头中的 token，如果没有则使用全局 token
                 final_token = request_token if request_token else global_token

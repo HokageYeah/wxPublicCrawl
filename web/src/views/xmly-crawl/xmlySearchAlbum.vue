@@ -60,9 +60,24 @@
               ></span>
               完本
             </button>
+            <button
+              @click="toggleFilter('vip')"
+              class="px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-300 flex items-center gap-1.5"
+              :class="[
+                filters.vip
+                  ? 'bg-red-500/20 text-red-400 border-red-500/40'
+                  : 'bg-gray-800/50 text-gray-400 border-gray-700 hover:bg-gray-800 hover:text-gray-300'
+              ]"
+            >
+              <span
+                :class="filters.vip ? 'i-carbon-checkmark-filled' : 'i-carbon-checkbox'"
+                class="text-base"
+              ></span>
+              VIP
+            </button>
             <!-- 清除所有筛选 -->
             <button
-              v-if="filters.paid || filters.finished"
+              v-if="filters.paid || filters.finished || filters.vip"
               @click="clearAllFilters"
               class="px-2.5 py-1.5 text-xs text-gray-500 hover:text-gray-300 transition-colors"
               title="清除筛选"
@@ -185,7 +200,7 @@
                           class="px-1.5 py-0.5 text-[10px] font-bold bg-amber-500/10 text-amber-400 rounded border border-amber-500/20"
                         >付费</span>
                         <span 
-                          v-if="album.isVipFree" 
+                          v-if="album.vipFreeType === 1" 
                           class="px-1.5 py-0.5 text-[10px] font-bold bg-red-500/10 text-red-400 rounded border border-red-500/20"
                         >VIP</span>
                      </div>
@@ -302,6 +317,7 @@ const subscribedIds = ref<Set<number>>(new Set());
 const filters = ref({
   paid: false,
   finished: false,
+  vip: false,
 });
 
 // -- Toast Helper --
@@ -344,7 +360,7 @@ const isSubscribed = (id: number) => {
 };
 
 // -- Filter Functions --
-const toggleFilter = (type: 'paid' | 'finished') => {
+const toggleFilter = (type: 'paid' | 'finished' | 'vip') => {
   filters.value[type] = !filters.value[type];
   applyFilters();
 };
@@ -352,11 +368,12 @@ const toggleFilter = (type: 'paid' | 'finished') => {
 const clearAllFilters = () => {
   filters.value.paid = false;
   filters.value.finished = false;
+  filters.value.vip = false;
   applyFilters();
 };
 
 const applyFilters = () => {
-  if (!filters.value.paid && !filters.value.finished) {
+  if (!filters.value.paid && !filters.value.finished && !filters.value.vip) {
     results.value = [...allResults.value];
     return;
   }
@@ -364,6 +381,7 @@ const applyFilters = () => {
   results.value = allResults.value.filter((album) => {
     if (filters.value.paid && !album.isPaid) return false;
     if (filters.value.finished && album.isFinished !== 2) return false;
+    if (filters.value.vip && album.vipFreeType !== 1) return false;
     return true;
   });
 };
@@ -381,6 +399,7 @@ const handleSearch = async () => {
   // 新搜索时重置筛选器
   filters.value.paid = false;
   filters.value.finished = false;
+  filters.value.vip = false;
   await performSearch(1);
 };
 
@@ -414,7 +433,7 @@ const performSearch = async (page: number) => {
       results.value = data.docs; // 默认显示所有结果
 
       // 如果有筛选条件，应用筛选
-      if (filters.value.paid || filters.value.finished) {
+      if (filters.value.paid || filters.value.finished || filters.value.vip) {
         applyFilters();
       }
 
