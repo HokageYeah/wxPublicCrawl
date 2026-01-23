@@ -31,6 +31,7 @@ const routes: Array<RouteRecordRaw> = [
         meta: {
           title: "搜索专辑",
           requiresAuth: true,
+          keepAlive: true,
         },
       },
       {
@@ -40,6 +41,7 @@ const routes: Array<RouteRecordRaw> = [
         meta: {
           title: "订阅专辑",
           requiresAuth: true,
+          keepAlive: true,
         },
       },
       {
@@ -51,6 +53,7 @@ const routes: Array<RouteRecordRaw> = [
           requiresAuth: true,
           hideInMenu: true,
           hidden: true,
+          keepAlive: true,
         },
       },
     ],

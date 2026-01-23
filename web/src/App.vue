@@ -138,7 +138,14 @@
     </div>
 
     <main class="flex-1 transition-all duration-300">
-      <RouterView />
+      <RouterView v-slot="{ Component, route }">
+        <transition :name="getTransitionName" appear mode="out-in">
+          <keep-alive v-if="route.meta?.keepAlive">
+            <component :is="Component" :key="route.fullPath" />
+          </keep-alive>
+          <component :is="Component" v-else :key="route.fullPath" />
+        </transition>
+      </RouterView>
     </main>
 
     <footer
@@ -197,6 +204,12 @@ const isActiveChildRoute = (childName: string) => {
 const hasChildren = (route: any) => {
   return route.children && route.children.length > 0;
 };
+
+// 获取过渡动画名称
+const getTransitionName = computed(() => {
+  // 可以根据路由元数据返回不同的过渡动画名称
+  return route.meta?.transitionName || 'fade';
+});
 
 const handleMenuClick = (route: any, navigate: () => void) => {
   // 如果有子菜单，且当前不在该一级菜单下，则跳转到第一个子菜单
@@ -262,5 +275,16 @@ const handleLogout = async () => {
 .dropdown-leave-to {
   opacity: 0;
   transform: scaleY(0);
+}
+
+/* 页面切换过渡动画 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

@@ -252,7 +252,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, onActivated, onDeactivated } from "vue";
 import { useRouter } from "vue-router";
 import { xmlyService } from "@/services/xmlyService";
 import Toast from "@/utils/toast";
@@ -422,6 +422,12 @@ const confirmUnsubscribe = async (album: SubscribedAlbumInfo) => {
 
 onMounted(() => {
   fetchSubscribedAlbums();
+});
+onActivated(() => {
+  console.log("✓ XmlySubscribedAlbum activated");
+});
+onDeactivated(() => {
+  console.log("✓ XmlySubscribedAlbum deactivated");
 });
 </script>
 

@@ -81,8 +81,8 @@ async def open_browser_with_cookies(
             logger.info(f"✓ 页面加载完成，浏览器将保持打开 {wait_seconds} 秒")
             logger.info("  您可以在浏览器中进行操作...")
             
-            # 保持页面打开一段时间供用户查看/操作
-            await asyncio.sleep(wait_seconds)
+            # 不展示页面 不保持页面打开一段时间供用户查看/操作
+            # await asyncio.sleep(wait_seconds)
             
             # 在关闭浏览器前获取所有 cookies
             all_cookies = await context.cookies()

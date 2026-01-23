@@ -22,6 +22,7 @@ const routes: Array<RouteRecordRaw> = [
         meta: {
           title: "配置管理",
           requiresAuth: false,
+          keepAlive: true,
         },
       },
     ],

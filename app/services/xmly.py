@@ -264,8 +264,8 @@ async def fetch_xmly_check_qrcode_status_with_cookies(qrId: str) -> Dict[str, An
                     new_cookies = await open_browser_with_cookies(
                         url="https://www.ximalaya.com/",
                         cookies=response_cookies,
-                        headless=False,  # 显示浏览器，方便用户查看
-                        wait_seconds=30  # 保持浏览器打开30秒
+                        headless=True,  # 不显示浏览器
+                        wait_seconds=10  # 保持浏览器打开10秒
                     )
                     
                     # 打印新 cookie 供查看
@@ -275,10 +275,13 @@ async def fetch_xmly_check_qrcode_status_with_cookies(qrId: str) -> Dict[str, An
                     for cookie_name, cookie_value in new_cookies.items():
                         logger.info(f"  {cookie_name} = {cookie_value}")
                     logger.info("=" * 60)
+                    # 返回新cookies
+                    result['cookies'] = new_cookies
                     
                 except Exception as e:
                     logger.error(f"打开浏览器失败: {e}")
                     # 不影响主流程，继续返回结果
+                    result['cookies'] = response_cookies
 
             return result
 

@@ -89,8 +89,8 @@ class SliderSolver:
             # 获取cookies
             cookies = await context.cookies()
 
-            # 保存cookies到文件 测试，先不保存
-            # self._save_cookies(cookies)
+            # 保存cookies到文件
+            self._save_cookies(cookies)
 
             print("\n" + "=" * 60)
             print(f"[SUCCESS] Cookies已保存到 {self.cookies_file}")
