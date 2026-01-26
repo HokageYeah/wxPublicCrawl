@@ -191,7 +191,7 @@ async def fetch_xmly_check_qrcode_status(qrId: str, cookies: Optional[Dict[str, 
 
 def decode_qrcode_image(img_base64: str) -> bytes:
     """
-    解码base64编码的二维码图片
+    解码base64编码的二维码图片1
 
     Args:
         img_base64: base64编码的图片字符串
