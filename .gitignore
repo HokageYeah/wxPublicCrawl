@@ -8,5 +8,3 @@ logs/*
 /web/logs/*
 /web/dist/*
 /web/node_modules/*
-/script/desktop/playwright_browsers/*
-/script/desktop/node_binaries/*
