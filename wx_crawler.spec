@@ -2,7 +2,7 @@
 # ============================================================================
 # PyInstaller 配置文件（自动生成）
 # ============================================================================
-# 平台: Windows
+# 平台: Darwin
 # 生成时间: 自动
 # ============================================================================
 
@@ -25,19 +25,22 @@ sys.path.insert(0, os.path.abspath('.'))
 # ============================================================================
 # Analysis 阶段：分析依赖关系
 # ============================================================================
+# NOTE: Node.js 二进制文件会在打包前动态添加到 binaries
 a = Analysis(
     ['run_desktop.py'],
     pathex=[],
-    binaries=[],
+    binaries=[(r'/Users/yuye/YeahWork/Python项目/wxPublicCrawl/script/desktop/node_binaries/node', 'nodejs')],
     datas=[
         ('web/dist', 'web/dist'),
         ('app/ai/prompt', 'app/ai/prompt'),
+        ('app/utils/js-code', 'app/utils/js-code'),
         ('app/ai/mcp/mcp_client/mcp_settings.json', 'app/ai/mcp/mcp_client'),
         ('app/ai/mcp/mcp_client/client_manager.py', 'app/ai/mcp/mcp_client'),
         ('app/ai/mcp/mcp_client/fastmcp_client.py', 'app/ai/mcp/mcp_client'),
         ('app/ai/mcp/mcp_server/run_server.py', 'app/ai/mcp/mcp_server'),
         ('app/ai/mcp/mcp_server/fastmcp_server.py', 'app/ai/mcp/mcp_server'),
         ('app/ai/mcp/mcp_server/server_manager.py', 'app/ai/mcp/mcp_server'),
+        (r'/Users/yuye/YeahWork/Python项目/wxPublicCrawl/script/desktop/playwright_browsers', 'playwright_browsers'),
         ('.env', '.'),
         ('.env.desktop', '.'),
     ],
@@ -118,17 +121,17 @@ exe = EXE(
     debug=False,
     strip=False,
     upx=True,
-    console=True,  # Windows 显示控制台便于调试
+    console=False,  # Windows 显示控制台便于调试
 
     # --------------------------------------------------------------------
-    # 🎨 应用图标配置（Windows）
+    # 🎨 应用图标配置（macOS）
     # --------------------------------------------------------------------
-    # icon='resources/icon.ico',  # Windows 图标（.ico 格式）
+    icon='resources/icon.icns',  # macOS 图标（.icns 格式）
     # 使用方法：
-    # 1. 准备 icon.ico 文件（包含多个尺寸：16x16, 32x32, 48x48, 256x256）
+    # 1. 准备 icon.icns 文件（推荐 512x512）
     # 2. 放置在 resources/ 目录
     # 3. 取消上面的注释
-    # 4. 在线转换工具：https://convertio.co/zh/png-ico/
+    # 4. 在线转换工具：https://cloudconvert.com/png-to-icns
 
     bootloader_ignore_signals=False,
     argv_emulation=False,
@@ -159,6 +162,17 @@ if is_mac:
     app = BUNDLE(
         coll,
         name='wx公众号工具.app',
+
+        # --------------------------------------------------------------------
+        # 🎨 应用图标（macOS Bundle）
+        # --------------------------------------------------------------------
+        icon='resources/icon.icns',  # .app 包的图标
+        # 使用方法：
+        # 1. 准备 icon.icns 文件（macOS 图标格式）
+        # 2. 放置在 resources/ 目录
+        # 3. 取消此行注释
+        # 4. 可以使用在线工具将 PNG 转换为 ICNS：
+        #    https://cloudconvert.com/png-to-icns
 
         bundle_identifier='com.wxcrawler.desktop',
         info_plist={

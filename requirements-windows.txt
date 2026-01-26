@@ -63,7 +63,6 @@ proxy_tools==0.1.0
 beautifulsoup4==4.13.4
 lxml==5.4.0
 soupsieve==2.7
-pandas==2.3.3
 numpy==2.3.4
 PyYAML==6.0.3
 jsonschema==4.25.1
@@ -75,6 +74,8 @@ markdown-it-py==4.0.0
 mdurl==0.1.2
 referencing==0.36.2
 rpds-py==0.30.0
+pandas==2.3.3
+openpyxl==3.1.5
 
 # ----------------------------------------------------
 # 模板引擎 (Templating)
@@ -161,6 +162,7 @@ jaraco.classes==3.4.0
 jaraco.context==6.0.2
 jaraco.functools==4.4.0
 setuptools==80.9.0
+colorama==0.4.6
 
 # ----------------------------------------------------
 # 时间与日期 (Date & Time)
@@ -175,3 +177,14 @@ tzdata==2025.2
 alibabacloud-oss-v2==1.1.1
 ccxt==4.5.12
 crcmod-plus==2.1.0
+
+# ----------------------------------------------------
+# 浏览器模拟 (Browser Simulation)  PyExecJS 解决滑块验证问题
+# ----------------------------------------------------
+playwright==1.57.0
+PyExecJS==1.5.1
+
+# ----------------------------------------------------
+# 异步文件操作 (Async File Operations)
+# ----------------------------------------------------
+aiofiles==25.1.0

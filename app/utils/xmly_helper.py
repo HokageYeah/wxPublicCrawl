@@ -154,7 +154,7 @@ async def _perform_slider_verification(
         try:
             cookies_dict = await slider_solver.solve_slider(verify_url)
             logger.info(f"滑块验证响应: {cookies_dict}")
-            cookie = slider_solver.get_cookies_string(cookies_dict)
+            cookie = slider_solver.cookies_dict_to_string(cookies_dict)
             logger.info(f"滑块验证cookie: {cookie}")
             headers["Cookie"] = cookie
             headers["Xm-Sign"] = xm_sign

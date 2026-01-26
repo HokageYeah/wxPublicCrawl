@@ -29,6 +29,13 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = SCRIPT_DIR.parent.parent
 os.chdir(PROJECT_ROOT)
 
+# Node.js 配置
+NODE_BINARIES_DIR = SCRIPT_DIR / "node_binaries"
+NODE_VERSION = "20.18.1"  # 使用稳定的 LTS 版本
+
+# Playwright 配置
+PLAYWRIGHT_BROWSERS_DIR = SCRIPT_DIR / "playwright_browsers"
+
 
 # =========================
 # 工具函数
@@ -45,6 +52,182 @@ def run(cmd, cwd=None):
     )
     if result.returncode != 0:
         error(f"命令执行失败: {cmd}")
+
+
+def download_playwright_browsers():
+    """下载并准备 Playwright 浏览器（仅 Chromium）"""
+    import json
+    
+    info("准备 Playwright 浏览器...")
+    
+    # 确保目录存在
+    PLAYWRIGHT_BROWSERS_DIR.mkdir(exist_ok=True)
+    
+    # 检查是否已经下载过
+    marker_file = PLAYWRIGHT_BROWSERS_DIR / ".downloaded"
+    if marker_file.exists():
+        info(f"Playwright 浏览器已存在: {PLAYWRIGHT_BROWSERS_DIR}")
+        return str(PLAYWRIGHT_BROWSERS_DIR)
+    
+    try:
+        # 1. 安装 playwright 包（如果还没安装）
+        info("检查 playwright 包...")
+        result = subprocess.run(
+            [sys.executable, "-m", "pip", "show", "playwright"],
+            capture_output=True,
+            text=True
+        )
+        
+        if result.returncode != 0:
+            info("安装 playwright 包...")
+            subprocess.run(
+                [sys.executable, "-m", "pip", "install", "playwright==1.57.0"],
+                check=True
+            )
+            success("playwright 包安装完成")
+        else:
+            info("playwright 包已安装")
+        
+        # 2. 设置 Playwright 浏览器下载路径
+        env = os.environ.copy()
+        env['PLAYWRIGHT_BROWSERS_PATH'] = str(PLAYWRIGHT_BROWSERS_DIR)
+        
+        # 3. 下载 Chromium 浏览器（只下载 chromium，不下载其他浏览器）
+        info("下载 Playwright Chromium 浏览器...")
+        info(f"目标路径: {PLAYWRIGHT_BROWSERS_DIR}")
+        info("⚠️  这可能需要几分钟时间，请耐心等待...")
+        
+        result = subprocess.run(
+            [sys.executable, "-m", "playwright", "install", "chromium"],
+            env=env,
+            capture_output=True,
+            text=True
+        )
+        
+        if result.returncode == 0:
+            success("Playwright Chromium 浏览器下载完成")
+            
+            # 创建标记文件
+            marker_file.write_text("downloaded")
+            
+            # 显示下载的内容
+            if PLAYWRIGHT_BROWSERS_DIR.exists():
+                info("下载的浏览器文件:")
+                for item in PLAYWRIGHT_BROWSERS_DIR.iterdir():
+                    info(f"  - {item.name}")
+            
+            return str(PLAYWRIGHT_BROWSERS_DIR)
+        else:
+            error(f"下载失败: {result.stderr}")
+            return None
+            
+    except Exception as e:
+        error(f"准备 Playwright 浏览器时出错: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+
+def download_node_binary():
+    """下载对应平台的 Node.js 二进制文件"""
+    import urllib.request
+    import tarfile
+    import zipfile
+    
+    # 确保 node_binaries 目录存在
+    NODE_BINARIES_DIR.mkdir(exist_ok=True)
+    
+    # 根据平台确定下载 URL 和文件名
+    if IS_MAC:
+        # macOS: 检测架构并下载对应版本
+        arch = platform.machine()  # 'arm64' 或 'x86_64'
+        info(f"检测到 Mac 架构: {arch}")
+        
+        if arch == 'arm64':
+            # Apple Silicon: 下载 arm64 版本
+            node_url = f"https://nodejs.org/dist/v{NODE_VERSION}/node-v{NODE_VERSION}-darwin-arm64.tar.gz"
+            archive_name = f"node-v{NODE_VERSION}-darwin-arm64.tar.gz"
+            info("使用 Apple Silicon (arm64) 版本")
+        else:
+            # Intel: 下载 x64 版本
+            node_url = f"https://nodejs.org/dist/v{NODE_VERSION}/node-v{NODE_VERSION}-darwin-x64.tar.gz"
+            archive_name = f"node-v{NODE_VERSION}-darwin-x64.tar.gz"
+            info("使用 Intel (x64) 版本")
+        
+        binary_name = "node"
+    elif IS_WINDOWS:
+        # Windows
+        node_url = f"https://nodejs.org/dist/v{NODE_VERSION}/node-v{NODE_VERSION}-win-x64.zip"
+        archive_name = f"node-v{NODE_VERSION}-win-x64.zip"
+        binary_name = "node.exe"
+    else:
+        # Linux
+        node_url = f"https://nodejs.org/dist/v{NODE_VERSION}/node-v{NODE_VERSION}-linux-x64.tar.gz"
+        archive_name = f"node-v{NODE_VERSION}-linux-x64.tar.gz"
+        binary_name = "node"
+    
+    archive_path = NODE_BINARIES_DIR / archive_name
+    binary_path = NODE_BINARIES_DIR / binary_name
+    
+    # 检查二进制文件是否已存在
+    if binary_path.exists():
+        info(f"Node.js 二进制文件已存在: {binary_path}")
+        return str(binary_path)
+    
+    info(f"下载 Node.js {NODE_VERSION} 二进制文件...")
+    info(f"URL: {node_url}")
+    
+    try:
+        # 下载文件
+        urllib.request.urlretrieve(node_url, archive_path)
+        success(f"下载完成: {archive_path}")
+        
+        # 解压文件
+        info("解压 Node.js 二进制文件...")
+        
+        if archive_name.endswith('.tar.gz'):
+            # 解压 tar.gz (macOS/Linux)
+            with tarfile.open(archive_path, 'r:gz') as tar:
+                # 提取 bin/node 文件
+                for member in tar.getmembers():
+                    if member.name.endswith('/bin/node'):
+                        member.name = binary_name  # 重命名为简单的 'node'
+                        tar.extract(member, NODE_BINARIES_DIR)
+                        break
+        else:
+            # 解压 zip (Windows)
+            with zipfile.ZipFile(archive_path, 'r') as zip_ref:
+                # 提取 node.exe 文件
+                for file_name in zip_ref.namelist():
+                    if file_name.endswith('node.exe'):
+                        # 读取文件内容
+                        with zip_ref.open(file_name) as source:
+                            # 写入到目标路径
+                            with open(binary_path, 'wb') as target:
+                                target.write(source.read())
+                        break
+        
+        # 添加可执行权限 (macOS/Linux)
+        if not IS_WINDOWS:
+            os.chmod(binary_path, 0o755)
+        
+        success(f"Node.js 二进制文件已准备: {binary_path}")
+        
+        # 清理压缩包
+        if archive_path.exists():
+            os.remove(archive_path)
+            info("已清理压缩包")
+        
+        return str(binary_path)
+        
+    except Exception as e:
+        error(f"下载或解压 Node.js 失败: {e}")
+        # 清理失败的文件
+        if archive_path.exists():
+            os.remove(archive_path)
+        if binary_path.exists():
+            os.remove(binary_path)
+        raise
 
 
 # =========================
@@ -399,10 +582,34 @@ def run(cmd, cwd=None):
 
 # 只需要修改 generate_spec_file() 函数中的图标配置部分
 
-def generate_spec_file():
-    """动态生成 wx_crawler.spec 文件"""
+def generate_spec_file(node_binary_path=None, playwright_browsers_path=None):
+    """
+    动态生成 wx_crawler.spec 文件
+    
+    参数:
+        node_binary_path: Node.js 二进制文件的路径（用于打包到应用中）
+        playwright_browsers_path: Playwright 浏览器目录的路径（用于打包到应用中）
+    """
     
     spec_path = PROJECT_ROOT / "wx_crawler.spec"
+    
+    # 配置 Node.js 二进制文件
+    if node_binary_path:
+        # 将 Node.js 二进制文件打包到应用的 nodejs 目录
+        node_binaries_config = f"[(r'{node_binary_path}', 'nodejs')]"
+        info(f"将 Node.js 打包到应用中: {node_binary_path}")
+    else:
+        node_binaries_config = "[]"
+        warning("未提供 Node.js 二进制文件，应用运行时将依赖系统 Node.js")
+    
+    # 配置 Playwright 浏览器
+    if playwright_browsers_path:
+        # 将 Playwright 浏览器打包到应用的 playwright_browsers 目录
+        playwright_datas_config = f"(r'{playwright_browsers_path}', 'playwright_browsers'),"
+        info(f"将 Playwright 浏览器打包到应用中: {playwright_browsers_path}")
+    else:
+        playwright_datas_config = ""
+        warning("未提供 Playwright 浏览器，滑块验证功能将不可用")
     
     # ✅ 根据平台选择图标配置
     if IS_WINDOWS:
@@ -411,7 +618,7 @@ def generate_spec_file():
     # --------------------------------------------------------------------
     # 🎨 应用图标配置（Windows）
     # --------------------------------------------------------------------
-    # icon='resources/icon.ico',  # Windows 图标（.ico 格式）
+    icon='resources/icon.ico',  # Windows 图标（.ico 格式）
     # 使用方法：
     # 1. 准备 icon.ico 文件（包含多个尺寸：16x16, 32x32, 48x48, 256x256）
     # 2. 放置在 resources/ 目录
@@ -426,7 +633,7 @@ def generate_spec_file():
     # --------------------------------------------------------------------
     # 🎨 应用图标配置（macOS）
     # --------------------------------------------------------------------
-    # icon='resources/icon.icns',  # macOS 图标（.icns 格式）
+    icon='resources/icon.icns',  # macOS 图标（.icns 格式）
     # 使用方法：
     # 1. 准备 icon.icns 文件（推荐 512x512）
     # 2. 放置在 resources/ 目录
@@ -437,7 +644,7 @@ def generate_spec_file():
         # --------------------------------------------------------------------
         # 🎨 应用图标（macOS Bundle）
         # --------------------------------------------------------------------
-        # icon='resources/icon.icns',  # .app 包的图标
+        icon='resources/icon.icns',  # .app 包的图标
         # 使用方法：
         # 1. 准备 icon.icns 文件（macOS 图标格式）
         # 2. 放置在 resources/ 目录
@@ -451,7 +658,7 @@ def generate_spec_file():
     # --------------------------------------------------------------------
     # 🎨 应用图标配置（Linux）
     # --------------------------------------------------------------------
-    # icon='resources/icon.png',  # Linux 图标（.png 格式）
+    icon='resources/icon.png',  # Linux 图标（.png 格式）
 """
         icon_config_bundle = ""
     
@@ -483,19 +690,22 @@ sys.path.insert(0, os.path.abspath('.'))
 # ============================================================================
 # Analysis 阶段：分析依赖关系
 # ============================================================================
+# NOTE: Node.js 二进制文件会在打包前动态添加到 binaries
 a = Analysis(
     ['run_desktop.py'],
     pathex=[],
-    binaries=[],
+    binaries={node_binaries_config},
     datas=[
         ('web/dist', 'web/dist'),
         ('app/ai/prompt', 'app/ai/prompt'),
+        ('app/utils/js-code', 'app/utils/js-code'),
         ('app/ai/mcp/mcp_client/mcp_settings.json', 'app/ai/mcp/mcp_client'),
         ('app/ai/mcp/mcp_client/client_manager.py', 'app/ai/mcp/mcp_client'),
         ('app/ai/mcp/mcp_client/fastmcp_client.py', 'app/ai/mcp/mcp_client'),
         ('app/ai/mcp/mcp_server/run_server.py', 'app/ai/mcp/mcp_server'),
         ('app/ai/mcp/mcp_server/fastmcp_server.py', 'app/ai/mcp/mcp_server'),
         ('app/ai/mcp/mcp_server/server_manager.py', 'app/ai/mcp/mcp_server'),
+        {playwright_datas_config}
         ('.env', '.'),
         ('.env.desktop', '.'),
     ],
@@ -707,21 +917,48 @@ def main():
     success("前端构建完成")
 
     # 6. 清理旧文件
-    step_info(6, 8, "清理旧文件")
+    step_info(6, 10, "清理旧文件")
     for name in ("dist", "build"):
         path = PROJECT_ROOT / name
         if path.exists():
             shutil.rmtree(path, ignore_errors=True)
     success("清理完成")
 
-    # 7. 生成 spec 文件（⭐ 新增）
-    step_info(7, 9, "生成 spec 文件")
-    spec_path = generate_spec_file()
+    # 7. 下载 Node.js 二进制文件
+    step_info(7, 11, "准备 Node.js 运行时")
+    try:
+        node_binary_path = download_node_binary()
+        success(f"Node.js 运行时已准备: {node_binary_path}")
+    except Exception as e:
+        warning(f"下载 Node.js 失败: {e}")
+        warning("将使用系统 Node.js（用户需要自行安装）")
+        node_binary_path = None
+
+    # 8. 下载 Playwright 浏览器（⭐ 新增步骤）
+    step_info(8, 11, "准备 Playwright 浏览器")
+    try:
+        playwright_browsers_path = download_playwright_browsers()
+        if playwright_browsers_path:
+            success(f"Playwright 浏览器已准备: {playwright_browsers_path}")
+        else:
+            warning("Playwright 浏览器准备失败")
+            playwright_browsers_path = None
+    except Exception as e:
+        warning(f"准备 Playwright 浏览器失败: {e}")
+        warning("滑块验证功能可能无法使用")
+        playwright_browsers_path = None
+
+    # 9. 生成 spec 文件（传入 Node.js 和 Playwright 路径）
+    step_info(9, 11, "生成 spec 文件")
+    spec_path = generate_spec_file(
+        node_binary_path=node_binary_path,
+        playwright_browsers_path=playwright_browsers_path
+    )
     warning(f"当前平台: {SYSTEM}")
     color_print(f"Spec 文件路径: {spec_path}", fg_color=Colors.CYAN)
 
-    # 8. PyInstaller 打包
-    step_info(8, 9, "开始打包")
+    # 10. PyInstaller 打包
+    step_info(10, 11, "开始打包")
 
     # 注入桌面端环境变量配置 下面的这行代码其实没有用处，需要在启动desktop的时候手动设置环境变量
     # python_cmd = "python" if IS_WINDOWS else "python3"

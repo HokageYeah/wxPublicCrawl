@@ -4,25 +4,31 @@
 """
 
 import asyncio
-import json
-import os
-from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeout
+import random
+from playwright.async_api import TimeoutError as PlaywrightTimeout
+from loguru import logger
+
+from app.utils.playright_manager import PlaywrightManager
 
 
-class SliderSolver:
-    """滑块验证解决器"""
+class SliderSolver(PlaywrightManager):
+    """
+    滑块验证解决器
+    
+    继承自 PlaywrightManager，提供自动化滑块验证功能
+    """
 
-    def __init__(self, headless=False):
+    def __init__(self, headless: bool = False):
         """
         初始化滑块解决器
 
         参数:
             headless: 是否无头模式运行（False=显示浏览器，方便调试）
         """
-        self.headless = headless
+        super().__init__(headless=headless)
         self.cookies_file = "ximalaya_cookies.json"
 
-    async def solve_slider(self, album_url):
+    async def solve_slider(self, album_url: str) -> dict:
         """
         自动化解决滑块验证
 
@@ -31,27 +37,13 @@ class SliderSolver:
         返回:
             cookies字典
         """
-        async with async_playwright() as p:
-            # 启动浏览器
-            browser = await p.chromium.launch(
-                headless=self.headless,
-                args=['--disable-blink-features=AutomationControlled']
-            )
-
-            # 创建上下文，模拟真实浏览器
-            context = await browser.new_context(
-                viewport={'width': 1920, 'height': 1080},
-                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36'
-            )
-
-            # 添加反爬虫检测绕过脚本
-            await context.add_init_script("""
-                Object.defineProperty(navigator, 'webdriver', {
-                    get: () => undefined
-                });
-            """)
-
-            page = await context.new_page()
+        try:
+            # 启动浏览器和创建上下文
+            await self.launch_browser()
+            await self.create_context()
+            
+            # 创建新页面
+            page = await self.new_page()
 
             print("=" * 60)
             print("正在访问专辑页面...")
@@ -87,21 +79,31 @@ class SliderSolver:
             await asyncio.sleep(3)
 
             # 获取cookies
-            cookies = await context.cookies()
+            cookies = await self.get_cookies()
 
-            # 保存cookies到文件
+            # 保存cookies
             self._save_cookies(cookies)
 
             print("\n" + "=" * 60)
-            print(f"[SUCCESS] Cookies已保存到 {self.cookies_file}")
-            print(f"共 {len(cookies)} 个cookie")
+            print(f"[SUCCESS] Cookies 已保存")
+            print(f"共 {len(cookies)} 个 cookie")
             for cookie in cookies:
-                print(f"滑块验证获取的cookie: {cookie['name']}: {cookie['value']}")
+                print(f"Cookie: {cookie['name']}: {cookie['value']}")
             print("=" * 60)
 
-            await browser.close()
+            # 关闭浏览器
+            await self.close()
 
-            return self._cookies_to_dict(cookies)
+            return self.cookies_to_dict(cookies)
+            
+        except Exception as e:
+            logger.error(f"❌ 滑块验证失败: {e}")
+            # 确保浏览器被关闭
+            try:
+                await self.close()
+            except:
+                pass
+            raise
 
     async def _handle_slider(self, page):
         """
@@ -194,7 +196,6 @@ class SliderSolver:
         start_y = button_box['y'] + button_box['height'] / 2
 
         # 滑动距离（轨道的85-95%）
-        import random
         slide_distance = track_width * random.uniform(0.85, 0.95)
         end_x = start_x + slide_distance
 
@@ -271,7 +272,7 @@ class SliderSolver:
             from app.services.xmly import load_xmly_session, save_xmly_session
             
             # 将 Playwright cookies 列表转换为字典
-            cookies_dict = self._cookies_to_dict(cookies)
+            cookies_dict = self.cookies_to_dict(cookies)
             
             # 尝试加载现有会话
             session = load_xmly_session()
@@ -285,55 +286,15 @@ class SliderSolver:
             if session and session.get('cookies'):
                 old_cookies = session.get('cookies')
 
-            merged_cookies = {**old_cookies, **cookies_dict }
+            merged_cookies = {**old_cookies, **cookies_dict}
             
             # 保存会话 (如果存在则更新 cookies，不存在则创建新会话)
             save_xmly_session(status_data, merged_cookies)
             
-            print(f"[INFO] Cookies已通过 save_xmly_session 更新")
+            print(f"[INFO] Cookies 已通过 save_xmly_session 更新")
             
         except Exception as e:
             print(f"[ERROR] 保存cookies失败: {e}")
-
-    def load_cookies(self):
-        """
-        从文件加载cookies
-
-        返回:
-            cookies字典，如果文件不存在返回None
-        """
-        if not os.path.exists(self.cookies_file):
-            return None
-
-        try:
-            with open(self.cookies_file, 'r', encoding='utf-8') as f:
-                cookies = json.load(f)
-            return self._cookies_to_dict(cookies)
-        except Exception as e:
-            print(f"[ERROR] 加载cookies失败: {e}")
-            return None
-
-    def _cookies_to_dict(self, cookies):
-        """
-        将Playwright cookies转换为requests可用的字典格式
-
-        参数:
-            cookies: Playwright cookies列表
-        返回:
-            cookies字典
-        """
-        return {cookie['name']: cookie['value'] for cookie in cookies}
-
-    def get_cookies_string(self, cookies_dict):
-        """
-        将cookies字典转换为Cookie请求头字符串
-
-        参数:
-            cookies_dict: cookies字典
-        返回:
-            Cookie字符串
-        """
-        return '; '.join([f"{k}={v}" for k, v in cookies_dict.items()])
 
 
 async def main():

@@ -167,7 +167,7 @@ jaraco.classes==3.4.0
 jaraco.context==6.0.2
 jaraco.functools==4.4.0
 setuptools==80.9.0
-colorama==0.4.8
+colorama==0.4.6
 
 # ----------------------------------------------------
 # 时间与日期 (Date & Time)
@@ -187,9 +187,9 @@ crcmod-plus==2.1.0
 # 浏览器模拟 (Browser Simulation)  PyExecJS 解决滑块验证问题
 # ----------------------------------------------------
 playwright==1.57.0
-PyExecJS==2.2.1
+PyExecJS==1.5.1
 
 # ----------------------------------------------------
 # 异步文件操作 (Async File Operations)
 # ----------------------------------------------------
-aiofiles==26.1.0
+aiofiles==25.1.0
