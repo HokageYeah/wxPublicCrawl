@@ -21,7 +21,9 @@ def test_resource_paths():
     print("="*70)
     
     # 检测运行模式
-    is_packaged = hasattr(sys, '_MEIPASS')
+    # 不用 _MEIPASS 判断是否打包、onedir 模式可能没有 _MEIPASS、非 PyInstaller 理论上也可能存在
+    # is_packaged = hasattr(sys, '_MEIPASS')
+    is_packaged = getattr(sys, 'frozen', False)
     print(f"\n📦 运行模式: {'打包模式 (PyInstaller)' if is_packaged else '开发模式'}")
     
     if is_packaged:

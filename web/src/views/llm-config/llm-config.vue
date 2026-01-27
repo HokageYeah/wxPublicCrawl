@@ -129,7 +129,7 @@
         <div
           v-for="config in configs"
           :key="config.id"
-          class="group bg-gray-900 border rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-1"
+          class="group bg-gray-900 border rounded-xl overflow-hidden transition-all duration-300 hover:-translate-y-1 flex flex-col h-full"
           :class="[
             config.is_active
               ? 'border-green-500 shadow-lg shadow-green-500/20'
@@ -137,7 +137,7 @@
           ]"
         >
           <!-- 卡片头部 -->
-          <div class="relative p-5 bg-gray-800 border-b border-gray-700">
+          <div class="relative p-5 bg-gray-800 border-b border-gray-700 shrink-0">
             <div class="flex items-start justify-between">
               <div class="flex items-center gap-3">
                 <div
@@ -169,7 +169,7 @@
           </div>
 
           <!-- 卡片内容 -->
-          <div class="p-5 space-y-3">
+          <div class="p-5 space-y-3 flex-1">
             <div class="flex items-center gap-2 text-sm">
               <span class="i-carbon-api text-gray-400"></span>
               <span class="text-gray-300 font-medium">API Key:</span>
@@ -213,7 +213,7 @@
 
           <!-- 卡片操作 -->
           <div
-            class="px-5 py-4 bg-gray-800/50 border-t border-gray-700 flex items-center justify-between"
+            class="px-5 py-4 bg-gray-800/50 border-t border-gray-700 flex items-center justify-between shrink-0"
           >
             <button
               v-if="!config.is_active"

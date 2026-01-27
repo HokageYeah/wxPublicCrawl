@@ -331,6 +331,7 @@ app.include_router(api_router, prefix=settings.API_PREFIX)
 
 def get_resource_path(relative_path):
     """获取资源文件的绝对路径(支持打包后)"""
+    # 判断 是否有 _MEIPASS 属性，如果有则获取
     if hasattr(sys, '_MEIPASS'):
         # PyInstaller 打包后的临时目录
         path = os.path.join(sys._MEIPASS, relative_path)
@@ -421,7 +422,9 @@ async def health_check():
         "status": "ok",
         "environment": os.getenv("ENV", "unknown"),
         "python_version": sys.version,
-        "is_packaged": hasattr(sys, '_MEIPASS'),
+        # 不用 _MEIPASS 判断是否打包、onedir 模式可能没有 _MEIPASS、非 PyInstaller 理论上也可能存在
+        # "is_packaged": hasattr(sys, '_MEIPASS'),
+        "is_packaged": getattr(sys, 'frozen', False),
         "base_path": sys._MEIPASS if hasattr(sys, '_MEIPASS') else os.getcwd(),
         "web_dist_path": web_dist_path,
         "web_dist_exists": os.path.exists(web_dist_path)

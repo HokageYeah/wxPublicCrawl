@@ -54,6 +54,7 @@ uvicorn_server = None
 
 def get_resource_path(relative_path):
     """获取资源文件的绝对路径(支持打包后)"""
+    # 判断 是否有 _MEIPASS 属性，如果有则获取
     if hasattr(sys, '_MEIPASS'):
         return os.path.join(sys._MEIPASS, relative_path)
     return os.path.join(os.path.abspath("."), relative_path)
