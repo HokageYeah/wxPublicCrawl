@@ -38,7 +38,7 @@ class ApiError extends Error {
   }
 }
 
-class Request {
+export class Request {
   private instance: AxiosInstance;
   private baseConfig: AxiosRequestConfig = {
     baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -49,9 +49,9 @@ class Request {
   // 自定义请求头配置
   private customHeaderGetters: Array<() => { key: string; value: any }> = [];
 
-  constructor(config: AxiosRequestConfig) {
+  constructor(config: AxiosRequestConfig = {}) {
     console.log('import.meta.env.VITE_API_BASE_URL------', import.meta.env);
-    this.instance = axios.create(Object.assign(this.baseConfig, config));
+    this.instance = axios.create(Object.assign({}, this.baseConfig, config));
 
     // 请求拦截器
     this.instance.interceptors.request.use(

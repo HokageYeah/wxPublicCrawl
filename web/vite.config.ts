@@ -29,6 +29,12 @@ export default ({ command, mode }: ConfigEnv): UserConfigExport => {
               target: 'http://127.0.0.1:8002',
               changeOrigin: true,
               rewrite: (path) => path.replace(/^\/web-api/, '')
+            },
+            // 卡密绑定服务代理
+            '/license-api': {
+              target: 'http://127.0.0.1:8003',
+              changeOrigin: true,
+              rewrite: (path) => path.replace(/^\/license-api/, '')
             }
           }
         }
