@@ -60,10 +60,11 @@ async def check_downloaded_status(params: CheckDownloadRequest):
 @router.post("/session/save", response_model=ApiResponseData)
 async def save_session(data: dict):
     """保存用户会话 (包括cookies和token)"""
+    platform = data.get('platform', 'wx')
     user_info = data.get('user_info', {})
     cookies = data.get('cookies', {})
     token = data.get('token', '')
-    success = system_manager.save_platform_session('wx', user_info, cookies, token, expires_days=7)
+    success = system_manager.save_platform_session(platform, user_info, cookies, token, expires_days=7)
     if success:
         return {"success": True, "message": "会话保存成功"}
     else:
@@ -71,9 +72,9 @@ async def save_session(data: dict):
 
 
 @router.get("/session/load", response_model=ApiResponseData)
-async def load_session():
+async def load_session(platform: str = Query('wx', description="平台标识")):
     """加载用户会话"""
-    user_info = system_manager.load_platform_session('wx')
+    user_info = system_manager.load_platform_session(platform)
     if user_info:
         return {
             "success": True,
@@ -89,10 +90,12 @@ async def load_session():
 
 
 @router.post("/session/clear", response_model=ApiResponseData)
-async def clear_session():
+async def clear_session(data: dict = None):
     """清除用户会话"""
-    success = system_manager.clear_platform_session('wx')
-    # success = system_manager.clear_session()
+    platform = 'wx'
+    if data:
+        platform = data.get('platform', 'wx')
+    success = system_manager.clear_platform_session(platform)
     return {"success": success}
 
 # ------------------------------------------------------------

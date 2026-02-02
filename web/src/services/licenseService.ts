@@ -1,4 +1,4 @@
-import licenseRequest from '@/utils/licenseRequest';
+import licenseRequest from "@/utils/licenseRequest";
 
 /**
  * 卡密绑定服务 API
@@ -16,6 +16,17 @@ export interface RegisterParams {
 export interface LoginParams {
   username: string;
   password: string;
+  app_key: string;
+}
+
+export interface AppSimpleInfo {
+  app_key: string;
+  app_name: string;
+}
+
+export interface AppSimpleListResponse {
+  total: number;
+  apps: AppSimpleInfo[];
 }
 
 export interface BindLicenseParams {
@@ -42,35 +53,42 @@ export interface LoginResponse {
  * 用户注册
  */
 export const register = (params: RegisterParams) => {
-  return licenseRequest.post<LoginResponse>('/api/v1/auth/register', params);
+  return licenseRequest.post<LoginResponse>("/api/v1/auth/register", params);
 };
 
 /**
  * 用户登录
  */
 export const login = (params: LoginParams) => {
-  return licenseRequest.post<LoginResponse>('/api/v1/auth/login', params);
+  return licenseRequest.post<LoginResponse>("/api/v1/auth/login", params);
 };
 
 /**
  * 用户登出
  */
 export const logout = () => {
-  return licenseRequest.post('/api/v1/auth/logout');
+  return licenseRequest.post("/api/v1/auth/logout");
+};
+
+/**
+ * 获取公开应用列表
+ */
+export const getPublicAppList = () => {
+  return licenseRequest.get<AppSimpleListResponse>("/api/v1/app/public/list");
 };
 
 /**
  * 获取用户信息
  */
 export const getUserInfo = () => {
-  return licenseRequest.get<UserInfo>('/api/v1/user/info');
+  return licenseRequest.get<UserInfo>("/api/v1/user/info");
 };
 
 /**
  * 绑定卡密
  */
 export const bindLicense = (params: BindLicenseParams) => {
-  return licenseRequest.post('/api/v1/license/bind', params);
+  return licenseRequest.post("/api/v1/license/bind", params);
 };
 
 /**
@@ -84,12 +102,12 @@ export const validateLicense = (licenseKey: string) => {
  * 获取卡密信息
  */
 export const getLicenseInfo = () => {
-  return licenseRequest.get('/api/v1/license/info');
+  return licenseRequest.get("/api/v1/license/info");
 };
 
 /**
  * 刷新 Token
  */
 export const refreshToken = () => {
-  return licenseRequest.post<{ token: string }>('/api/v1/auth/refresh');
+  return licenseRequest.post<{ token: string }>("/api/v1/auth/refresh");
 };

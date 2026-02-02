@@ -1,9 +1,9 @@
-import api from '@/utils/request';
+import api from "@/utils/request";
 export interface UserInfo {
-    // 根据你的实际用户信息结构定义
-    [key: string]: any;
-  }
-  
+  // 根据你的实际用户信息结构定义
+  [key: string]: any;
+}
+
 export interface SessionResponse {
   success: boolean;
   logged_in: boolean;
@@ -13,16 +13,28 @@ export interface SessionResponse {
 }
 
 export const sessionService = {
-  saveSession: async (user_info: UserInfo, cookies?: Record<string, any>, token?: string): Promise<boolean> => {
-      const data = await api.post('/system/session/save', { user_info, cookies: cookies || {}, token: token || '' });
-      return data.success;
+  saveSession: async (
+    user_info: UserInfo,
+    cookies?: Record<string, any>,
+    token?: string,
+    platform: string = "wx",
+  ): Promise<boolean> => {
+    const data = await api.post("/system/session/save", {
+      user_info,
+      cookies: cookies || {},
+      token: token || "",
+      platform,
+    });
+    return data.success;
   },
-  loadSession: async (): Promise<SessionResponse> => {
-      const data = await api.get('/system/session/load');
-      return data;
+  loadSession: async (platform: string = "wx"): Promise<SessionResponse> => {
+    const data = await api.get("/system/session/load", {
+      params: { platform },
+    });
+    return data;
   },
-  clearSession: async (): Promise<boolean> => {
-      const data = await api.post('/system/session/clear');
-      return data.success;
-  }
-}
+  clearSession: async (platform: string = "wx"): Promise<boolean> => {
+    const data = await api.post("/system/session/clear", { platform });
+    return data.success;
+  },
+};
