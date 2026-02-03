@@ -126,12 +126,9 @@ const handleRegister = async () => {
       password: registerForm.password,
     });
 
-    // 注册成功通常也会自动登录，返回 token 和 userInfo
-    await licenseStore.setToken(result.token);
-    await licenseStore.setUserInfo(result.userInfo);
-
-    alert("注册成功！");
-    router.push("/");
+    // 注册成功，直接跳转登录页面（注册是全平台通用的，需要选择应用后才能使用）
+    alert("注册成功！请选择应用登录");
+    router.push("/login");
   } catch (error: any) {
     alert("注册失败: " + (error.message || "未知错误"));
   } finally {

@@ -3,7 +3,10 @@ from typing import Union
 from enum import Enum
 class PlatformEnum(str, Enum):
     WX_PUBLIC = "WX_PUBLIC"
-
+    LICENSE = "LICENSE"
+    SYSTEM = "SYSTEM"
+    XIMALAYA = "XIMALAYA"
+    UNKNOWN = "UNKNOWN"
 class ApiResponseData(BaseModel):
     platform: PlatformEnum
     api: str

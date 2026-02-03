@@ -2,6 +2,15 @@ import type { RouteRecordRaw } from "vue-router";
 
 const appLoginRoutes: RouteRecordRaw[] = [
   {
+    path: "/",
+    name: "DefaultHome",
+    component: () => import("@/views/default/DefaultHome.vue"),
+    meta: {
+      title: "首页",
+      hideInMenu: true,
+    },
+  },
+  {
     path: "/login",
     name: "Login",
     component: () => import("@/views/app-login/AppLogin.vue"),

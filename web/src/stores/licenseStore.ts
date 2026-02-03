@@ -1,7 +1,8 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import type { UserInfo } from "@/services/licenseService";
+import type { UserInfo, CardInfo } from "@/services/licenseService";
 import { sessionService } from "@/services/sessionService";
+import { getMyCards } from "@/services/licenseService";
 import licenseRequest from "@/utils/licenseRequest";
 
 /**
@@ -20,6 +21,9 @@ export const useLicenseStore = defineStore("license", () => {
 
   // 卡密状态
   const licenseStatus = ref<string>("");
+
+  // 用户卡密列表
+  const cards = ref<CardInfo[]>([]);
 
   // 平台标识
   const PLATFORM = "license";
@@ -45,6 +49,9 @@ export const useLicenseStore = defineStore("license", () => {
 
         // 设置请求头拦截器
         setupRequestInterceptor();
+
+        // // 获取卡密信息
+        // await fetchCards();
       }
     } catch (error) {
       console.error("加载许可证会话失败:", error);
@@ -64,7 +71,7 @@ export const useLicenseStore = defineStore("license", () => {
   };
 
   /**
-   * 设置用户信息并同步到后端
+   * 设置用户信息（不立即同步到后端）
    */
   const setUserInfo = async (info: UserInfo | null) => {
     userInfo.value = info;
@@ -73,16 +80,17 @@ export const useLicenseStore = defineStore("license", () => {
     if (info?.licenseStatus) {
       licenseStatus.value = info.licenseStatus;
     }
-
-    await saveSessionToBackend();
+    // 注意：这里不立即保存到后端，等待卡密信息获取后一起保存
   };
 
   /**
-   * 设置登录 Token并同步到后端
+   * 设置登录 Token（不立即同步到后端）
    */
   const setToken = async (newToken: string) => {
     token.value = newToken;
-    await saveSessionToBackend();
+    // 设置请求头拦截器，以便后续请求可以携带 token
+    setupRequestInterceptor();
+    // 注意：这里不立即保存到后端，等待用户信息和卡密信息一起保存
   };
 
   /**
@@ -112,6 +120,32 @@ export const useLicenseStore = defineStore("license", () => {
   };
 
   /**
+   * 获取用户的卡密列表并保存到本地
+   */
+  const fetchCards = async () => {
+    try {
+      const response = await getMyCards();
+      cards.value = response.cards || [];
+      
+      // 更新用户信息中的卡密状态
+      if (userInfo.value) {
+        userInfo.value.has_card = response.has_card;
+        userInfo.value.cards = response.cards;
+      }
+      console.log("✓ 已获取用户卡密信息", cards.value.length, "张卡密");
+    } catch (error) {
+      console.error("获取卡密信息失败:", error);
+    }
+  };
+
+  /**
+   * 设置卡密列表
+   */
+  const setCards = (cardList: CardInfo[]) => {
+    cards.value = cardList;
+  };
+
+  /**
    * 清除用户信息（登出）
    */
   const clearUserInfo = async () => {
@@ -119,6 +153,7 @@ export const useLicenseStore = defineStore("license", () => {
     token.value = "";
     isLoggedIn.value = false;
     licenseStatus.value = "";
+    cards.value = [];
 
     try {
       await sessionService.clearSession(PLATFORM);
@@ -136,10 +171,14 @@ export const useLicenseStore = defineStore("license", () => {
     token,
     isLoggedIn,
     licenseStatus,
+    cards,
     setUserInfo,
     setToken,
     setLicenseStatus,
+    setCards,
     clearUserInfo,
     initialize,
+    fetchCards,
+    saveSessionToBackend,
   };
 });

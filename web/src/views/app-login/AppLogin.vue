@@ -101,11 +101,13 @@ import {
   type AppSimpleInfo,
 } from "@/services/licenseService";
 import { useLicenseStore } from "@/stores/licenseStore";
+import { useAppStore } from "@/stores/appStore";
 // 注意：项目可能没有全局通知组件，这里使用简单的 alert 或如果是 Ant Design/Element 则需要引入
 // 暂且使用原生的或假设有 message 系统
 
 const router = useRouter();
 const licenseStore = useLicenseStore();
+const appStore = useAppStore();
 
 const loginForm = reactive({
   username: "",
@@ -132,20 +134,45 @@ const fetchAppList = async () => {
 
 onMounted(() => {
   fetchAppList();
+  // 初始化应用信息
+  appStore.initialize();
 });
 
 const handleLogin = async () => {
   loading.value = true;
   try {
+    // 获取设备指纹作为device_id
+    const { getDeviceId } = await import('@/utils/fingerprint')
+    const deviceId = await getDeviceId()
     const result = await login({
       username: loginForm.username,
       password: loginForm.password,
       app_key: loginForm.app_key,
+      device_id: deviceId,
     });
 
-    // 保存登录状态
+    // 1. 先设置 Token（需要 token 才能调用卡密接口）
     await licenseStore.setToken(result.token);
-    await licenseStore.setUserInfo(result.userInfo);
+    
+    // 2. 设置基础用户信息
+    await licenseStore.setUserInfo({
+      role: result.role,
+      has_card: result.has_card,
+      user_status: result.user_status,
+      username: result.username,
+    });
+
+    // 3. 保存应用信息到独立的 store
+    const app_info = appList.value.find(app => app.app_key === loginForm.app_key);
+    if (app_info) {
+      await appStore.setCurrentApp(app_info as AppSimpleInfo);
+    }
+
+    // 4. 获取卡密信息并合并到用户信息中，然后统一保存到本地
+    await licenseStore.fetchCards();
+
+    // 5. 保存会话到后端
+    await licenseStore.saveSessionToBackend();
 
     // 登录成功跳转
     // 你可以根据需要调整跳转路径

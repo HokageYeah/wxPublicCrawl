@@ -17,11 +17,15 @@ export interface LoginParams {
   username: string;
   password: string;
   app_key: string;
+  device_id?: string;
 }
 
 export interface AppSimpleInfo {
-  app_key: string;
   app_name: string;
+  app_id: string;
+  app_key: string;
+  app_status: string;
+  app_created_at: string;
 }
 
 export interface AppSimpleListResponse {
@@ -42,72 +46,106 @@ export interface UserInfo {
   licenseStatus?: string;
   licenseExpireTime?: string;
   createdAt?: string;
+  // 用户角色
+  role?: 'admin' | 'user';
+  // 卡密信息
+  has_card?: boolean;
+  cards?: CardInfo[];
+}
+
+export interface CardInfo {
+  card_id: number;
+  card_key: string;
+  expire_time: string;
+  permissions: string[];
+  bind_devices: number;
+  max_device_count: number;
+  status: string;
+  remark?: string;
+  app_name: string;
+  app_id: string;
+  app_key: string;
+  app_status: string;
+  app_created_at: string;
+}
+
+export interface MyCardsResponse {
+  has_card: boolean;
+  cards: CardInfo[];
 }
 
 export interface LoginResponse {
   token: string;
   userInfo: UserInfo;
+  app_info: AppSimpleInfo;
 }
 
 /**
  * 用户注册
  */
 export const register = (params: RegisterParams) => {
-  return licenseRequest.post<LoginResponse>("/api/v1/auth/register", params);
+  return licenseRequest.post<LoginResponse>("/auth/register", params);
 };
 
 /**
  * 用户登录
  */
 export const login = (params: LoginParams) => {
-  return licenseRequest.post<LoginResponse>("/api/v1/auth/login", params);
+  return licenseRequest.post<LoginResponse>("/auth/login", params);
 };
 
 /**
  * 用户登出
  */
 export const logout = () => {
-  return licenseRequest.post("/api/v1/auth/logout");
+  return licenseRequest.post("/auth/logout");
 };
 
 /**
  * 获取公开应用列表
  */
 export const getPublicAppList = () => {
-  return licenseRequest.get<AppSimpleListResponse>("/api/v1/app/public/list");
+  return licenseRequest.get<AppSimpleListResponse>("/app/public/list");
 };
 
 /**
  * 获取用户信息
  */
 export const getUserInfo = () => {
-  return licenseRequest.get<UserInfo>("/api/v1/user/info");
+  return licenseRequest.get<UserInfo>("/user/info");
 };
 
 /**
  * 绑定卡密
  */
 export const bindLicense = (params: BindLicenseParams) => {
-  return licenseRequest.post("/api/v1/license/bind", params);
+  return licenseRequest.post("/license/bind", params);
 };
 
 /**
  * 验证卡密
  */
 export const validateLicense = (licenseKey: string) => {
-  return licenseRequest.get(`/api/v1/license/validate/${licenseKey}`);
+  return licenseRequest.get(`/license/validate/${licenseKey}`);
 };
 
 /**
  * 获取卡密信息
  */
 export const getLicenseInfo = () => {
-  return licenseRequest.get("/api/v1/license/info");
+  return licenseRequest.get("/license/info");
 };
 
 /**
  * 刷新 Token
  */
 export const refreshToken = () => {
-  return licenseRequest.post<{ token: string }>("/api/v1/auth/refresh");
+  return licenseRequest.post<{ token: string }>("/auth/refresh");
+};
+
+/**
+ * 查询我的卡密
+ */
+export const getMyCards = () => {
+  return licenseRequest.get<MyCardsResponse>("/card/my");
 };
