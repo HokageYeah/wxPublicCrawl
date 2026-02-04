@@ -6,6 +6,7 @@ import { sessionService } from "@/services/sessionService";
 /**
  * 当前登录应用信息管理
  * 用于存储用户当前选择登录的应用信息
+ * 使用 pinia-plugin-persistedstate 实现持久化
  */
 export const useAppStore = defineStore("app", () => {
   // 当前选中的应用信息
@@ -35,7 +36,6 @@ export const useAppStore = defineStore("app", () => {
    * 设置当前应用信息并保存到后端
    */
   const setCurrentApp = async (app: AppSimpleInfo | null) => {
-    debugger
     currentApp.value = app;
 
     if (app) {
@@ -48,15 +48,15 @@ export const useAppStore = defineStore("app", () => {
    * 将当前状态保存到后端
    */
   const saveSessionToBackend = async () => {
-    debugger
     if (currentApp.value) {
       try {
         // 保存应用信息到后端会话
         await sessionService.saveSession(
-          currentApp.value,
+          {},
           {},
           "",
           PLATFORM,
+          currentApp.value,
         );
         console.log("✓ 应用会话已同步到后端");
       } catch (error) {
@@ -106,4 +106,9 @@ export const useAppStore = defineStore("app", () => {
     clearCurrentApp,
     initialize,
   };
-});
+}, {
+  persist: {
+    key: 'app-store',
+    paths: ['currentApp'],
+  },
+} as any);

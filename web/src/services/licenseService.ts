@@ -78,6 +78,11 @@ export interface LoginResponse {
   token: string;
   userInfo: UserInfo;
   app_info: AppSimpleInfo;
+  // 兼容旧版响应
+  role?: 'admin' | 'user';
+  has_card?: boolean;
+  user_status?: string;
+  username?: string;
 }
 
 /**

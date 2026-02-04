@@ -56,6 +56,9 @@ const router = createRouter({
 
 import { useWechatLoginStore } from "@/stores/wechatLoginStore";
 import { useXmlyLoginStore } from "@/stores/xmlyLoginStore";
+import { useLicenseStore } from "@/stores/licenseStore";
+import { useAppStore } from "@/stores/appStore";
+import { hasRoutePermission, requiresPermission } from "@/utils/permission";
 
 /**
  * 全局前置守卫
@@ -87,6 +90,46 @@ router.beforeEach(async (to, _, next) => {
     if (!wechatStore.isLoggedIn) {
       alert("您还未登录，请先登录系统");
       next({ name: "wx-public-crawl-login" });
+      return;
+    }
+  }
+
+  // 权限检查逻辑
+  const licenseStore = useLicenseStore();
+  const appStore = useAppStore();
+  
+  // 确保 licenseStore 已初始化
+  if (!licenseStore.isLoggedIn) {
+    await licenseStore.initialize();
+  }
+  
+  // 如果已登录且需要权限验证
+  if (licenseStore.isLoggedIn && to.name && requiresPermission(String(to.name))) {
+    const isAdmin = licenseStore.userInfo?.role === 'admin';
+    
+    // 获取当前应用下的卡密
+    let currentPermissions: string[] = [];
+    
+    if (!isAdmin) {
+      // 获取当前应用下的卡密
+      const currentAppCards = licenseStore.cards.filter(
+        card => card.app_id === appStore.currentApp?.app_id
+      );
+      
+      // 获取第一张卡密的权限（TODO: 支持多卡切换）
+      if (currentAppCards.length > 0) {
+        currentPermissions = currentAppCards[0].permissions || [];
+      }
+    }
+    
+    // 检查是否有权限访问目标路由
+    const routePath = to.path || String(to.name);
+    const hasPermission = hasRoutePermission(routePath, currentPermissions, isAdmin);
+    
+    if (!hasPermission) {
+      console.warn(`没有权限访问路由: ${routePath}`);
+      // 跳转到欢迎首页
+      next({ name: 'DefaultHome' });
       return;
     }
   }

@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import type { UserInfo, CardInfo } from "@/services/licenseService";
 import { sessionService } from "@/services/sessionService";
 import { getMyCards } from "@/services/licenseService";
@@ -7,7 +7,7 @@ import licenseRequest from "@/utils/licenseRequest";
 
 /**
  * 卡密服务状态管理
- * 数据持久化通过后端 sessionService 实现，以适配桌面程序需求
+ * 数据持久化通过 pinia-plugin-persistedstate 实现
  */
 export const useLicenseStore = defineStore("license", () => {
   // 用户信息
@@ -181,4 +181,9 @@ export const useLicenseStore = defineStore("license", () => {
     fetchCards,
     saveSessionToBackend,
   };
-});
+}, {
+  persist: {
+    key: 'license-store',
+    paths: ['userInfo', 'token', 'isLoggedIn', 'licenseStatus', 'cards'],
+  },
+} as any);

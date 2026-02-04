@@ -261,6 +261,7 @@ import { useAppStore } from "@/stores/appStore";
 import type { CardInfo } from "@/services/licenseService";
 import { useRouter, useRoute } from "vue-router";
 import { onMounted, computed, ref } from "vue";
+import { hasRoutePermission } from "@/utils/permission";
 
 const licenseStore = useLicenseStore();
 const appStore = useAppStore();
@@ -303,14 +304,49 @@ const currentAppCards = computed(() => {
   return cards;
 });
 
-// 获取一级路由（顶部菜单）
+// 获取当前激活卡密的权限列表
+const currentPermissions = computed(() => {
+  // 管理员拥有所有权限
+  if (licenseStore.userInfo?.role === 'admin') {
+    return ['all'];
+  }
+  
+  // 获取当前卡密的权限
+  const currentCard = currentAppCards.value[activeCardIndex.value];
+  return currentCard?.permissions || [];
+});
+
+// 检查路由是否有权限访问
+const checkRoutePermission = (routePath: string) => {
+  const isAdmin = licenseStore.userInfo?.role === 'admin';
+  return hasRoutePermission(routePath, currentPermissions.value, isAdmin);
+};
+
+// 获取一级路由（顶部菜单）- 根据权限过滤
 const topRoutes = computed(() => {
   const routes = router.options.routes;
+  const isAdmin = licenseStore.userInfo?.role === 'admin';
+  console.log("✓ 检查路由是否有权限访问--routes", routes);
   return routes
-    .filter(
-      (r: any) =>
-        r.meta && r.meta.title && !r.meta?.hideInMenu && !r.path.includes(":")
-    )
+    .filter((r: any) => {
+      // 基础过滤：必须有标题且不隐藏
+      if (!r.meta || !r.meta.title || r.meta?.hideInMenu || r.path.includes(":")) {
+        return false;
+      }
+      
+      // 管理员显示所有路由
+      if (isAdmin) {
+        return true;
+      }
+      console.log("✓ 检查路由是否有权限访问--r.name", r.name);
+      console.log("✓ 检查路由是否有权限访问--r.path", r.path);
+      console.log("✓ 检查路由是否有权限访问--checkRoutePermission", currentPermissions.value, isAdmin);
+
+      // 普通用户需要检查权限
+      // 优先使用路由名称，因为权限映射中使用的是路由名称
+      const routeIdentifier = r.name || r.path;
+      return checkRoutePermission(routeIdentifier);
+    })
     .sort((a: any, b: any) => (a.meta?.sort || 999) - (b.meta?.sort || 999));
 });
 
@@ -335,10 +371,27 @@ const hasChildren = (route: any) => {
   return route.children && route.children.length > 0;
 };
 
-// 获取可见的子路由
+// 获取可见的子路由 - 根据权限过滤
 const getVisibleChildren = (parentRoute: any) => {
   if (!parentRoute.children) return [];
-  return parentRoute.children.filter((c: any) => !c.meta?.hidden);
+  const isAdmin = licenseStore.userInfo?.role === 'admin';
+  
+  return parentRoute.children.filter((c: any) => {
+    // 基础过滤：不隐藏的子路由
+    if (c.meta?.hidden) {
+      return false;
+    }
+    
+    // 管理员显示所有子路由
+    if (isAdmin) {
+      return true;
+    }
+    
+    // 普通用户需要检查权限
+    // 优先使用路由名称，因为权限映射中使用的是路由名称
+    const routeIdentifier = c.name || c.path;
+    return checkRoutePermission(routeIdentifier);
+  });
 };
 
 // 获取过渡动画名称
