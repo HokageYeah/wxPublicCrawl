@@ -92,6 +92,10 @@ class Settings(BaseSettings):
     AI_BASE_URL: str = '' # AI Base URL
     AI_MODEL: str = '' # AI Model
 
+    # 卡密系统权限校验配置
+    PERMISSION_API_URL: str = '' # 卡密系统权限校验 API 地址
+    PERMISSION_API_TOKEN: str = '' # 卡密系统权限校验 Token
+
     # 数据库配置
     # 桌面应用默认使用 SQLite，服务器环境使用 MySQL
     DB_DRIVER: Optional[str] = ""  # desktop 环境默认使用 sqlite

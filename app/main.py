@@ -123,6 +123,7 @@ from app.db.sqlalchemy_db import database
 from fastapi.exceptions import RequestValidationError, HTTPException, ResponseValidationError
 from app.middleware.exception_handlers import request_validation_error_handler, http_exception_handler, response_validation_error_handler
 from app.middleware.response_validator import ResponseValidatorMiddleware
+from app.middleware.permission_middleware import PermissionMiddleware
 from app.schemas.common_data import ApiResponseData, PlatformEnum
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
@@ -310,6 +311,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 添加权限校验中间件
+# 注意：中间件的执行顺序与添加顺序相反，最后添加的中间件最先执行
+# 权限校验中间件应该在 CORS 之后、异常处理之前执行
+app.add_middleware(PermissionMiddleware)
 
 # 定义全局异常处理器
 app.add_exception_handler(RequestValidationError, request_validation_error_handler)

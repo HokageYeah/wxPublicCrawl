@@ -64,7 +64,8 @@ async def save_session(data: dict):
     user_info = data.get('user_info', {})
     cookies = data.get('cookies', {})
     token = data.get('token', '')
-    success = system_manager.save_platform_session(platform, user_info, cookies, token, expires_days=7)
+    app_info = data.get('app_info', {})
+    success = system_manager.save_platform_session(platform, user_info, cookies, token, app_info, expires_days=7)
     if success:
         return {"success": True, "message": "会话保存成功"}
     else:

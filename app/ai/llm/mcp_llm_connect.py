@@ -340,12 +340,14 @@ class MCPLLMConnect:
                     )
                     
                     if consecutive_failures >= max_consecutive_failures:
+                        model_name = self.ai_client.model
                         logger.bind(tag=TAG).error(
-                            f"❌ Kimi无限循环检测：连续 {consecutive_failures} 次相同错误，强制退出"
+                            f"❌ {model_name} 无限循环检测：连续 {consecutive_failures} 次相同错误，强制退出"
                         )
                         return (
                             f"抱歉，我在处理您的请求时遇到了技术问题。\n"
                             f"问题原因：工具调用反复失败（{tool_calls[0]['function']['name'] if tool_calls else 'unknown'}）\n"
+                            f"模型：{model_name}\n"
                             f"建议：请尝试换一种方式描述您的需求，或稍后再试。"
                         )
                 else:
@@ -572,7 +574,9 @@ class MCPLLMConnect:
                 # 2. {name: "", arguments: '{"location":"罗山"}'}
                 # 需要尝试合并或过滤这些异常调用
                 
-                tool_calls = self._fix_split_tool_calls(raw_tool_calls)
+                # 获取当前模型名称，用于日志显示
+                model_name = self.ai_client.model
+                tool_calls = self._fix_split_tool_calls(raw_tool_calls, model_name)
                 return tool_calls
             
             return []
@@ -581,7 +585,11 @@ class MCPLLMConnect:
             logger.bind(tag=TAG).error(f"提取工具调用失败: {e}")
             return []
     
-    def _fix_split_tool_calls(self, tool_calls: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _fix_split_tool_calls(
+        self, 
+        tool_calls: List[Dict[str, Any]], 
+        model_name: str = "unknown"
+    ) -> List[Dict[str, Any]]:
         """
         修复 Kimi-K2.5 拆分的工具调用
         
@@ -595,6 +603,7 @@ class MCPLLMConnect:
         
         Args:
             tool_calls: 原始工具调用列表
+            model_name: 模型名称（用于日志显示）
             
         Returns:
             修复后的工具调用列表
@@ -639,7 +648,7 @@ class MCPLLMConnect:
                     }
                     fixed_calls.append(merged_call)
                     logger.bind(tag=TAG).info(
-                        f"🔧 Kimi修复：合并拆分的工具调用\n"
+                        f"🔧 [{model_name}] 工具调用修复：合并拆分调用\n"
                         f"   - 原始: [{current_name}, 空参数] + [空名称, {next_args[:50]}...]\n"
                         f"   - 修复后: [{current_name}, {next_args[:50]}...]"
                     )
@@ -650,7 +659,7 @@ class MCPLLMConnect:
             if has_valid_name and not has_valid_args:
                 # 有名称但无参数 - 过滤掉（因为总是会失败）
                 logger.bind(tag=TAG).warning(
-                    f"⚠️ Kimi修复：过滤无参数的工具调用 [{current_name}]"
+                    f"⚠️ [{model_name}] 工具调用修复：过滤无参数调用 [{current_name}]"
                 )
                 i += 1
                 continue
@@ -658,7 +667,7 @@ class MCPLLMConnect:
             if not has_valid_name:
                 # 无名称 - 过滤掉
                 logger.bind(tag=TAG).warning(
-                    f"⚠️ Kimi修复：过滤无名称的工具调用"
+                    f"⚠️ [{model_name}] 工具调用修复：过滤无名称调用"
                 )
                 i += 1
                 continue
@@ -669,7 +678,7 @@ class MCPLLMConnect:
         
         if len(fixed_calls) != len(tool_calls):
             logger.bind(tag=TAG).info(
-                f"🔧 Kimi修复完成：{len(tool_calls)} 个调用 → {len(fixed_calls)} 个有效调用"
+                f"🔧 [{model_name}] 工具调用修复：{len(tool_calls)} 个调用 → {len(fixed_calls)} 个有效调用"
             )
         
         return fixed_calls
@@ -712,10 +721,12 @@ class MCPLLMConnect:
         # 2. arguments 为空字符串但 name 正常
         # 需要过滤掉这些无效的工具调用
         
+        model_name = self.ai_client.model
+        
         # 检查 tool_name 是否有效
         if not tool_name or not tool_name.strip():
             logger.bind(tag=TAG).warning(
-                f"⚠️ Kimi兼容处理: 工具名称为空，跳过此工具调用\n"
+                f"⚠️ [{model_name}] 兼容处理: 工具名称为空，跳过此工具调用\n"
                 f"   原始数据: {tool_call}"
             )
             self.tool_call_stats["total_calls"] += 1
@@ -723,7 +734,7 @@ class MCPLLMConnect:
             
             return {
                 "success": False,
-                "error": "工具名称为空（可能是模型响应异常）",
+                "error": f"工具名称为空（可能是 {model_name} 模型响应异常）",
                 "tool_name": tool_name or "unknown"
             }
         
@@ -732,7 +743,7 @@ class MCPLLMConnect:
             # Kimi-K2.5 有时会返回空字符串作为 arguments
             if not tool_args_str or not tool_args_str.strip():
                 logger.bind(tag=TAG).warning(
-                    f"⚠️ Kimi兼容处理: 工具 [{tool_name}] 的参数为空，使用空字典"
+                    f"⚠️ [{model_name}] 兼容处理: 工具 [{tool_name}] 的参数为空，使用空字典"
                 )
                 tool_args = {}
             else:

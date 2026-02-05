@@ -177,6 +177,7 @@ class SystemManager:
         user_info: Dict[str, Any],
         cookies: Optional[Dict[str, Any]] = None,
         token: Optional[str] = None,
+        app_info: Optional[Dict[str, Any]] = None,
         expires_days: int = 7
     ) -> bool:
         """
@@ -200,8 +201,10 @@ class SystemManager:
                 'user_info': user_info,
                 'cookies': cookies or {},
                 'token': token or '',
+                'app_info': app_info or {},
                 'created_at': datetime.now().isoformat(),
-                'expires_at': (datetime.now() + timedelta(days=expires_days)).isoformat()
+                'expires_at': (datetime.now() + timedelta(days=expires_days)).isoformat(),
+                'logged_in': True
             }
 
             with open(session_file, 'w', encoding='utf-8') as f:
@@ -246,7 +249,11 @@ class SystemManager:
             return {
                 'user_info': session_data['user_info'],
                 'cookies': session_data.get('cookies', {}),
-                'token': session_data.get('token', '')
+                'token': session_data.get('token', ''),
+                'app_info': session_data.get('app_info', {}),
+                'created_at': session_data.get('created_at', ''),
+                'expires_at': session_data.get('expires_at', ''),
+                'logged_in': session_data.get('logged_in', False),
             }
 
         except Exception as e:

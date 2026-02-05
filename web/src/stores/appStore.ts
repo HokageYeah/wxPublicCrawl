@@ -22,7 +22,7 @@ export const useAppStore = defineStore("app", () => {
     try {
       console.log("正在从后端加载应用信息...");
       const sessionResponse = await sessionService.loadSession(PLATFORM);
-
+      debugger
       if (sessionResponse.logged_in && sessionResponse.app_info) {
         currentApp.value = sessionResponse.app_info as AppSimpleInfo;
         console.log("✓ 从后端恢复应用登录状态", currentApp.value.app_name);
