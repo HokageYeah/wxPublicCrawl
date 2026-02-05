@@ -15,7 +15,7 @@ TAG = "AI_ASSISTANT_SERVICE"
 _global_connector: Optional[MCPLLMConnect] = None
 
 
-async def init_ai_assistant_service(llm_conn=None) -> bool:
+async def init_ai_assistant_service(llm_conn=None, user_id: Optional[str] = None) -> bool:
     """
     初始化AI助手服务
     
@@ -26,6 +26,7 @@ async def init_ai_assistant_service(llm_conn=None) -> bool:
     
     Args:
         llm_conn: 已废弃，保留以兼容旧代码
+        user_id: 用户ID，用于加载用户专属的LLM配置
         
     Returns:
         bool: 初始化是否成功
@@ -33,13 +34,13 @@ async def init_ai_assistant_service(llm_conn=None) -> bool:
     global _global_connector
     
     logger.bind(tag=TAG).info("=" * 80)
-    logger.bind(tag=TAG).info("🚀 开始初始化AI助手服务...")
+    logger.bind(tag=TAG).info(f"🚀 开始初始化AI助手服务... (user_id: {user_id})")
     logger.bind(tag=TAG).info("=" * 80)
     
     try:
-        # 1. 创建连接器实例（同步）
+        # 1. 创建连接器实例（同步），传递user_id以加载用户配置
         logger.bind(tag=TAG).info("📝 创建MCP-LLM连接器实例...")
-        _global_connector = MCPLLMConnect()
+        _global_connector = MCPLLMConnect(user_id=user_id)
         logger.bind(tag=TAG).info("✅ 连接器实例创建成功")
         
         # 2. 异步初始化（连接MCP服务器、加载工具等）
@@ -88,7 +89,8 @@ async def query_ai_assistant(
     query: str,
     enable_tools: bool = True,
     temperature: Optional[float] = None,
-    system_message: Optional[str] = None
+    system_message: Optional[str] = None,
+    extra_body: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
     """
     向AI助手发送查询
@@ -98,6 +100,7 @@ async def query_ai_assistant(
         enable_tools: 是否启用工具调用
         temperature: 温度参数
         system_message: 系统消息（可选）
+        extra_body: API 额外参数（如 enable_thinking 等）
         
     Returns:
         Dict: 包含AI响应、工具调用信息等的字典
@@ -126,7 +129,8 @@ async def query_ai_assistant(
             user_message=query,
             system_message=system_message,
             temperature=temperature,
-            enable_tools=enable_tools
+            enable_tools=enable_tools,
+            extra_body=extra_body
         )
         
         # 4. 获取统计信息
@@ -180,9 +184,32 @@ def _extract_tool_calls_from_history(connector: MCPLLMConnect) -> List[Dict[str,
             if message.get("role") == "assistant" and "tool_calls" in message:
                 for tool_call in message.get("tool_calls", []):
                     logger.bind(tag=TAG).debug(f"工具调用信息- tool_call: {json.dumps(tool_call, ensure_ascii=False, indent=2)}")
+                    
+                    # ============ Kimi-K2.5 兼容性处理 ============
+                    # Kimi-K2.5 可能返回异常格式：name 或 arguments 为空字符串
+                    # 需要过滤和清理这些无效数据
+                    
+                    tool_name = tool_call.get("function", {}).get("name", "unknown")
+                    tool_args = tool_call.get("function", {}).get("arguments", {})
+                    
+                    # 跳过无效的工具调用（name 为空）
+                    if not tool_name or not tool_name.strip():
+                        logger.bind(tag=TAG).warning(
+                            f"⚠️ Kimi兼容处理: 跳过工具名称为空的调用"
+                        )
+                        continue
+                    
+                    # 处理 arguments：如果是空字符串，转为空字典
+                    if isinstance(tool_args, str):
+                        if not tool_args or not tool_args.strip():
+                            logger.bind(tag=TAG).debug(
+                                f"⚠️ Kimi兼容处理: 工具 [{tool_name}] 的参数为空字符串，转为空字典"
+                            )
+                            tool_args = "{}"  # 保持字符串格式，后续在API层处理
+                    
                     tool_info = {
-                        "tool_name": tool_call.get("function", {}).get("name", "unknown"),
-                        "arguments": tool_call.get("function", {}).get("arguments", {}),
+                        "tool_name": tool_name,
+                        "arguments": tool_args,
                         "result": "",  # 结果在下一条消息中
                         "success": True,
                         "execution_time": None

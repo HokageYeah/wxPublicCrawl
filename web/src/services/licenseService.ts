@@ -39,7 +39,8 @@ export interface BindLicenseParams {
 }
 
 export interface UserInfo {
-  id: string;
+  id: string; // 用户ID
+  user_id: string; // 用户ID
   username: string;
   email?: string;
   phone?: string;

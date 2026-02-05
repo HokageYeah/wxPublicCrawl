@@ -7,6 +7,7 @@ from openai import AsyncOpenAI
 from loguru import logger
 from app.core.config import settings
 from app.services.llm_configuration import get_llm_config_for_client
+from app.services.system import system_manager
 
 
 class Message:
@@ -98,8 +99,18 @@ class AIClient:
         # 如果启用数据库配置，从数据库获取配置
         logger.info(f"拿到数据库配置use_db_config：{use_db_config}")
         if use_db_config:
+            # 如果user_id为空，尝试从license session中读取用户信息
+            if not user_id:
+                logger.info("user_id为空，尝试从license session读取用户信息...")
+                session_data = system_manager.load_platform_session('license')
+                if session_data and session_data.get('user_info'):
+                    user_id = session_data['user_info'].get('id') or session_data['user_info'].get('user_id')
+                    logger.info(f"✅ 从license session获取到user_id: {user_id}")
+                else:
+                    logger.warning("⚠️  未找到license session或用户信息")
+            
             db_config = self._load_config_from_db(user_id)
-            logger.info(f"拿到数据库配置：{db_config}")
+            logger.info(f"拿到数据库配置：{db_config}，user_id：{user_id} ")
             if db_config:
                 api_key = api_key or db_config.get("api_key")
                 base_url = base_url or db_config.get("base_url")

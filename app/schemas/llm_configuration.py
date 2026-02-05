@@ -17,6 +17,8 @@ class ModelTypeEnum(str, Enum):
     DEEPSEEK = "DeepSeek"
     GEMINI = "Gemini"
     CUSTOM = "Custom"
+    KIMIK2="Kimik2"
+    MINIMAX="Minimax"
 
 
 class ActionEnum(str, Enum):

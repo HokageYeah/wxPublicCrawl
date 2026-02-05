@@ -176,9 +176,9 @@ async def create_config(
 
         # 如果新配置被激活，重新初始化AI助手服务
         if params.is_active:
-            logger.bind(tag=TAG).info("新配置已激活，正在重新初始化AI助手服务...")
+            logger.bind(tag=TAG).info(f"新配置已激活，正在重新初始化AI助手服务... (user_id: {params.user_id})")
             try:
-                init_success = await init_ai_assistant_service()
+                init_success = await init_ai_assistant_service(user_id=params.user_id)
                 if init_success:
                     logger.bind(tag=TAG).success("AI助手服务重新初始化成功")
                 else:
@@ -318,9 +318,9 @@ async def update_config(
         
         # 如果更新包含激活状态的改变，重新初始化AI助手服务
         if 'is_active' in update_data and update_data['is_active']:
-            logger.bind(tag=TAG).info("配置已激活，正在重新初始化AI助手服务...")
+            logger.bind(tag=TAG).info(f"配置已激活，正在重新初始化AI助手服务... (user_id: {params.user_id})")
             try:
-                init_success = await init_ai_assistant_service()
+                init_success = await init_ai_assistant_service(user_id=params.user_id)
                 if init_success:
                     logger.bind(tag=TAG).success("AI助手服务重新初始化成功")
                 else:
@@ -442,10 +442,10 @@ async def switch_config(
         if not db_config:
             raise HTTPException(status_code=404, detail="配置不存在")
         
-        # 重新初始化AI助手服务以应用新配置
-        logger.bind(tag=TAG).info("配置切换成功，正在重新初始化AI助手服务...")
+        # 重新初始化AI助手服务以应用新配置，传递user_id以加载用户专属配置
+        logger.bind(tag=TAG).info(f"配置切换成功，正在重新初始化AI助手服务... (user_id: {params.user_id})")
         try:
-            init_success = await init_ai_assistant_service()
+            init_success = await init_ai_assistant_service(user_id=params.user_id)
             if init_success:
                 logger.bind(tag=TAG).success("AI助手服务重新初始化成功")
             else:

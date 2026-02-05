@@ -153,13 +153,11 @@ const handleLogin = async () => {
 
     // 1. 先设置 Token（需要 token 才能调用卡密接口）
     await licenseStore.setToken(result.token);
-    
+    debugger;
     // 2. 设置基础用户信息
     await licenseStore.setUserInfo({
-      role: result.role,
-      has_card: result.has_card,
-      user_status: result.user_status,
-      username: result.username,
+      ...result,
+      id: result.user_id,
     });
 
     // 3. 保存应用信息到独立的 store

@@ -49,7 +49,8 @@ class MCPLLMConnect:
         mcp_manager: MCPClientManager = None,
         ai_client: Optional[AIClient] = None,
         max_tool_calls: int = 15,
-        auto_execute_tools: bool = True
+        auto_execute_tools: bool = True,
+        user_id: Optional[str] = None
     ):
         """
         初始化MCP与LLM连接器
@@ -59,9 +60,10 @@ class MCPLLMConnect:
             ai_client: AI客户端实例，如果为None则创建默认实例
             max_tool_calls: 单次对话中最大工具调用次数（防止无限循环）
             auto_execute_tools: 是否自动执行AI请求的工具调用
+            user_id: 用户ID，用于从数据库获取用户专属LLM配置
         """
         self.mcp_manager = mcp_manager or MCPClientManager(self)
-        self.ai_client = ai_client or AIClient(enable_history=True, use_db_config=True)
+        self.ai_client = ai_client or AIClient(enable_history=True, use_db_config=True, user_id=user_id)
         self.max_tool_calls = max_tool_calls
         self.auto_execute_tools = auto_execute_tools
         self.func_handler = FunctionHandler(self) # 函数处理
@@ -157,7 +159,8 @@ class MCPLLMConnect:
         user_message: str,
         system_message: Optional[str] = None,
         temperature: Optional[float] = None,
-        enable_tools: bool = True
+        enable_tools: bool = True,
+        extra_body: Optional[Dict[str, Any]] = None
     ) -> str:
         """
         发送查询并获取响应（支持自动工具调用）
@@ -178,6 +181,7 @@ class MCPLLMConnect:
             system_message: 系统消息（可选）
             temperature: 温度参数（可选）
             enable_tools: 是否启用工具调用
+            extra_body: API 额外参数（如 enable_thinking 等）
             
         Returns:
             str: AI的最终回复
@@ -205,7 +209,8 @@ class MCPLLMConnect:
             final_response = await self._conversation_loop(
                 messages=messages,
                 tools=tools,
-                temperature=temperature
+                temperature=temperature,
+                extra_body=extra_body
             )
             
             logger.bind(tag=TAG).info("✅ 查询完成")
@@ -226,7 +231,8 @@ class MCPLLMConnect:
         self,
         messages: List[Dict[str, Any]],
         tools: Optional[List[Dict[str, Any]]],
-        temperature: Optional[float]
+        temperature: Optional[float],
+        extra_body: Optional[Dict[str, Any]] = None
     ) -> str:
         """
         对话循环（处理工具调用）
@@ -235,18 +241,25 @@ class MCPLLMConnect:
             messages: 消息列表
             tools: 工具定义列表
             temperature: 温度参数
+            extra_body: API 额外参数
             
         Returns:
             str: 最终回复
         """
         tool_call_count = 0
+        # ============ Kimi-K2.5 无限循环检测 ============
+        # 记录连续失败的工具调用，防止无限循环
+        consecutive_failures = 0
+        max_consecutive_failures = 3  # 连续失败 3 次则停止
+        last_error_signature = None  # 记录上次的错误特征
         
         while tool_call_count < self.max_tool_calls:
             # 调用AI模型
             response = await self._call_ai_with_tools(
                 messages=messages,
                 tools=tools,
-                temperature=temperature
+                temperature=temperature,
+                extra_body=extra_body
             )
             
             # 检查是否有工具调用请求
@@ -292,9 +305,15 @@ class MCPLLMConnect:
             
             # 执行所有工具调用
             tool_results = []
+            all_failed = True  # 检测是否所有工具都失败了
+            
             for tool_call in tool_calls:
                 result = await self._execute_tool_call(tool_call)
                 tool_results.append(result)
+                
+                # 检查是否成功
+                if isinstance(result, dict) and result.get("success"):
+                    all_failed = False
                 
                 # 添加工具结果到消息列表（紧跟在 assistant message 之后）
                 messages.append({
@@ -303,7 +322,39 @@ class MCPLLMConnect:
                     "name": tool_call["function"]["name"],
                     # 只传递纯结果，去除元数据包装
                     "content": result.get("result", str(result)) if isinstance(result, dict) else str(result)
-                })                
+                })
+            
+            # ============ Kimi-K2.5 无限循环检测 ============
+            # 如果所有工具调用都失败，检测是否陷入循环
+            if all_failed:
+                # 生成错误特征（工具名称 + 错误类型）
+                error_signature = "|".join([
+                    f"{r.get('tool_name', 'unknown')}:{r.get('error', '')[:50]}"
+                    for r in tool_results if isinstance(r, dict)
+                ])
+                
+                if error_signature == last_error_signature:
+                    consecutive_failures += 1
+                    logger.bind(tag=TAG).warning(
+                        f"⚠️ 检测到连续失败 ({consecutive_failures}/{max_consecutive_failures})：{error_signature[:100]}"
+                    )
+                    
+                    if consecutive_failures >= max_consecutive_failures:
+                        logger.bind(tag=TAG).error(
+                            f"❌ Kimi无限循环检测：连续 {consecutive_failures} 次相同错误，强制退出"
+                        )
+                        return (
+                            f"抱歉，我在处理您的请求时遇到了技术问题。\n"
+                            f"问题原因：工具调用反复失败（{tool_calls[0]['function']['name'] if tool_calls else 'unknown'}）\n"
+                            f"建议：请尝试换一种方式描述您的需求，或稍后再试。"
+                        )
+                else:
+                    consecutive_failures = 1
+                    last_error_signature = error_signature
+            else:
+                # 有成功的调用，重置计数器
+                consecutive_failures = 0
+                last_error_signature = None
             
             # 继续循环，让AI处理工具结果
             logger.bind(tag=TAG).debug("继续对话循环，让AI处理工具结果...")
@@ -318,7 +369,8 @@ class MCPLLMConnect:
         self,
         messages: List[Dict[str, Any]],
         tools: Optional[List[Dict[str, Any]]],
-        temperature: Optional[float]
+        temperature: Optional[float],
+        extra_body: Optional[Dict[str, Any]] = None
     ) -> Any:
         """
         调用AI模型（带工具定义）
@@ -327,11 +379,18 @@ class MCPLLMConnect:
             messages: 消息列表
             tools: 工具定义
             temperature: 温度参数
-            
+            extra_body: API 额外参数（如 enable_thinking 等）
+                       如果不传，默认禁用 thinking（某些模型需要）
+        
         Returns:
             AI响应对象
         """
         try:
+            # 如果没有传入 extra_body，使用默认配置（禁用 thinking）
+            # 👉 关键：禁止 thinking 可避免某些模型（如 Kimi-K2.5）的兼容性问题
+            if extra_body is None:
+                extra_body = {"enable_thinking": False}
+            
             # 调用OpenAI API
             response = await self.ai_client.client.chat.completions.create(
                 model=self.ai_client.model,
@@ -339,44 +398,82 @@ class MCPLLMConnect:
                 tools=tools,
                 tool_choice="auto" if tools else None,
                 temperature=temperature if temperature is not None else self.ai_client.temperature,
-                max_tokens=self.ai_client.max_tokens
+                max_tokens=self.ai_client.max_tokens,
+                extra_body=extra_body
             )
             
             return response
             
         except Exception as e:
-            # 增强错误处理：解析 HTTP 错误
+            # 增强错误处理：处理 OpenAI SDK 和 HTTP 错误
             import httpx
+            from openai import RateLimitError, APIError, APIStatusError
             
-            if isinstance(e, httpx.HTTPStatusError):
+            # ============ 处理 OpenAI RateLimitError（429）============
+            if isinstance(e, RateLimitError):
+                # OpenAI SDK 已经包装了 429 错误
+                error_msg = (
+                    f"API 速率限制：已达到请求上限\n"
+                    f"模型: {self.ai_client.model}\n"
+                    f"错误信息: {str(e)}\n"
+                    f"建议: 请等待 60 秒后重试，或升级 API 计划"
+                )
+                logger.bind(tag=TAG).warning(f"⚠️ {error_msg}")
+                raise ValueError(error_msg)
+            
+            # ============ 处理其他 OpenAI API 错误 ============
+            elif isinstance(e, APIStatusError):
+                # 其他 API 状态错误（400, 401, 403, 500等）
+                status_code = e.status_code
+                error_detail = str(e)
+                error_msg = f"API 请求失败 (HTTP {status_code}): {error_detail}"
+                logger.bind(tag=TAG).error(error_msg)
+                raise ValueError(error_msg)
+            
+            elif isinstance(e, APIError):
+                # 通用 API 错误
+                error_msg = f"API 错误: {str(e)}"
+                logger.bind(tag=TAG).error(error_msg)
+                raise ValueError(error_msg)
+            
+            # ============ 处理原始 HTTP 错误（兼容旧逻辑）============
+            elif isinstance(e, httpx.HTTPStatusError):
                 status_code = e.response.status_code
+                headers = e.response.headers
                 
                 # 处理速率限制错误（429）
                 if status_code == 429:
                     # 提取速率限制信息
-                    headers = e.response.headers
                     remaining = headers.get('modelscope-ratelimit-model-requests-remaining', '未知')
                     limit = headers.get('modelscope-ratelimit-model-requests-limit', '未知')
+                    retry_after = headers.get('retry-after', '60')
                     
                     error_msg = (
-                        f"⚠️ API 速率限制：已达到请求上限\n"
-                        f"   - 模型请求限制: {limit}/分钟\n"
-                        f"   - 剩余请求数: {remaining}\n"
-                        f"   - 请稍后再试或升级 API 计划"
+                        f"API 速率限制：已达到请求上限\n"
+                        f"模型: {self.ai_client.model}\n"
+                        f"限制: {limit} 次/分钟\n"
+                        f"剩余: {remaining} 次\n"
+                        f"建议: 请等待 {retry_after} 秒后重试，或升级 API 计划"
                     )
-                    logger.bind(tag=TAG).warning(error_msg)
+                    logger.bind(tag=TAG).warning(f"⚠️ {error_msg}")
                     raise ValueError(error_msg)
                 
-                # 处理其他 HTTP 错误（400, 401, 403, 500等）
+                # 处理其他 HTTP 错误
                 else:
-                    error_detail = self._extract_error_message(e.response, status_code)
+                    try:
+                        error_detail = self._extract_error_message(e.response, status_code)
+                    except Exception as extract_err:
+                        logger.bind(tag=TAG).debug(f"提取错误信息失败: {extract_err}")
+                        error_detail = str(e)
+                    
                     error_msg = f"API 请求失败 (HTTP {status_code}): {error_detail}"
                     logger.bind(tag=TAG).error(error_msg)
                     raise ValueError(error_msg)
             
-            # 其他异常直接抛出
-            logger.bind(tag=TAG).error(f"调用AI模型失败: {e}", exc_info=True)
-            raise
+            # ============ 其他未知异常 ============
+            else:
+                logger.bind(tag=TAG).error(f"调用AI模型失败: {e}", exc_info=True)
+                raise
     
     def _extract_error_message(self, response, status_code: int) -> str:
         """
@@ -387,15 +484,15 @@ class MCPLLMConnect:
             status_code: HTTP 状态码
             
         Returns:
-            提取的错误信息
+            提取的错误信息（保证不会抛出异常）
         """
         try:
             error_body = response.json()
             logger.bind(tag=TAG).debug(f"错误响应体: {error_body}")
             
             # 尝试多种错误格式
-            # 格式1: {"error": {"message": "..."}}
             if isinstance(error_body, dict):
+                # 格式1: {"error": {"message": "..."}}
                 if "error" in error_body:
                     error_obj = error_body["error"]
                     if isinstance(error_obj, dict) and "message" in error_obj:
@@ -411,24 +508,34 @@ class MCPLLMConnect:
                 if "errors" in error_body:
                     errors = error_body["errors"]
                     if isinstance(errors, list) and errors:
-                        return str(errors[0])
+                        # 如果是字典列表，尝试提取 message
+                        first_error = errors[0]
+                        if isinstance(first_error, dict) and "message" in first_error:
+                            return first_error["message"]
+                        return str(first_error)
                     elif isinstance(errors, str):
                         return errors
                 
                 # 格式4: {"detail": "..."}
                 if "detail" in error_body:
-                    return error_body["detail"]
+                    detail = error_body["detail"]
+                    if isinstance(detail, str):
+                        return detail
+                    return str(detail)
             
-            # 如果都没匹配，返回整个JSON
-            return json.dumps(error_body, ensure_ascii=False)
+            # 如果都没匹配，返回整个JSON（限制长度）
+            json_str = json.dumps(error_body, ensure_ascii=False)
+            return json_str[:500] if len(json_str) > 500 else json_str
             
         except Exception as parse_error:
             # JSON 解析失败，尝试获取文本
+            logger.bind(tag=TAG).debug(f"JSON解析错误响应失败: {parse_error}")
             try:
                 text = response.text
-                logger.bind(tag=TAG).debug(f"错误响应文本: {text}")
+                logger.bind(tag=TAG).debug(f"错误响应文本: {text[:200]}")
                 return text[:200] if len(text) > 200 else text
-            except:
+            except Exception as text_error:
+                logger.bind(tag=TAG).debug(f"获取响应文本失败: {text_error}")
                 return f"HTTP {status_code} 错误（无法解析响应内容）"
     
     def _extract_tool_calls(self, response: Any) -> List[Dict[str, Any]]:
@@ -448,9 +555,9 @@ class MCPLLMConnect:
             message = response.choices[0].message
             
             if hasattr(message, 'tool_calls') and message.tool_calls:
-                tool_calls = []
+                raw_tool_calls = []
                 for tc in message.tool_calls:
-                    tool_calls.append({
+                    raw_tool_calls.append({
                         "id": tc.id,
                         "type": tc.type,
                         "function": {
@@ -458,6 +565,14 @@ class MCPLLMConnect:
                             "arguments": tc.function.arguments
                         }
                     })
+                
+                # ============ Kimi-K2.5 高级兼容：修复拆分的工具调用 ============
+                # Kimi-K2.5 可能将一个正确的工具调用拆成两个：
+                # 1. {name: "weather", arguments: ""}
+                # 2. {name: "", arguments: '{"location":"罗山"}'}
+                # 需要尝试合并或过滤这些异常调用
+                
+                tool_calls = self._fix_split_tool_calls(raw_tool_calls)
                 return tool_calls
             
             return []
@@ -465,6 +580,99 @@ class MCPLLMConnect:
         except Exception as e:
             logger.bind(tag=TAG).error(f"提取工具调用失败: {e}")
             return []
+    
+    def _fix_split_tool_calls(self, tool_calls: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        修复 Kimi-K2.5 拆分的工具调用
+        
+        Kimi-K2.5 特殊问题：将一个工具调用拆成两个：
+        - 第一个：有 name 但 arguments 为空
+        - 第二个：name 为空但 arguments 正确
+        
+        策略：
+        1. 尝试合并相邻的拆分调用
+        2. 过滤掉无法修复的无效调用
+        
+        Args:
+            tool_calls: 原始工具调用列表
+            
+        Returns:
+            修复后的工具调用列表
+        """
+        if len(tool_calls) <= 1:
+            return tool_calls
+        
+        fixed_calls = []
+        i = 0
+        
+        while i < len(tool_calls):
+            current = tool_calls[i]
+            current_name = current.get("function", {}).get("name", "")
+            current_args = current.get("function", {}).get("arguments", "")
+            
+            # 检查当前调用是否有效
+            has_valid_name = current_name and current_name.strip()
+            has_valid_args = current_args and current_args.strip()
+            
+            # 如果当前调用完全有效，直接添加
+            if has_valid_name and has_valid_args:
+                fixed_calls.append(current)
+                i += 1
+                continue
+            
+            # 检查是否可以与下一个调用合并（Kimi 拆分修复）
+            if i + 1 < len(tool_calls):
+                next_call = tool_calls[i + 1]
+                next_name = next_call.get("function", {}).get("name", "")
+                next_args = next_call.get("function", {}).get("arguments", "")
+                
+                # 情况1: 当前有 name 无 args，下一个无 name 有 args
+                if has_valid_name and not has_valid_args and not (next_name and next_name.strip()) and next_args and next_args.strip():
+                    # 合并这两个调用
+                    merged_call = {
+                        "id": current.get("id"),  # 使用第一个的 ID
+                        "type": current.get("type"),
+                        "function": {
+                            "name": current_name,
+                            "arguments": next_args  # 使用第二个的参数
+                        }
+                    }
+                    fixed_calls.append(merged_call)
+                    logger.bind(tag=TAG).info(
+                        f"🔧 Kimi修复：合并拆分的工具调用\n"
+                        f"   - 原始: [{current_name}, 空参数] + [空名称, {next_args[:50]}...]\n"
+                        f"   - 修复后: [{current_name}, {next_args[:50]}...]"
+                    )
+                    i += 2  # 跳过下一个（已合并）
+                    continue
+            
+            # 无法合并，检查是否应该过滤
+            if has_valid_name and not has_valid_args:
+                # 有名称但无参数 - 过滤掉（因为总是会失败）
+                logger.bind(tag=TAG).warning(
+                    f"⚠️ Kimi修复：过滤无参数的工具调用 [{current_name}]"
+                )
+                i += 1
+                continue
+            
+            if not has_valid_name:
+                # 无名称 - 过滤掉
+                logger.bind(tag=TAG).warning(
+                    f"⚠️ Kimi修复：过滤无名称的工具调用"
+                )
+                i += 1
+                continue
+            
+            # 其他情况，保留原样
+            fixed_calls.append(current)
+            i += 1
+        
+        if len(fixed_calls) != len(tool_calls):
+            logger.bind(tag=TAG).info(
+                f"🔧 Kimi修复完成：{len(tool_calls)} 个调用 → {len(fixed_calls)} 个有效调用"
+            )
+        
+        return fixed_calls
     
     def _extract_text_response(self, response: Any) -> str:
         """
@@ -498,9 +706,37 @@ class MCPLLMConnect:
         tool_name = tool_call["function"]["name"]
         tool_args_str = tool_call["function"]["arguments"]
         
+        # ============ Kimi-K2.5 兼容性处理 ============
+        # 某些模型（如 Kimi-K2.5）可能返回异常的工具调用格式：
+        # 1. name 为空字符串但 arguments 正常
+        # 2. arguments 为空字符串但 name 正常
+        # 需要过滤掉这些无效的工具调用
+        
+        # 检查 tool_name 是否有效
+        if not tool_name or not tool_name.strip():
+            logger.bind(tag=TAG).warning(
+                f"⚠️ Kimi兼容处理: 工具名称为空，跳过此工具调用\n"
+                f"   原始数据: {tool_call}"
+            )
+            self.tool_call_stats["total_calls"] += 1
+            self.tool_call_stats["failed_calls"] += 1
+            
+            return {
+                "success": False,
+                "error": "工具名称为空（可能是模型响应异常）",
+                "tool_name": tool_name or "unknown"
+            }
+        
         try:
-            # 解析参数
-            tool_args = json.loads(tool_args_str)
+            # 解析参数 - 兼容空字符串情况
+            # Kimi-K2.5 有时会返回空字符串作为 arguments
+            if not tool_args_str or not tool_args_str.strip():
+                logger.bind(tag=TAG).warning(
+                    f"⚠️ Kimi兼容处理: 工具 [{tool_name}] 的参数为空，使用空字典"
+                )
+                tool_args = {}
+            else:
+                tool_args = json.loads(tool_args_str)
             
             logger.bind(tag=TAG).info(
                 f"🔧 执行工具: {tool_name}\n"
@@ -526,7 +762,11 @@ class MCPLLMConnect:
             }
             
         except json.JSONDecodeError as e:
-            logger.bind(tag=TAG).error(f"工具参数JSON解析失败: {e}")
+            logger.bind(tag=TAG).error(
+                f"❌ 工具参数JSON解析失败: {e}\n"
+                f"   工具名称: {tool_name}\n"
+                f"   参数字符串: '{tool_args_str}'"
+            )
             self.tool_call_stats["total_calls"] += 1
             self.tool_call_stats["failed_calls"] += 1
             

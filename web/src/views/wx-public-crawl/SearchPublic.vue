@@ -401,7 +401,10 @@ const handleAIQuery = async () => {
       error?: string;
     }>('/ai/query', {
       query: userQuery,
-      enable_tools: true
+      enable_tools: true,
+      extra_body: {
+        enable_thinking: false,
+      }
     });
     
     if (response.success) {

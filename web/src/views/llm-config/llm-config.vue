@@ -585,6 +585,7 @@
 import { ref, onMounted, computed } from "vue";
 import request from "@/utils/request";
 import Toast from "@/utils/toast";
+import { useLicenseStore } from "@/stores/licenseStore";
 
 // 类型定义
 interface LLMConfig {
@@ -616,6 +617,9 @@ const activeConfig = ref<LLMConfig | null>(null);
 const modelTypes = ref<string[]>([]);
 const total = ref(0);
 const currentPage = ref(1);
+
+
+const licenseStore = useLicenseStore();
 
 // 筛选条件
 const filters = ref({
@@ -695,7 +699,7 @@ const fetchConfigs = async () => {
     const result = await request.post<{ total: number; items: LLMConfig[] }>(
       "/llm-config/llm-config-list",
       {
-        user_id: null,
+        user_id: `${licenseStore.userInfo?.user_id || null}`,
         model_type: filters.value.model_type || undefined,
         is_active: filters.value.is_active,
         skip: filters.value.skip,
@@ -739,7 +743,7 @@ const fetchActiveConfig = async () => {
   try {
     const result = await request.post<LLMConfig>(
       "/llm-config/llm-config-active",
-      { user_id: null }
+      { user_id: `${licenseStore.userInfo?.user_id || null}` }
     );
     activeConfig.value = result;
   } catch (error: any) {
@@ -801,11 +805,11 @@ const openEditDialog = async (config: LLMConfig) => {
     // 获取完整配置信息
     const result = await request.post<LLMConfig>("/llm-config/llm-config-get", {
       config_id: config.id,
-      user_id: null,
+      user_id: `${licenseStore.userInfo?.user_id || null}`,
     });
 
     isEditMode.value = true;
-    formData.value = { ...result, config_id: config.id };
+    formData.value = { ...result, id: config.id };
     showApiKey.value = false;
     showDialog.value = true;
   } catch (error) {
@@ -845,9 +849,9 @@ const saveConfig = async () => {
     if (isEditMode.value) {
       // 更新配置
       await request.post("/llm-config/llm-config-update", {
-        config_id: formData.value.config_id,
-        user_id: null,
+        config_id: formData.value.id || 0,
         ...formData.value,
+        user_id: `${licenseStore.userInfo?.user_id || null}`,
       });
       if (formData.value.is_active) {
         showToast("配置已激活，AI助手服务正在重新初始化...");
@@ -855,9 +859,12 @@ const saveConfig = async () => {
         showToast("配置更新成功");
       }
     } else {
+      console.log("formData.value", formData.value);
+      console.log("licenseStore.userInfo?.user_id", licenseStore.userInfo?.user_id);
       // 创建配置
       await request.post("/llm-config/llm-config-create", {
         ...formData.value,
+        user_id: `${licenseStore.userInfo?.user_id || null}`,
       });
       if (formData.value.is_active) {
         showToast("配置已创建并激活，AI助手服务正在重新初始化...");
@@ -898,10 +905,12 @@ const activateConfig = async (configId: number) => {
   try {
     await request.post("/llm-config/llm-config-switch", {
       config_id: configId,
-      user_id: null,
+      user_id: `${licenseStore.userInfo?.user_id || null}`,
     });
     showToast("配置已激活，AI助手服务正在重新初始化...");
+    // 获取配置列表
     await fetchConfigs();
+    // 获取激活配置
     await fetchActiveConfig();
   } catch (error: any) {
     console.error("激活配置失败:", error);
@@ -921,7 +930,7 @@ const deleteConfig = async (configId: number) => {
   try {
     await request.post("/llm-config/llm-config-delete", {
       config_id: configId,
-      user_id: null,
+      user_id: `${licenseStore.userInfo?.user_id || null}`,
     });
     showToast("配置删除成功");
     await fetchConfigs();

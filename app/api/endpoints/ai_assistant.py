@@ -31,6 +31,9 @@ class AIQueryRequest(BaseModel):
     enable_tools: bool = True
     # 温度
     temperature: Optional[float] = None
+    # API 额外参数（如 enable_thinking 等）
+    # 示例: {"enable_thinking": False} - 禁用思考模式（Kimi-K2.5 需要）
+    extra_body: Optional[Dict[str, Any]] = None
 
 
 class ToolCallInfo(BaseModel):
@@ -108,20 +111,59 @@ async def ai_query(request: AIQueryRequest) -> ApiResponseData:
     result = await query_ai_assistant(
         query=request.query,
         enable_tools=request.enable_tools,
-        temperature=request.temperature
+        temperature=request.temperature,
+        extra_body=request.extra_body
     )
     # 构建 AIQueryResponse 对象
+    # ============ Kimi-K2.5 兼容性处理 ============
+    # 安全解析工具调用参数，处理空字符串等异常情况
+    tool_calls_list = []
+    for tool_call in result.get("tool_calls", []):
+        try:
+            # 获取 arguments 字段
+            arguments = tool_call.get("arguments", {})
+            
+            # 如果是字符串，尝试解析为 JSON
+            if isinstance(arguments, str):
+                # Kimi-K2.5 兼容：空字符串或空白字符串转为空字典
+                if not arguments or not arguments.strip():
+                    logger.bind(tag=TAG).debug(
+                        f"⚠️ Kimi兼容处理: 工具 [{tool_call.get('tool_name')}] "
+                        f"的参数为空字符串，使用空字典"
+                    )
+                    arguments = {}
+                else:
+                    arguments = json.loads(arguments)
+            
+            # 构建 ToolCallInfo 对象
+            tool_calls_list.append(ToolCallInfo(**{
+                **tool_call,
+                "arguments": arguments
+            }))
+            
+        except json.JSONDecodeError as e:
+            # JSON 解析失败，记录警告并使用空字典
+            logger.bind(tag=TAG).warning(
+                f"⚠️ 工具调用参数JSON解析失败: {e}\n"
+                f"   工具: {tool_call.get('tool_name')}\n"
+                f"   原始参数: {tool_call.get('arguments')}\n"
+                f"   使用空字典代替"
+            )
+            tool_calls_list.append(ToolCallInfo(**{
+                **tool_call,
+                "arguments": {}
+            }))
+        except Exception as e:
+            # 其他异常，记录错误并跳过该工具调用
+            logger.bind(tag=TAG).error(
+                f"❌ 处理工具调用信息失败: {e}\n"
+                f"   工具: {tool_call.get('tool_name')}"
+            )
+    
     response_data = AIQueryResponse(
         response=result.get("response", ""),
         tool_calls_count=result.get("tool_calls_count", 0),
-        tool_calls=[
-            ToolCallInfo(**{
-                **tool_call,
-                "arguments": json.loads(tool_call.get("arguments", {}))
-                if isinstance(tool_call.get("arguments", {}), str)
-                else tool_call.get("arguments", {})
-            }) for tool_call in result.get("tool_calls", [])
-        ],
+        tool_calls=tool_calls_list,
         success=result.get("success", False),
         error=result.get("error")
     )
