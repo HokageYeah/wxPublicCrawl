@@ -68,6 +68,8 @@ export interface CardInfo {
   app_key: string;
   app_status: string;
   app_created_at: string;
+  // 设备ID，用于权限校验（如果未提供，可使用 card_id 作为替代）
+  device_id?: string;
 }
 
 export interface MyCardsResponse {

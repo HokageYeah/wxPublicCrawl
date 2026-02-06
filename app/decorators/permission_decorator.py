@@ -59,11 +59,10 @@ def require_permission(permission: str):
                     detail="缺少授权令牌"
                 )
             
-            # 从请求头获取 device_id
-            device_id_str = request.headers.get("X-Device-Id", "")
-            device_ids = [d.strip() for d in device_id_str.split(",") if d.strip()] if device_id_str else []
+            # 从请求头获取 device_id（单个字符串）
+            device_id = request.headers.get("X-Device-Id", "").strip()
             
-            if not device_ids:
+            if not device_id:
                 logger.warning(f"请求缺少 X-Device-Id 头")
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
@@ -74,7 +73,7 @@ def require_permission(permission: str):
             is_allowed, error_msg = await _check_permission(
                 token=token,
                 permission=permission,
-                device_ids=device_ids
+                device_id=device_id
             )
             
             if not is_allowed:
@@ -106,7 +105,7 @@ def require_permission(permission: str):
 async def _check_permission(
     token: str,
     permission: str,
-    device_ids: list[str]
+    device_id: str
 ) -> tuple[bool, Optional[str]]:
     """
     调用卡密系统 API 检查权限
@@ -114,7 +113,7 @@ async def _check_permission(
     Args:
         token: 用户令牌
         permission: 权限标识
-        device_ids: 设备ID列表
+        device_id: 设备ID字符串
         
     Returns:
         (是否允许, 错误信息)
@@ -129,7 +128,7 @@ async def _check_permission(
                 settings.PERMISSION_API_URL,
                 json={
                     "permission": permission,
-                    "device_id": device_ids
+                    "device_id": device_id
                 },
                 headers={
                     "Content-Type": "application/json",
@@ -138,16 +137,33 @@ async def _check_permission(
             )
             
             if response.status_code == 200:
-                data = response.json()
-                allowed = data.get("allowed", False)
-                message = data.get("message", "")
+                resp_data = response.json()
                 
-                if allowed:
-                    logger.info(f"权限校验通过: {permission}, 设备: {device_ids}")
-                    return True, None
+                # 检查是否是标准的 API 响应格式
+                if "data" in resp_data:
+                    # 从 data 字段中提取权限校验结果
+                    data = resp_data.get("data", {})
+                    allowed = data.get("allowed", False)
+                    message = data.get("message", "")
+                    expire_time = data.get("expire_time", "")
+                    
+                    if allowed:
+                        logger.info(f"权限校验通过: {permission}, 设备: {device_id}, 过期时间: {expire_time}")
+                        return True, None
+                    else:
+                        logger.warning(f"权限校验失败: {message}")
+                        return False, message
                 else:
-                    logger.warning(f"权限校验失败: {message}")
-                    return False, message
+                    # 兼容旧格式（直接返回 allowed 和 message）
+                    allowed = resp_data.get("allowed", False)
+                    message = resp_data.get("message", "")
+                    
+                    if allowed:
+                        logger.info(f"权限校验通过: {permission}, 设备: {device_id}")
+                        return True, None
+                    else:
+                        logger.warning(f"权限校验失败: {message}")
+                        return False, message
             else:
                 logger.error(f"权限校验API返回错误状态码: {response.status_code}")
                 return False, f"权限校验服务错误: {response.status_code}"

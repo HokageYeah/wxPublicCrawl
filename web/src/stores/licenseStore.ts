@@ -4,6 +4,7 @@ import type { UserInfo, CardInfo } from "@/services/licenseService";
 import { sessionService } from "@/services/sessionService";
 import { getMyCards } from "@/services/licenseService";
 import licenseRequest from "@/utils/licenseRequest";
+import api from "@/utils/request"; // 导入主请求实例，用于设置全局权限请求头
 
 /**
  * 卡密服务状态管理
@@ -28,6 +29,9 @@ export const useLicenseStore = defineStore("license", () => {
   // 平台标识
   const PLATFORM = "license";
 
+  // 设备ID
+  const deviceId = ref<string>("");
+
   /**
    * 初始化：从后端加载会话
    */
@@ -35,6 +39,9 @@ export const useLicenseStore = defineStore("license", () => {
     try {
       console.log("正在从后端加载许可证会话...");
       const sessionResponse = await sessionService.loadSession(PLATFORM);
+      const { getDeviceId } = await import('@/utils/fingerprint')
+      deviceId.value = await getDeviceId()
+      console.log("✓ 已获取设备指纹作为device_id", deviceId.value);
 
       if (sessionResponse.logged_in && sessionResponse.user_info) {
         userInfo.value = sessionResponse.user_info as UserInfo;
@@ -60,14 +67,43 @@ export const useLicenseStore = defineStore("license", () => {
 
   /**
    * 设置请求头拦截器，自动携带 Token
+   * 同时设置主请求实例和 licenseRequest 实例
    */
   const setupRequestInterceptor = () => {
-    // 移除旧的 getter（如果有的话，Request 类目前没提供移除特定 getter 的方法，但重复添加可能会有问题）
-    // 这里我们使用统一的 getter 逻辑
+    // 为 licenseRequest 设置 Authorization 头
     licenseRequest.addCustomHeaderGetter(() => ({
       key: "Authorization",
       value: token.value ? `Bearer ${token.value}` : "",
     }));
+
+    // 为主请求实例设置 Authorization 头（用于权限校验）
+    api.addCustomHeaderGetter(() => ({
+      key: "Authorization",
+      value: token.value ? `Bearer ${token.value}` : "",
+    }));
+
+    // 为主请求实例设置 X-Device-Id 头（用于权限校验）
+    // 只发送第一个卡密的设备ID（单个字符串）
+    // 如果卡密没有 device_id 字段，则使用 card_id 作为设备标识
+    api.addCustomHeaderGetter(() => {
+      // let deviceId = "";
+      if (cards.value && cards.value.length > 0) {
+        // 只取第一个卡密的设备ID
+        // const firstCard = cards.value[0];
+        // deviceId = firstCard.device_id || String(firstCard.card_id);
+        // 获取设备指纹作为device_id
+        // const { getDeviceId } = await import('@/utils/fingerprint')
+        // deviceId = await getDeviceId()
+        // 9b1ea719e1ba482a27d45364d3c7f877
+        console.log("✓ 已获取设备指纹作为device_id", deviceId.value);
+      }
+      return {
+        key: "X-Device-Id",
+        value: deviceId.value,
+      };
+    });
+
+    console.log("✓ 已为主请求实例和 licenseRequest 设置权限请求头拦截器");
   };
 
   /**
