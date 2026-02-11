@@ -16,8 +16,10 @@ from app.services.wx_public import (
     fetch_get_login_info,
     fetch_redirect_login_info,
     fetch_verify_user_info,
+    export_articles_to_excel,
 )
-from app.schemas.wx_data import ArticleDetailRequest, ArticleListRequest, CookieTokenRequest, PreloginRequest, WebreportRequest, StartLoginRequest, RedirectLoginInfoRequest
+from app.schemas.wx_data import ArticleDetailRequest, ArticleListRequest, CookieTokenRequest, PreloginRequest, WebreportRequest, StartLoginRequest, RedirectLoginInfoRequest, EducationAnalyzeRequest, EducationAnalyzeByIdRequest, GetAllArticlesInfoByIdRequest, ExportArticlesToExcelRequest
+from app.ai.code.education_analyze import analyze_education_articles, analyze_education_articles_by_id, get_all_articles_info_by_id
 from app.schemas.common_data import ApiResponseData
 from app.decorators.cache_decorator import ttl_cache, timed_cache, get_cache
 
@@ -26,23 +28,24 @@ router = APIRouter()
 
 
 @router.get("/search-wx-public",response_model=ApiResponseData)
-async def search_wx_articles(query: str = Query(..., description="搜索关键词"),
+async def search_wx_articles(request: Request,
+                             query: str = Query(..., description="搜索关键词"),
                              begin: int = Query(0, description="开始位置"),
                              count: int = Query(5, description="数量")):
     """搜索微信公众号"""
-    result = await fetch_wx_public(query, begin, count)
+    result = await fetch_wx_public(request, query, begin, count)
     return result
 
 # 根据公众号id搜索公众号文章列表
 @router.post("/get-wx-article-list", response_model=ApiResponseData)
-async def get_wx_article_list(params: ArticleListRequest):
+async def get_wx_article_list(request: Request, params: ArticleListRequest):
     """使用公众号ID搜索公众号文章列表（使用Query参数）"""
-    result = await fetch_wx_article_list(params)
+    result = await fetch_wx_article_list(request, params)
     return result
 
 # 根据文章链接请求得到文章详情（需要传递公众号id以及公众号名称，做网站本地化保存使用）
 @router.post("/get-wx-article-detail-by-link", response_model=ApiResponseData)
-async def get_wx_article_detail_by_link(params: ArticleDetailRequest):
+async def get_wx_article_detail_by_link(request: Request, params: ArticleDetailRequest):
     """根据文章链接请求得到文章详情（需要传递公众号id以及公众号名称，做网站本地化保存使用）
     
     此端点用于测试body参数的异常处理
@@ -56,7 +59,7 @@ async def get_wx_article_detail_by_link(params: ArticleDetailRequest):
     }
     ```
     """
-    result = await fetch_wx_article_detail_by_link(params)
+    result = await fetch_wx_article_detail_by_link(request, params)
     return result
 
 # 设置cookie、token接口
@@ -65,6 +68,70 @@ async def set_wx_cookie_token(params: CookieTokenRequest):
     """设置cookie、token"""
     result = await fetch_set_wx_cookie_token(params)
     return result
+
+
+# AI分析教育相关文章
+@router.post("/analyze-education-content", response_model=ApiResponseData)
+async def analyze_education_content(params: EducationAnalyzeRequest):
+    """
+    AI分析教育相关文章
+    """
+    result = await analyze_education_articles(params.articles)
+    return {"code": 0, "msg": "success", "data": result}
+
+
+# AI通过ID分析教育相关文章
+@router.post("/analyze-education-content-by-id", response_model=ApiResponseData)
+async def analyze_education_content_by_id(params: EducationAnalyzeByIdRequest):
+    """
+    AI通过公众号ID分析教育相关文章
+    """
+    result = await analyze_education_articles_by_id(params.wx_public_id)
+    return {"code": 0, "msg": "success", "data": result}
+
+
+# AI通过ID获取公众号所有文章信息
+@router.post("/get-all-articles-info-by-id", response_model=ApiResponseData)
+async def get_all_articles_info_by_id_endpoint(params: GetAllArticlesInfoByIdRequest):
+    """
+    AI通过公众号ID获取所有文章的标题、发布时间、链接
+    """
+    result = await get_all_articles_info_by_id(params.wx_public_id)
+    return {"code": 0, "msg": "success", "data": result}
+
+
+# 导出文章到Excel
+@router.post("/export-articles-to-excel", response_model=ApiResponseData)
+async def export_articles_to_excel_endpoint(params: ExportArticlesToExcelRequest):
+    """
+    将文章列表导出到Excel文件
+    
+    请求体示例:
+    ```json
+    {
+        "articles": [
+            {
+                "aid": "2247484875_1",
+                "link": "https://mp.weixin.qq.com/s/pRZA_mYBGy6iWUjqqdYG9A",
+                "publish_time": "2025-08-13 20:50:17",
+                "title": "文章标题",
+                "update_time": 1755089417
+            }
+        ],
+        "save_path": "/Users/username/Desktop",
+        "file_name": "公众号文章"
+    }
+    ```
+    
+    Excel表头顺序：
+    1. 文章ID (aid)
+    2. 文章标题
+    3. 发布时间 (publish_time)
+    4. 更新时间 (update_time)
+    5. 文章链接
+    """
+    result = await export_articles_to_excel(params.articles, params.save_path, params.file_name)
+    return {"code": 0, "msg": "success", "data": result}
 
 
 # 微信二维码登录流程
@@ -179,4 +246,3 @@ async def get_session_id():
     """
     session_id = await generate_session_id()
     return {"session_id": session_id}
-

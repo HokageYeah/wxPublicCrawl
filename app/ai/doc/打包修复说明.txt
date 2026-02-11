@@ -1,0 +1,115 @@
+╔════════════════════════════════════════════════════════════════════╗
+║                 🔧 打包后提示词文件找不到 - 已修复                  ║
+╚════════════════════════════════════════════════════════════════════╝
+
+【问题】
+打包成桌面程序后，运行时报错：
+  提示词目录不存在: app/ai/prompt
+  提示词文件不存在: app/ai/prompt/education_prompt.txt
+
+【原因】
+打包后资源文件路径需要使用 get_resource_path() 函数处理，
+但代码中传入的是字符串相对路径，没有正确转换。
+
+【修复内容】✅
+
+1. app/ai/utils/prompt_manager.py
+   ✓ 修改 __init__ 方法，自动处理相对路径
+   ✓ 添加详细的调试日志
+   ✓ 列出目录内容帮助调试
+
+2. app/ai/code/education_analyze.py
+   ✓ 使用默认路径（自动处理打包路径）
+
+3. app/utils/src_path.py
+   ✓ 改进 get_resource_path() 日志输出
+   ✓ 更详细的调试信息
+
+4. 新增诊断工具
+   ✓ app/ai/test/test_resource_path.py
+   ✓ 可以检测路径是否正确
+
+5. 新增文档
+   ✓ app/ai/doc/打包问题解决方案.md（详细说明）
+
+【下一步操作】⚠️ 重要！
+
+1️⃣ 重新打包（必须）
+   cd /Users/yuye/YeahWork/Python项目/wxPublicCrawl
+   ./script/desktop/build_mac.sh
+
+2️⃣ 测试验证
+   方法A - 运行诊断工具:
+     python app/ai/test/test_resource_path.py
+   
+   方法B - 运行打包后的应用并查看日志:
+     ./dist/wx公众号工具/wx公众号工具
+   
+   ✅ 应该看到:
+     📦 [打包模式] sys._MEIPASS: /private/var/folders/...
+     ✅ 提示词管理器已初始化 - 目录: .../app/ai/prompt
+     找到 1 个提示词文件: ['education_prompt.txt']
+
+3️⃣ 测试AI功能
+   - 打开应用
+   - 登录微信公众号
+   - 打开文章列表
+   - 点击"AI帮分析"按钮
+   - ✅ 应该正常分析教育类文章
+
+【验证清单】
+
+打包前：
+  □ 确认代码已保存
+  □ 运行开发环境测试: python app/ai/test/test_resource_path.py
+  □ 确认 wx_crawler.spec 包含: ('app/ai/prompt', 'app/ai/prompt')
+
+打包后：
+  □ 清理旧文件: rm -rf build/ dist/
+  □ 重新打包: ./script/desktop/build_mac.sh
+  □ 查看打包日志无错误
+  □ 检查文件: ls dist/wx公众号工具/_internal/app/ai/prompt/
+  □ 运行应用: ./dist/wx公众号工具/wx公众号工具
+  □ 查看日志确认路径正确
+  □ 测试AI分析功能
+
+【如果还有问题】
+
+1. 查看详细文档:
+   cat app/ai/doc/打包问题解决方案.md
+
+2. 运行诊断工具:
+   python app/ai/test/test_resource_path.py
+
+3. 检查日志输出，寻找:
+   - "📦 [打包模式]" 或 "🔧 [开发模式]"
+   - "资源完整路径" 和 "文件是否存在"
+   - "提示词目录不存在" 的具体路径
+
+4. 确认 PyInstaller 版本:
+   pyinstaller --version
+   # 推荐使用 6.0+ 版本
+
+【文件清单】
+
+修改的文件:
+  ✓ app/ai/utils/prompt_manager.py
+  ✓ app/ai/code/education_analyze.py
+  ✓ app/utils/src_path.py
+
+新增的文件:
+  ✓ app/ai/test/test_resource_path.py（诊断工具）
+  ✓ app/ai/doc/打包问题解决方案.md（详细文档）
+  ✓ app/ai/doc/打包修复说明.txt（本文件）
+
+打包配置:
+  ✓ wx_crawler.spec（无需修改，已包含提示词）
+
+═══════════════════════════════════════════════════════════════════
+
+✨ 修复完成时间: 2025-12-29
+📝 状态: ✅ 代码已修复，需要重新打包验证
+🔗 详细文档: app/ai/doc/打包问题解决方案.md
+
+═══════════════════════════════════════════════════════════════════
+

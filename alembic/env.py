@@ -100,7 +100,7 @@ def run_migrations_offline() -> None:
     """
     # url = config.get_main_option("sqlalchemy.url")
      # 使用配置文件中的 DATABASE_URL
-    url = DATABASE_URL
+    url = str(DATABASE_URL)
     print(f"数据库URL: {url}")
     context.configure(
         url=url,
@@ -122,8 +122,8 @@ def run_migrations_online() -> None:
     """
         # 使用配置文件中的 DATABASE_URL
     configuration = config.get_section(config.config_ini_section)
-    configuration["sqlalchemy.url"] = DATABASE_URL
-    print(f"数据库configuration: {configuration}")
+    configuration["sqlalchemy.url"] = str(DATABASE_URL)
+    print(f"数据库configuration: {configuration}")  
     connectable = engine_from_config(
         configuration,
         prefix="sqlalchemy.",

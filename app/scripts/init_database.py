@@ -9,6 +9,8 @@ sys.path.append(str(project_root))
 
 # 设置环境变量
 os.environ["ENV"] = "production"
+if "ENV" not in os.environ:
+    os.environ["ENV"] = "development"
 
 # 导入必要的模块
 from sqlalchemy import create_engine
@@ -18,8 +20,8 @@ from app.models import *  # 导入所有模型
 
 def init_database():
     """初始化数据库，创建所有表"""
-    print(f"使用连接URL: {DATABASE_URL}")
-    engine = create_engine(DATABASE_URL)
+    print(f"使用连接URL: {str(DATABASE_URL)}")
+    engine = create_engine(str(DATABASE_URL))
     
     try:
         # 创建所有表

@@ -56,3 +56,45 @@ class sogou_ArticleDetailRequest(BaseModel):
     is_save_to_local: bool = Field(False, description="是否保存到本地, 非必填")
     save_to_local_path: str = Field("", description="保存到本地路径, 非必填")
     save_to_local_file_name: str = Field("", description="保存到本地文件名, 非必填")
+
+class ArticleItem(BaseModel):
+    aid: str
+    title: str
+
+class CheckDownloadRequest(BaseModel):
+    base_path: str = Field(..., description="下载根目录")
+    wx_public_name: str = Field(..., description="公众号名称")
+    articles: list[ArticleItem] = Field(..., description="文章列表")
+
+
+class ArticleSimple(BaseModel):
+    aid: str
+    title: str
+
+
+class EducationAnalyzeRequest(BaseModel):
+    articles: list[ArticleSimple]
+
+
+class EducationAnalyzeByIdRequest(BaseModel):
+    wx_public_id: str = Field(..., description="公众号ID")
+
+
+class GetAllArticlesInfoByIdRequest(BaseModel):
+    wx_public_id: str = Field(..., description="公众号ID")
+
+
+class ArticleExportItem(BaseModel):
+    """文章导出项"""
+    aid: str = Field(..., description="文章ID")
+    title: str = Field(..., description="文章标题")
+    publish_time: str = Field(..., description="发布时间")
+    update_time: int = Field(..., description="更新时间戳")
+    link: str = Field(..., description="文章链接")
+
+
+class ExportArticlesToExcelRequest(BaseModel):
+    """导出文章到Excel请求"""
+    articles: list[ArticleExportItem] = Field(..., description="文章列表")
+    save_path: str = Field(..., description="保存路径")
+    file_name: str = Field(..., description="文件名（不含扩展名）")

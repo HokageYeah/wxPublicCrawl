@@ -1,0 +1,10 @@
+{
+    "mcp_server_url": "http://127.0.0.1:8008/mcp",
+    "mcpServer": {
+        "fastmcp-demo-tools": {
+            "transport": "streamable-http",
+            "url": "http://127.0.0.1:8008/mcp",
+            "description": "FastMCP Server 天气、知识库测试"
+        }
+    }
+}

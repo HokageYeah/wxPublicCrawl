@@ -12,23 +12,34 @@ Base = declarative_base()
 class Database:
     def __init__(self):
         self.db_config = get_database_config()
-        self.db_url = DATABASE_URL
+        self.db_url = str(DATABASE_URL)
         self._engine = None
         self._session_factory = None
 
     def connect(self) -> None:
         """初始化数据库连接"""
         try:
-            # 创建引擎，配置连接池
-            self._engine = create_engine(
-                self.db_url,
-                poolclass=QueuePool,
-                pool_size=self.db_config['pool_size'],
-                max_overflow=self.db_config['max_overflow'],
-                pool_timeout=self.db_config['pool_timeout'],
-                pool_recycle=self.db_config['pool_recycle'],
-                echo=self.db_config['echo']
-            )
+            # SQLite 不需要连接池配置
+            is_sqlite = self.db_url.startswith('sqlite:///')
+            
+            if is_sqlite:
+                # SQLite 配置
+                self._engine = create_engine(
+                    self.db_url,
+                    echo=self.db_config['echo'],
+                    connect_args={"check_same_thread": False}  # SQLite 特定配置
+                )
+            else:
+                # MySQL 等其他数据库配置
+                self._engine = create_engine(
+                    self.db_url,
+                    poolclass=QueuePool,
+                    pool_size=self.db_config['pool_size'],
+                    max_overflow=self.db_config['max_overflow'],
+                    pool_timeout=self.db_config['pool_timeout'],
+                    pool_recycle=self.db_config['pool_recycle'],
+                    echo=self.db_config['echo']
+                )
             
             # 创建会话工厂
             self._session_factory = sessionmaker(
@@ -41,18 +52,27 @@ class Database:
             session = self._session_factory()
             try:
                 session.execute(text("SELECT 1"))
-                logging.info("sqlalchemy数据库连接成功")
+                logging.info(f"sqlalchemy数据库连接成功 - 数据库类型: {'SQLite' if is_sqlite else 'MySQL'}")
+                
+                # 如果是 SQLite，创建表结构
+                if is_sqlite:
+                    Base.metadata.create_all(self._engine)
+                    logging.info("SQLite 数据库表结构已创建")
+                    
             finally:
                 session.close()
 
         except Exception as e:
             logging.error(f"sqlalchemy数据库连接失败: {e}")
-            raise
+            logging.warning("应用将在没有数据库的情况下启动，某些功能可能不可用")
+            # 桌面应用不抛出异常，允许在没有数据库的情况下启动
+            # raise  # 注释掉这行，让应用继续运行
 
     def get_session(self) -> Generator[Session, None, None]:
         """获取数据库会话"""
         if not self._session_factory:
-            raise RuntimeError("sqlalchemy数据库未初始化，请先调用 connect()")
+            logging.warning("数据库未连接，某些功能可能不可用")
+            raise RuntimeError("数据库未初始化。如果您是桌面应用用户，请检查数据库配置。")
             
         session = self._session_factory()
         try:

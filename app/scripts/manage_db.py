@@ -9,8 +9,8 @@ project_root = Path(__file__).resolve().parent.parent.parent
 sys.path.append(str(project_root))
 
 from sqlalchemy import create_engine, text
-from src.config.database_config import DATABASE_URL, get_database_config
-from src.sql.sqlalchemy_db import Base
+from app.config.database_config import DATABASE_URL, get_database_config
+from app.db.sqlalchemy_db import Base
 
 # 创建一个命令行接口
 @click.group()
@@ -48,14 +48,14 @@ def drop_db():
 @cli.command()
 def create_tables():
     """创建所有表"""
-    engine = create_engine(DATABASE_URL)
+    engine = create_engine(str(DATABASE_URL))
     Base.metadata.create_all(engine)
     click.echo("所有表创建成功")
 
 @cli.command()
 def drop_tables():
     """删除所有表"""
-    engine = create_engine(DATABASE_URL)
+    engine = create_engine(str(DATABASE_URL))
     Base.metadata.drop_all(engine)
     click.echo("所有表删除成功")
 

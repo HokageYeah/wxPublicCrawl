@@ -1,0 +1,198 @@
+# API 接口速查表
+
+快速查找 API 接口的路径、方法和权限要求。
+
+---
+
+## 🔧 前端调用配置
+
+本项目有两个后端服务：
+
+### 主应用服务（端口 8002）
+- **开发环境代理**: `/web-api` → `http://127.0.0.1:8002`
+- **生产环境**: 直接访问 `http://127.0.0.1:8002`
+- **用途**: 微信公众号爬虫、喜马拉雅等主要功能
+- **Request 实例**: `@/utils/request.ts` 中的默认导出
+- **Service 示例**: `@/services/wechatService.ts`, `@/services/xmlyService.ts`
+
+### 卡密绑定服务（端口 8003）
+- **开发环境代理**: `/license-api/api/v1/` → `http://127.0.0.1:8003`
+- **生产环境**: 直接访问 `http://127.0.0.1:8003/api/v1/`
+- **用途**: 用户注册、登录、卡密绑定和权限管理
+- **Request 实例**: `@/utils/licenseRequest.ts` 中的专用实例
+- **Service**: `@/services/licenseService.ts`
+- **Store**: `@/stores/licenseStore.ts`
+
+### 前端调用示例
+
+**调用主应用服务：**
+```typescript
+import request from '@/utils/request';
+import { getWechatQRCode } from '@/services/wechatService';
+
+// 方式1: 直接使用 service
+const qrCode = await getWechatQRCode();
+
+// 方式2: 直接使用 request
+const data = await request.get('/some-endpoint');
+```
+
+**调用卡密服务：**
+```typescript
+import licenseRequest from '@/utils/licenseRequest';
+import { login, bindLicense } from '@/services/licenseService';
+import { useLicenseStore } from '@/stores/licenseStore';
+
+// 方式1: 使用 service（推荐）
+const result = await login({ username: 'user', password: 'pass' });
+
+// 方式2: 直接使用 licenseRequest
+const userInfo = await licenseRequest.get('/auth/me');
+
+// 使用 store 管理状态
+const licenseStore = useLicenseStore();
+licenseStore.setToken(result.token);
+licenseStore.setUserInfo(result.userInfo);
+```
+
+---
+
+## 🔐 认证接口（无需登录）
+
+| 方法 | 路径 | 说明 | 请求体 |
+|------|------|------|--------|
+| POST | `/api/v1/auth/register` | 用户注册 | `{username, password}` |
+| POST | `/api/v1/auth/login` | 用户登录 | `{username, password, app_key, device_id}` |
+
+---
+
+## 👤 用户接口（需要登录）
+
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/api/v1/auth/verify` | 验证Token | 🔒 登录 |
+| GET | `/api/v1/auth/me` | 获取当前用户信息 | 🔒 登录 |
+| POST | `/api/v1/auth/logout` | 用户登出 | 🔒 登录 |
+
+---
+
+## 🎫 卡密管理接口（需要登录）
+
+| 方法 | 路径 | 说明 | 请求体 | 权限 |
+|------|------|------|--------|------|
+| GET | `/api/v1/card/my` | 查询我的卡密 | - | 🔒 登录 |
+| POST | `/api/v1/card/bind` | 绑定卡密 | `{card_key, device_id, device_name?}` | 🔒 登录 |
+| POST | `/api/v1/card/unbind-device` | 解绑设备 | `{card_id, device_id}` | 🔒 登录 |
+| GET | `/api/v1/card/{card_id}` | 查询卡密详情 | - | 🔒 登录 |
+
+---
+
+## 🏢 应用管理接口（需要管理员）
+
+| 方法 | 路径 | 说明 | 请求体 | 权限 |
+|------|------|------|--------|------|
+| GET | `/api/v1/app/list` | 查询应用列表 | - | 🔑 管理员 |
+| POST | `/api/v1/app/create` | 创建应用 | `{app_name, app_key?}` | 🔑 管理员 |
+| PUT | `/api/v1/app/{app_id}/status` | 更新应用状态 | `{status}` | 🔑 管理员 |
+| GET | `/api/v1/app/{app_id}` | 查询应用详情 | - | 🔑 管理员 |
+
+---
+
+## 🔑 权限校验接口
+
+| 方法 | 路径 | 说明 | 请求体 | 权限 |
+|------|------|------|--------|------|
+| POST | `/api/v1/permission/check` | 权限校验 | `{permission, device_id?}` | 🔒 登录 |
+| POST | `/api/v1/permission/batch-check` | 批量权限校验 | `{permissions, device_id?}` | 🔒 登录 |
+| GET | `/api/v1/permission/my-permissions` | 查询我的权限 | - | 🔒 登录 |
+
+---
+
+## 👨‍💼 管理后台接口（开发中）
+
+### 卡密管理
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| POST | `/api/v1/admin/card/generate` | 批量生成卡密 | 🔑 管理员 |
+| GET | `/api/v1/admin/cards` | 查询所有卡密 | 🔑 管理员 |
+| PUT | `/api/v1/admin/card/{card_id}/status` | 修改卡密状态 | 🔑 管理员 |
+| PUT | `/api/v1/admin/card/{card_id}/permissions` | 修改卡密权限 | 🔑 管理员 |
+
+### 用户管理
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/api/v1/admin/users` | 查询所有用户 | 🔑 管理员 |
+| PUT | `/api/v1/admin/user/{user_id}/status` | 封禁/解封用户 | 🔑 管理员 |
+
+### 设备管理
+| 方法 | 路径 | 说明 | 权限 |
+|------|------|------|------|
+| GET | `/api/v1/admin/devices` | 查询设备列表 | 🔑 管理员 |
+| PUT | `/api/v1/admin/device/{device_id}/status` | 禁用/启用设备 | 🔑 管理员 |
+
+---
+
+## 📖 图例说明
+
+- 🔒 **登录**: 需要提供有效的 JWT Token
+- 🔑 **管理员**: 需要管理员角色的 Token
+- ✅ **已完成**: 接口已实现可用
+- 🚧 **开发中**: 接口正在开发
+- ⏳ **待开发**: 接口还未开始开发
+
+---
+
+## 🎯 快速测试
+
+### 获取 Token
+```bash
+# 普通用户
+curl -X POST "http://localhost:8003/api/v1/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"username":"testuser","password":"test123456","app_key":"default_app","device_id":"test-001"}'
+
+# 管理员
+curl -X POST "http://localhost:8003/api/v1/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"admin123456","app_key":"default_app","device_id":"admin-001"}'
+```
+
+### 使用 Token
+在后续请求中添加 Header：
+```
+Authorization: Bearer YOUR_TOKEN_HERE
+```
+
+---
+
+## 📱 Swagger UI
+
+访问交互式 API 文档：
+```
+http://localhost:8003/docs
+```
+
+在 Swagger UI 中：
+1. 先调用登录接口获取 token
+2. 点击右上角 🔒 "Authorize" 按钮
+3. 输入 token
+4. 就可以测试所有需要认证的接口了
+
+---
+
+## 🔍 接口状态
+
+### 已完成接口（✅）
+- 认证接口：5个
+- 卡密管理接口：4个
+- 应用管理接口：4个
+- 权限校验接口：3个
+
+**共计：16个接口**
+
+### 待开发接口（⏳）
+- 管理后台接口：约10个
+
+---
+
+**最后更新**: 2026-01-27

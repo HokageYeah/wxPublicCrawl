@@ -2,3 +2,18 @@
 /migrations/versions/*
 /app/logs/*
 venv/
+build/
+dist/
+logs/*
+/web/logs/*
+/web/dist/*
+/web/node_modules/*
+
+# playwright
+script/desktop/playwright_browsers/
+
+# node binaries
+script/desktop/node_binaries/
+
+# 通用
+node_modules/

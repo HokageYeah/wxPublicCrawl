@@ -3,6 +3,7 @@ import urllib.parse
 import time
 import math
 import random
+from typing import Dict, Any
 from fastapi import HTTPException, Request
 import logging
 from loguru import logger
@@ -10,6 +11,8 @@ from app.schemas.wx_data import ArticleDetailRequest, ArticleListRequest, Cookie
 import json
 from app.utils.wx_article_handle import save_html_to_local, parse_wx_common_data, upload_to_aliyun
 from bs4 import BeautifulSoup
+from app.utils.src_path import get_temp_file_path
+from app.decorators.request_decorator import extract_wx_credentials
 # from PIL import Image
 cookies = {
     # "appmsglist_action_3964406050": "card",
@@ -42,30 +45,32 @@ def handle_error(base_resp):
         raise HTTPException(status_code=400, detail=f"HTTP错误: {err_msg}")
     return base_resp
 
-async def fetch_wx_public(query: str,begin:int,count:int):
+@extract_wx_credentials(cookies, token)
+async def fetch_wx_public(request: Request, query: str, begin: int, count: int):
     """获取微信公众号"""
-    print('cookies---token', cookies, token)
-    print('query', query)
-    url = f"https://mp.weixin.qq.com/cgi-bin/searchbiz?action=search_biz&begin={begin}&count={count}&query={query}&token={token}&lang=zh_CN&f=json&ajax=1"
-    # url = 'https://mp.weixin.qq.com/cgi-bin/searchbiz?action=search_biz&begin=0&count=5&query=%E9%83%91%E5%B7%9E%E5%8F%91%E5%B8%83&fingerprint=9b1ea719e1ba482a27d45364d3c7f877&token=1316584330&lang=zh_CN&f=json&ajax=1'
+    # 从 request.state 中获取装饰器处理后的 cookies 和 token
+    merged_cookies = request.state.wx_cookies
+    final_token = request.state.wx_token
     
+    print('🔍 [DEBUG] 查询参数 query:', query)
+    
+    url = f"https://mp.weixin.qq.com/cgi-bin/searchbiz?action=search_biz&begin={begin}&count={count}&query={query}&token={final_token}&lang=zh_CN&f=json&ajax=1"
+
     try:
         async with httpx.AsyncClient(verify=False) as client:
             logging.info(f"正在请求URL: {url}")
-            logging.debug(f"请求头")
-            logging.warning(f"请求头")
-            logging.error(f"请求头")
-            logging.critical(f"请求头")
+            logger.info(f"正在请求cookies: {merged_cookies}，token: {final_token}")
             headers = {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
             }
-            response = await client.get(url, headers=headers,timeout=10,cookies=cookies)
+            # 使用合并后的 cookies
+            response = await client.get(url, headers=headers, timeout=10, cookies=merged_cookies)
             response.raise_for_status()
             # 整理成json
             json_data = json.loads(response.text)
-            base_resp = json_data.get('base_resp',{})
+            base_resp = json_data.get('base_resp', {})
             handle_error(base_resp)
-            return json_data.get('list',[])
+            return json_data.get('list', [])
     except httpx.HTTPStatusError as e:
         raise HTTPException(status_code=e.response.status_code, detail=f"HTTP错误: {e}")
     except httpx.RequestError as e:
@@ -73,16 +78,20 @@ async def fetch_wx_public(query: str,begin:int,count:int):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"未知错误: {e}")
 
-async def fetch_wx_article_list(params: ArticleListRequest):
+@extract_wx_credentials(cookies, token)
+async def fetch_wx_article_list(request: Request, params: ArticleListRequest):
     """使用Query参数获取微信公众号文章详情"""
+    # 从 request.state 中获取装饰器处理后的 cookies 和 token
+    merged_cookies = request.state.wx_cookies
+    final_token = request.state.wx_token
     if len(params.query) <= 0:
-        url = f"https://mp.weixin.qq.com/cgi-bin/appmsgpublish?sub=list&begin={params.begin}&count={params.count}&fakeid={params.wx_public_id}&type=101_1&free_publish_type=1&sub_action=list_ex&token={token}&lang=zh_CN&f=json&ajax=1"
+        url = f"https://mp.weixin.qq.com/cgi-bin/appmsgpublish?sub=list&begin={params.begin}&count={params.count}&fakeid={params.wx_public_id}&type=101_1&free_publish_type=1&sub_action=list_ex&token={final_token}&lang=zh_CN&f=json&ajax=1"
     else:
-        url = f"https://mp.weixin.qq.com/cgi-bin/appmsgpublish?sub=search&search_field=7&begin={params.begin}&count={params.count}&query={params.query}&fakeid={params.wx_public_id}&type=101_1&free_publish_type=1&sub_action=list_ex&token={token}&lang=zh_CN&f=json&ajax=1"
+        url = f"https://mp.weixin.qq.com/cgi-bin/appmsgpublish?sub=search&search_field=7&begin={params.begin}&count={params.count}&query={params.query}&fakeid={params.wx_public_id}&type=101_1&free_publish_type=1&sub_action=list_ex&token={final_token}&lang=zh_CN&f=json&ajax=1"
     print('url', url)
     try:
         async with httpx.AsyncClient(verify=False) as client:
-            response = await client.get(url,timeout=10,cookies=cookies)
+            response = await client.get(url,timeout=10,cookies=merged_cookies)
             response.raise_for_status()
             json_data = json.loads(response.text)
             base_resp = json_data.get('base_resp',{})
@@ -95,8 +104,12 @@ async def fetch_wx_article_list(params: ArticleListRequest):
         raise HTTPException(status_code=e.response.status_code, detail=f"HTTP错误: {e}")
 
 
-async def fetch_wx_article_detail_by_link(request_data: ArticleDetailRequest):
+@extract_wx_credentials(cookies, token)
+async def fetch_wx_article_detail_by_link(request: Request, request_data: ArticleDetailRequest):
     """根据文章链接请求得到文章详情（需要传递公众号id以及公众号名称，做网站本地化保存使用）"""
+    # 从 request.state 中获取装饰器处理后的 cookies 和 token
+    merged_cookies = request.state.wx_cookies
+    final_token = request.state.wx_token
     article_link = request_data.article_link
     wx_public_id = request_data.wx_public_id
     wx_public_name = request_data.wx_public_name
@@ -116,7 +129,7 @@ async def fetch_wx_article_detail_by_link(request_data: ArticleDetailRequest):
                 "Referer": article_link,
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
             }
-            response = await client.get(article_link, headers=headers)
+            response = await client.get(article_link, headers=headers, cookies=merged_cookies)
             response.raise_for_status()
             # 返回一个html
             html_content = response.text
@@ -173,6 +186,23 @@ headers = {
 }
 cookies = {}
 newsessionid = ""
+token = ""
+
+
+def restore_cookies_and_token(session_cookies: Dict[str, Any], session_token: str = ""):
+    """从会话数据中恢复全局cookies和token
+    
+    Args:
+        session_cookies: 会话中保存的cookies
+        session_token: 会话中保存的token (可选)
+    """
+    global cookies, token
+    if session_cookies:
+        cookies = session_cookies
+        print(f"✓ 已恢复 cookies: {len(cookies)} 个")
+    if session_token:
+        token = session_token
+        print(f"✓ 已恢复 token")
 
 
 # 微信公众号登录流程 - 第一步：预登录获取忽略密码列表
@@ -349,14 +379,22 @@ async def fetch_get_wx_login_qrcode(request: Request):
             logger.info(f"二维码大小: {len(response.content)} bytes")
             
             # 保存二维码到本地文件用于调试
-            with open('qrcode.png', 'wb') as f:
+            # 获取临时文件路径
+            # 在 .app 包模式下：
+            # 当前工作目录 (CWD) 被设置为 .app 包内部
+            # 这个目录是只读的（macOS 安全机制）
+            # 所以无法写入文件
+            qrcode_file_path = get_temp_file_path('qrcode.png')
+            with open(qrcode_file_path, 'wb') as f:
                 f.write(response.content)
+            print('二维码保存路径:', qrcode_file_path)
                 
             # 直接返回二进制内容
             return response.content
     except Exception as e:
         logger.error(f"获取二维码时发生错误: {e}")
         raise HTTPException(status_code=500, detail=f"获取二维码失败: {str(e)}")
+
 
 # 微信公众号登录流程 - 第五步：获取二维码状态
 async def fetch_get_qrcode_status(request: Request):
@@ -458,7 +496,11 @@ async def fetch_redirect_login_info(request: Request, redirect_url: str):
         wx_data = parse_wx_common_data(response.text)
         # 解析出
         print('第七步：根据重定向获取微信公众号个人登录信息---重定向地址--wx_data', wx_data)
-        return wx_data
+        return {
+            "userInfo": wx_data,
+            "cookies": request_cookies,
+            "token": token
+        }
     
 
 async def generate_session_id():
@@ -471,3 +513,73 @@ async def generate_session_id():
     session_id = f"{timestamp}{random_num}"  # 拼接成会话ID
     print('session_id----------', session_id)
     return session_id
+
+
+async def export_articles_to_excel(articles: list, save_path: str, file_name: str):
+    """
+    将文章列表导出到Excel文件
+    
+    参数:
+        articles: 文章列表，包含aid, title, publish_time, update_time, link
+        save_path: 保存路径
+        file_name: 文件名（不含扩展名）
+        
+    返回:
+        dict: 包含保存路径和文件名的结果
+    """
+    import pandas as pd
+    import os
+    from pathlib import Path
+    
+    try:
+        logger.info(f"开始导出文章到Excel，共 {len(articles)} 篇文章")
+        
+        # 将Pydantic模型转换为字典（如果传入的是模型对象）
+        article_dicts = []
+        for article in articles:
+            # 如果是Pydantic模型，转换为字典
+            if hasattr(article, 'model_dump'):
+                article_dict = article.model_dump()
+            elif hasattr(article, 'dict'):
+                article_dict = article.dict()
+            else:
+                article_dict = article
+            article_dicts.append(article_dict)
+        
+        # 创建DataFrame，按照指定顺序：aid, title, publish_time, update_time, link
+        df_data = []
+        for article in article_dicts:
+            df_data.append({
+                "文章ID": article.get("aid", "") if isinstance(article, dict) else getattr(article, "aid", ""),
+                "文章标题": article.get("title", "") if isinstance(article, dict) else getattr(article, "title", ""),
+                "发布时间": article.get("publish_time", "") if isinstance(article, dict) else getattr(article, "publish_time", ""),
+                "更新时间": article.get("update_time", "") if isinstance(article, dict) else getattr(article, "update_time", ""),
+                "文章链接": article.get("link", "") if isinstance(article, dict) else getattr(article, "link", "")
+            })
+        
+        df = pd.DataFrame(df_data)
+        
+        # 确保保存路径存在
+        save_dir = Path(save_path)
+        save_dir.mkdir(parents=True, exist_ok=True)
+        
+        # 构建完整文件路径
+        full_path = save_dir / f"{file_name}.xlsx"
+        
+        # 导出到Excel
+        df.to_excel(full_path, index=False, engine='openpyxl')
+        
+        logger.info(f"文章导出成功: {full_path}")
+        
+        return {
+            "success": True,
+            "file_path": str(full_path),
+            "article_count": len(articles)
+        }
+        
+    except ImportError as e:
+        logger.error(f"缺少必要的库: {e}")
+        raise HTTPException(status_code=500, detail=f"缺少必要的库，请安装 pandas 和 openpyxl: pip install pandas openpyxl")
+    except Exception as e:
+        logger.error(f"导出Excel失败: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"导出Excel失败: {str(e)}")
